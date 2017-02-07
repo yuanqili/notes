@@ -1,0 +1,48 @@
+<h1 id="cs190i-w17-sample-midterm">CS190I W17 Sample Midterm</h1>
+<h2 id="true-or-false">True or False</h2>
+<ol>
+<li>True (?)</li>
+<li>True</li>
+<li>True</li>
+<li>True (?)</li>
+<li>True</li>
+<li>True (?)</li>
+<li>True (?)</li>
+<li>True</li>
+<li>False</li>
+<li>False</li>
+</ol>
+<h2 id="multiple-choice">Multiple Choice</h2>
+<p>B</p>
+<h2 id="short-answers">Short Answers</h2>
+<h3 id="generative-vs-discrimitive-models">Generative vs. discrimitive models</h3>
+<ul>
+<li>Generative: Find joint probability $P(X,Y)$; integrate data likelihood and prior.</li>
+<li>Discriminative: Find conditional probability $P(Y|X)$; directly compute poserior.</li>
+</ul>
+<h3 id="conditional-independence">Conditional independence</h3>
+<p>Feature probabilities $P(x_j|c_j)$ are independent, so that
+[
+  P(x_1,...,x_n|c) = \prod_i P(x_i|c).
+]
+This assumption significantly reduce computation involved in joint probability.</p>
+<h3 id="start-state-and-end-state-in-hmms">Start state and end state in HMMs</h3>
+<p>(?) The start state provides prior for each state appearing as the init state; the end state serves as the single accept state reducing computation.</p>
+<h3 id="memms">MEMMs</h3>
+<p>MEMMs does local optimization and have no global view, because probabilities of outgoing arcs normalized separately for each state.</p>
+<h2 id="hmm">HMM</h2>
+<ol>
+<li>No.</li>
+<li>Yes.</li>
+<li>No.
+4.
+[
+\begin{align<em>}
+P(o_1 = \square | T, E)
+ &amp; = P(o_1=\square|s_1=A)+P(o_1=\square|s_1=B) \
+ &amp; = .5 \times .5 + .5 \times .7 \
+ &amp; = .6
+\end{align</em>}
+]</li>
+<li>$AB$. Too lazy to show steps.</li>
+</ol>

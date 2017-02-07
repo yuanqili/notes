@@ -1,0 +1,232 @@
+<h1 id="cs190i-w17-cheetsheet">CS190I W17 Cheetsheet</h1>
+<h2 id="todo">TODO</h2>
+<ul>
+<li>perceptron</li>
+<li>stochastic gradient</li>
+<li>train/dev/test set</li>
+</ul>
+<h2 id="preliminary">Preliminary</h2>
+<ul>
+<li>Regex<ul>
+<li><code style="font-family: SFMono-Regular;">?</code>: 0 or 1; <code style="font-family: SFMono-Regular;">*</code>: 0 or more; <code style="font-family: SFMono-Regular;">+</code>: 1 or more; <code style="font-family: SFMono-Regular;">.</code>: any.</li>
+<li><code style="font-family: SFMono-Regular;">^</code>: begining; <code style="font-family: SFMono-Regular;">$</code>: ending.</li>
+</ul>
+</li>
+<li>Error<ul>
+<li>Type I: false positive, minimizing to improve accuracy/precision.</li>
+<li>Type II: false negative, minimizing to improve coverage/recall.</li>
+<li>Precision: percentage of predicted items that are correct, $P=tp/(tp+fp)$</li>
+<li>Recall: percentage of correct items that are predicted, $R=tp/(tp+fn)$</li>
+<li>F measure: $F = 1/(\alpha/P + (1-\alpha)/R)$<ul>
+<li>A combined measure that assesses the P/R tradeoff</li>
+<li>Usually use balanced F1 measure, $\alpha=1/2, \beta=1$, $F=2PR/(P+R)$</li>
+</ul>
+</li>
+<li>Accuracy: correct predictions (tp+tn) / size of test set</li>
+<li>Macro-avg: compute performance for each class, then average</li>
+<li>Micro-avg: collect decisions for all classes, compute contigency table, then evaluate</li>
+</ul>
+</li>
+<li>Count<ul>
+<li>Type: an element of the vocabulary</li>
+<li>Token: an instance of that type in running text</li>
+</ul>
+</li>
+<li>Unix tools<ul>
+<li><code style="font-family: SFMono-Regular;">grep</code>: search for a pattern using regex</li>
+<li><code style="font-family: SFMono-Regular;">sort</code></li>
+<li><code style="font-family: SFMono-Regular;">uniq -c</code>: count duplicates</li>
+<li><code style="font-family: SFMono-Regular;">tr</code>: translate chars</li>
+<li><code style="font-family: SFMono-Regular;">wc</code>: word count</li>
+<li><code style="font-family: SFMono-Regular;">cat</code>, <code style="font-family: SFMono-Regular;">echo</code></li>
+<li><code style="font-family: SFMono-Regular;">cut</code>: columns in tab separated files</li>
+<li><code style="font-family: SFMono-Regular;">paste</code>: paste columns</li>
+<li><code style="font-family: SFMono-Regular;">head</code>, <code style="font-family: SFMono-Regular;">tail</code>, <code style="font-family: SFMono-Regular;">rev</code></li>
+<li><code style="font-family: SFMono-Regular;">tr &#39;A-Z&#39; &#39;a-z&#39; &lt; text.txt | tr -sc &#39;A-Za-z&#39; &#39;\n&#39; | sort | uniq -c | sort -n -r</code></li>
+</ul>
+</li>
+<li>Stemming: reduce terms to their stems in information retrieval<ul>
+<li>sses -&gt; ss, ies -&gt; i, ss -&gt; ss, s -&gt; ø</li>
+<li>(*v*)ing, (*v*)ed -&gt; ø</li>
+<li>ational -&gt; ate, izer -&gt; ize, ator -&gt; ate</li>
+<li>al, able, ate -&gt; ø</li>
+</ul>
+</li>
+<li>Generative models<ul>
+<li>e.g., NB</li>
+<li>Joint probability model $P(X,Y)$</li>
+<li>Strong Bayesian flavor, integrating data likelihood and priors</li>
+</ul>
+</li>
+<li>Discriminative models<ul>
+<li>e.g., perceptron, logistic regression</li>
+<li>No Bayes rules, and predict the outcome directly</li>
+<li>Often consider the conditional probability $P(Y|X)$ directly</li>
+<li>For perceptron, there is no probabilities involved</li>
+</ul>
+</li>
+<li>Regression vs. classification<ul>
+<li>Regression: predicts a real-valued number</li>
+<li>Classification: predicts discrete classes</li>
+<li>For multiclass problems: use softmax instead of sigmoid, $P(y=j|x) = \exp(x^Tw<em>j) / \sum</em>{k=1}^K \exp(x^Tw_k)$</li>
+</ul>
+</li>
+</ul>
+<h2 id="probabilitic-langauge-modeling">Probabilitic Langauge Modeling</h2>
+<ul>
+<li>Probabilitic LM<ul>
+<li>$P(W)$ or $P(w_n|w_1^{n-1})$ is called a LM</li>
+<li>$P(B|A) = P(A,B)/P(A)$, i.e., $P(A,B) = P(A)P(B|A)$</li>
+<li>Chain rule: $P(x_1,...,x_n) = P(x_1)P(x_2|x_1)\cdots P(x_n|x<em>1,...,x</em>{n-1})$</li>
+<li>Chain rule application: $P(w_1^n) = \prod_i P(w_i|w_1^{i-1})$</li>
+<li>Markov assumption: $P(w_i|w_1^{i-1}) \approx \prod_i P(w<em>i|w</em>{i-k}^{i-1})$</li>
+<li>Unigram model: $P(w_1^n) \approx \prod_i P(w_i)$</li>
+<li>Bigram model: $P(w_i|w_1^{i-1}) \approx \prod_i P(w<em>i|w</em>{i-1})$</li>
+</ul>
+</li>
+<li>Estimating bigram probabilities<ul>
+<li>MLE: $P(w<em>i|w</em>{i-1}) = C(w_{i-1},w<em>i)/C(w</em>{i-1})$</li>
+<li>Underflow issue: $\log(p_1p_2p_3p_4) = \log p_1 + \log p_2 + \log p_3 + \log p_4$</li>
+</ul>
+</li>
+<li>Evaluation<ul>
+<li>Extrinsic: evaluation on test set, time consuming</li>
+<li>Intrinsic: perplexity, bad approximation</li>
+<li>Perplexity is the inverse probability of the test set, normalized by the number of words, i.e., how many alternatives the LM believes there are following each word</li>
+<li>$PP(W) = P(w<em>1^N)^{-1/N} = \sqrt[N]{\prod</em>{i=1}^N {1/P(w_i|w_1^{i-1})}}$</li>
+<li>Minimizing perplexity is the same as maximizing probability</li>
+</ul>
+</li>
+<li>Generalization and zeros<ul>
+<li>N-grams only work well for word prediction if the test corpus looks like the training corpus; in real life, it often doesn&#39;t</li>
+</ul>
+</li>
+<li>Add-one (Laplace) smoothing<ul>
+<li>Add one to all the counts: $P<em>{Laplace} = [C(w</em>{i-1},w<em>i)+1]/[C(w</em>{i-1})+V]$</li>
+<li>Add-1 is not good for n-grams, but it is used to smooth other NLP models, e.g., text classification, and in domains where the number of zeros isn&#39;t so huge</li>
+</ul>
+</li>
+<li>Backoff and interpolation<ul>
+<li>Backoff: use trigram if you have good evidence, otherwise bigram, otherwise unigram</li>
+<li>Interpolation: mix unigram, bigram, trigram; works better; $\sum_i \lambda_i = 1$<ul>
+<li>Simple interpolation: $\hat{P}(w<em>n|w</em>{n-2}^{n-1}) = \lambda_1 P(w<em>n|w</em>{n-2}^{n-1}) + \lambda_2 P(w<em>n|w</em>{n-1}) + \lambda_3 P(w_n)$</li>
+<li>Condition on context: $\hat{P}(w<em>n|w</em>{n-2}^{n-1}) = \lambda<em>1 (w</em>{n-2}^{n-1}) P(w<em>n|w</em>{n-2}^{n-1}) + \lambda<em>2 (w</em>{n-2}^{n-1}) P(w<em>n|w</em>{n-1}) + \lambda<em>3 (w</em>{n-2}^{n-1}) P(w_n)$</li>
+</ul>
+</li>
+<li>To set $\lambda$s, use a hold-out corpus, so that chosen $\lambda$s maximize the probability of hold-out data.</li>
+</ul>
+</li>
+<li>Unknown words<ul>
+<li>Closed vocabulary task: If we know all the words in advance, vocabulary $V$ is fixed</li>
+<li>Open vocabulary task: out-of-vocabulary (OOVs)</li>
+<li>Create an unknown word token <code style="font-family: SFMono-Regular;">&lt;UNK&gt;</code></li>
+</ul>
+</li>
+<li>Absolute discounting interpolation<ul>
+<li>$P_{AD}(w<em>i|w</em>{i-1}) = [C(w_{i-1},w<em>i)-d]/[C(w</em>{i-1})] + \lambda(w_{i-1})P(w)$</li>
+</ul>
+</li>
+<li>Kneser-Ney smoothing<ul>
+<li>$P_\text{continuation}(w)$ is how many times does $w$ appear as a novel continuation, normalized by the total number of word bigram types.</li>
+<li>$P<em>\text{continuation}(w) = \lvert { w</em>{i-1}:C(w<em>{i-1},w)&gt;0 } \rvert / \lvert { (w</em>{j-1},w<em>j): C(w</em>{j-1},w_j)&gt;0 } \rvert$</li>
+<li>A frequent word (Francisco) occuring in only one context (after San) will have a low continuation probability</li>
+<li>$P_{KN}(w<em>i|w</em>{i-1}) = \max(C(w_{i-1},w<em>i)-d, 0) / C(w</em>{i-1}) + \lambda(w<em>{i-1}) P</em>\text{cont}(w<em>i)$, where $\lambda(w</em>{i-1})={d\over C(w<em>{i-1})}\lvert { w: C(w</em>{i-1},w) &gt; 0 } \rvert$</li>
+</ul>
+</li>
+</ul>
+<h2 id="naive-bayes">Naive Bayes</h2>
+<ul>
+<li>Text classification<ul>
+<li>Input: a document $d$; a fixed set of classes $C={c_1,...,c_n}$</li>
+<li>Output: a predicted class $c\in C$</li>
+</ul>
+</li>
+<li>Supervised ML for text classification<ul>
+<li>Input: a document $d$; a fixed set of classes $C$; a training set of $m$ hand-labeled documents $(d_1,c_1),...,(d_m,c_m)$</li>
+<li>Output: a learned classifier: $v:d \rightarrow c$</li>
+<li>Classifiers: Naive Bayes (bag-of-words), logistic regression, SVM, kNN</li>
+</ul>
+</li>
+<li>Naive Bayes: bag of words<ul>
+<li>create a vocabulary file (e.g., top 100 word types) from trianing data</li>
+<li>For a document $d$ and a class $c$: $P(c|d) = P(d|c)P(c)/P(d)$</li>
+<li>Bag of words assumption: position doesn&#39;t matter</li>
+<li>Conditional independence: feature probabilities $P(x_j|c_j)$ are independent, $P(x_1,...,x_n|c) = P(x_1|c)...P(x_n|c)$</li>
+<li>$P<em>{MAP} = \text{arg}\max</em>{c \in C} P(c|d) = \text{arg}\max<em>{c \in C} P(d|c)P(c) = \text{arg}\max</em>{c \in C} P(x_1,...,x_n|c)P(c)$</li>
+<li>$P<em>{NB} = \text{arg}\max</em>{c \in C} P(c_j) \prod_x P(x|c)$</li>
+<li>MLE: $\hat{P}(c<em>j) = N</em>\text{doc}(C=c<em>j) / N</em>\text{doc}$, $\hat{P}(w_i|c_j) = C(w_i,c<em>j)/\sum</em>{w\in V}C(w,c_j)$<ul>
+<li>It&#39;s the fraction of times word $w_i$ appears among all words in documents of topic $c_j$</li>
+<li>Still zero probabilities, using add-1 smoothing</li>
+</ul>
+</li>
+<li>Training<ul>
+<li>No training data: manually written rules</li>
+<li>Little data: NB, get more labeled data, bootstrapping, EM</li>
+<li>A reasonable amount of data: SVM, regularized logistic regression</li>
+<li>A huge amount of data: SVM, kNN, CNN, LSTM</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="perceptron">Perceptron</h2>
+<ul>
+<li>Support online learning, no probabilities involved</li>
+<li>Perceptron for binary classification<ul>
+<li>Initialize a zero-valued weight vector $w$</li>
+<li>Prediction: $y_\text{pred} = +1$ if $\langle w,x \rangle &gt; 0$; $-1$ otherwise.</li>
+<li>If prediction is correct, we do nothing</li>
+<li>If prediction is incorrect, we adjust by adding or subtracting the feature vector $w<em>\text{new} = w</em>\text{old} + y_\text{truth}\cdot x$</li>
+</ul>
+</li>
+<li><strong>Multicalss perceptron</strong><ul>
+<li>Initialize zero-valued weight vectors $w_y$</li>
+<li>Prediction: $y_\text{pred} = \text{arg}\max_y w_y \cdot f(x)$</li>
+<li>If prediction is correct, we do nothing</li>
+<li>If it&#39;s incorrect, we lower wrong answer, and raise correct answer</li>
+</ul>
+</li>
+<li><strong>Voted perceptron</strong><ul>
+<li>We can build an ensemble of perceptrons and integrate them together</li>
+<li>Input: a labeled training set $\langle (x_1,y_1), ..., (x_m,y_m) \rangle$, number of epochs $T$</li>
+<li>Output: a list of weighted perceptrons, $\langle (v_1,c_1), ..., (v_k,c_k) \rangle$</li>
+<li>initialization: $k=0, v_1=0, v_1=0$</li>
+<li>Repeat $T$ times: for $i=1,...,m$:<ul>
+<li>Compute prediction $\hat{y} = \text{sign}(v_k \cdot x_i)$</li>
+<li>If $\hat{y} = y$, then $c_k = c<em>k+1$, else $v</em>{k+1} = v_k + y_ix<em>i, c</em>{k+1} = 1, k = k+1$</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><strong>Issues</strong><ul>
+<li>Cannot provide confident</li>
+<li>Sign function is not differentiable, not easy to be applied concex optimization</li>
+</ul>
+</li>
+</ul>
+<h2 id="optimization">Optimization</h2>
+<ul>
+<li>Given the dataset $\mathcal{D}$, the goal is to learn the parameter $\mathbf{w}$, using the model to define $P(\mathcal{D}|\mathbf{w})$. Set $\mathbf{w}$ to maximize likelihood</li>
+<li>Gradient ascent: to find $\text{arg}\min_w f(w)$<ul>
+<li>Start with $\mathbf{w}<em>0$, for $t=1$, $w</em>{t+1} = w_t + \lambda f&#39;(w_t)$, where $\lambda$ is small</li>
+</ul>
+</li>
+<li>Asscent for likelihood; descent for loss<ul>
+<li>Pros: simple, effective, scalable</li>
+<li>Cons: only applied to differentiable functions, local vs. global (there is only one local optimum if the function is convex)</li>
+</ul>
+</li>
+<li>Using gradient ascent for linear classifiers<ul>
+<li>Replace $\text{sign}(x \cdot w)$ with something diiferentiable, e.g., the logistic function, $\sigma(u) = 1 / (1+e^{-u})$</li>
+<li>Define a loss function, likelihood $LCL_D(w) = \sum_i \log P(y_i|x_i,w)$</li>
+<li>Differentiate the likelihood and use gradient ascent, start with $w<em>0$, $w</em>{t+1} = w)t+\lambda \text{loss}&#39;_D(w_t)$</li>
+</ul>
+</li>
+<li><strong>Stochastic gradient descent</strong> (SGD)<ul>
+<li>Pick a small subset of examples $\mathcal{B} \ll \mathcal{D}$, approximate the gradient using them. On average, this is the right direction. Take a step in that direction, and repeat</li>
+<li>$\mathcal{B}$ of one example is very popular choice, because we want scalability. For large datasets, traditional optimization methods are expensive: we don&#39;t want to load all the data $\mathcal{D}$ into memory.</li>
+<li>It takes more steps, noisier path toward the minimum, but each step is cheaper</li>
+<li>Define the function $LCL_D(w) = \sum_i \log P(y_i|x_i,w)$; differentiate the function and use gradient descent. For each step, $p<em>i = (1+\exp(-x\cdot w))^{-1}, w</em>{t+1}=w<em>t+\lambda L</em>{x,y}(w_t) = w_t + \lambda(y-p_i) x$</li>
+</ul>
+</li>
+</ul>

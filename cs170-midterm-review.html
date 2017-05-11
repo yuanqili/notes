@@ -709,42 +709,42 @@ machineState[WhenDonePCState] = (<span class="dt">int</span>) ThreadFinish;</cod
 <li><code>ReadyToRun()</code> in <code>scheduler.cc</code> under threads directory marks the selected thread to be ready and append it to the end of ready list.</li>
 <li><code>Run()</code> in <code>scheduler.cc</code> under threads directory executes the selected thread. It does context switch from old thread to new thread by calling assembly code <code>SWITCH(oldThread, nextThread)</code> in <code>switch.s</code> under threads directory. <code>SWITCH()</code> shifts execution from the old thread to new thread. It saves register state for the old thread and loads the new data from the new thread's control block. For example, if the host hardware is MIPS (actually not as we run on the Intel chip. I use MIPS because its instructions are easy to read.)</li>
 </ol>
-<div class="sourceCode"><pre class="sourceCode cpp"><code class="sourceCode cpp">    <span class="er"># a0 -- pointer to old Thread</span>
-    <span class="er"># a1 -- pointer to new Thread</span>
+<div class="sourceCode"><pre class="sourceCode mips"><code class="sourceCode mips">    <span class="co"># a0 -- pointer to old Thread</span>
+    <span class="co"># a1 -- pointer to new Thread</span>
 
-SWITCH:
-    sw  sp, SP(a0)      <span class="er">#</span> save <span class="kw">new</span> stack pointer
-    sw  s0, S0(a0)      <span class="er">#</span> save all the callee-save registers
-    sw  s1, S1(a0)
-    sw  s2, S2(a0)
-    sw  s3, S3(a0)
-    sw  s4, S4(a0)
-    sw  s5, S5(a0)
-    sw  s6, S6(a0)
-    sw  s7, S7(a0)
-    sw  fp, FP(a0)      <span class="er">#</span> save frame pointer
-    sw  ra, PC(a0)      <span class="er">#</span> save <span class="cf">return</span> address
+<span class="ot">SWITCH:</span>
+    <span class="kw">sw</span>  sp, SP(a0)      <span class="co"># save new stack pointer</span>
+    <span class="kw">sw</span>  s0, S0(a0)      <span class="co"># save all the callee-save registers</span>
+    <span class="kw">sw</span>  s1, S1(a0)
+    <span class="kw">sw</span>  s2, S2(a0)
+    <span class="kw">sw</span>  s3, S3(a0)
+    <span class="kw">sw</span>  s4, S4(a0)
+    <span class="kw">sw</span>  s5, S5(a0)
+    <span class="kw">sw</span>  s6, S6(a0)
+    <span class="kw">sw</span>  s7, S7(a0)
+    <span class="kw">sw</span>  fp, FP(a0)      <span class="co"># save frame pointer</span>
+    <span class="kw">sw</span>  ra, PC(a0)      <span class="co"># save return address</span>
     
-    lw  sp, SP(a1)      <span class="er">#</span> load the <span class="kw">new</span> stack pointer
-    lw  s0, S0(a1)      <span class="er">#</span> load the callee-save registers
-    lw  s1, S1(a1)
-    lw  s2, S2(a1)
-    lw  s3, S3(a1)
-    lw  s4, S4(a1)
-    lw  s5, S5(a1)
-    lw  s6, S6(a1)
-    lw  s7, S7(a1)
-    lw  fp, FP(a1)
-    lw  ra, PC(a1)      <span class="er">#</span> load the <span class="cf">return</span> address   
+    <span class="kw">lw</span>  sp, SP(a1)      <span class="co"># load the new stack pointer</span>
+    <span class="kw">lw</span>  s0, S0(a1)      <span class="co"># load the callee-save registers</span>
+    <span class="kw">lw</span>  s1, S1(a1)
+    <span class="kw">lw</span>  s2, S2(a1)
+    <span class="kw">lw</span>  s3, S3(a1)
+    <span class="kw">lw</span>  s4, S4(a1)
+    <span class="kw">lw</span>  s5, S5(a1)
+    <span class="kw">lw</span>  s6, S6(a1)
+    <span class="kw">lw</span>  s7, S7(a1)
+    <span class="kw">lw</span>  fp, FP(a1)
+    <span class="kw">lw</span>  ra, PC(a1)      <span class="co"># load the return address   </span>
 
-    j   ra
+    <span class="kw">j</span>   ra
     .end SWITCH
 
-ThreadRoot:
-    jal StartupPC       <span class="er">#</span> call startup procedure
-    move a0, InitialArg
-    jal InitialPC       <span class="er">#</span> call main procedure
-    jal WhenDonePC      <span class="er">#</span> when were done, call clean up procedure</code></pre></div>
+<span class="ot">ThreadRoot:</span>
+    <span class="kw">jal</span> StartupPC       <span class="co"># call startup procedure</span>
+    <span class="fu">move</span> a0, InitialArg
+    <span class="kw">jal</span> InitialPC       <span class="co"># call main procedure</span>
+    <span class="kw">jal</span> WhenDonePC      <span class="co"># when were done, call clean up procedure</span></code></pre></div>
 <p>Constants <code>SP</code>, <code>S0</code>, ..., <code>PC</code> etc are defined in <code>switch.h</code> under threads directory. For example, <code>SP=0</code> for MIPS host. Notice that <code>0</code> means the first position <code>stackTop</code> in the thread control block which is defined in <code>thread.h</code> What does <code>SWITCH()</code> finally call after saving and loading context? Namely what does the return address &quot;ra&quot; point to before executing &quot;j ra&quot;? Notice that <code>StackAllocate(func, arg)</code> has assigned</p>
 <div class="sourceCode"><pre class="sourceCode cpp"><code class="sourceCode cpp">machineState[PCState] = (<span class="dt">int</span>) ThreadRoot;   <span class="er">#</span> in MIPS, PCState = PC/<span class="dv">4-1</span> = <span class="dv">9</span>
 machineState[InitialPCState] = (<span class="dt">int</span>) func;  <span class="er">#</span> in MIPS, InitialPCState = S0/<span class="dv">4-1</span> = <span class="dv">0</span></code></pre></div>
@@ -786,7 +786,10 @@ machineState[InitialPCState] = (<span class="dt">int</span>) func;  <span class=
 <li><code>$28</code> - <code>$gp</code>. Globals pointer used for addressing static global variables.</li>
 <li><code>$29</code> - <code>$sp</code>. Stack pointer.</li>
 <li><code>$30</code> - <code>$fp ($s8)</code>. Frame pointer.</li>
-<li><p><code>$31</code> - <code>$ra</code>. Return address in a subroutine call.</p></li>
+<li><code>$31</code> - <code>$ra</code>. Return address in a subroutine call.</li>
+</ul>
+<p>Caller and callee save</p>
+<ul>
 <li>Callee saves
 <ul>
 <li>a procedure clears out some registers for its own use</li>
@@ -802,5 +805,353 @@ machineState[InitialPCState] = (<span class="dt">int</span>) func;  <span class=
 <li>procedures use these registers for local variables, because the values do not need to be preserved outside the scope of the procedure.</li>
 </ul></li>
 </ul>
+<h2 id="code">Code</h2>
+<h4 id="synchronization">Synchronization</h4>
+<div class="sourceCode"><pre class="sourceCode cpp"><code class="sourceCode cpp"><span class="co">//----------------------------------------------------------------------</span>
+<span class="co">// Semaphore::Semaphore</span>
+<span class="co">//  Initialize a semaphore, so that it can be used for synchronization.</span>
+<span class="co">//</span>
+<span class="co">//  &quot;debugName&quot; is an arbitrary name, useful for debugging.</span>
+<span class="co">//  &quot;initialValue&quot; is the initial value of the semaphore.</span>
+<span class="co">//----------------------------------------------------------------------</span>
+
+Semaphore::Semaphore(<span class="dt">char</span>* debugName, <span class="dt">int</span> initialValue)
+{
+    name = debugName;
+    value = initialValue;
+    queue = <span class="kw">new</span> List;
+}
+
+<span class="co">//----------------------------------------------------------------------</span>
+<span class="co">// Semaphore::~Semaphore</span>
+<span class="co">//  De-allocate semaphore, when no longer needed.  Assume no one</span>
+<span class="co">//  is still waiting on the semaphore!</span>
+<span class="co">//----------------------------------------------------------------------</span>
+
+Semaphore::~Semaphore()
+{
+    <span class="kw">delete</span> queue;
+}
+
+<span class="co">//----------------------------------------------------------------------</span>
+<span class="co">// Semaphore::P</span>
+<span class="co">//  Wait until semaphore value &gt; 0, then decrement.  Checking the</span>
+<span class="co">//  value and decrementing must be done atomically, so we</span>
+<span class="co">//  need to disable interrupts before checking the value.</span>
+<span class="co">//</span>
+<span class="co">//  Note that Thread::Sleep assumes that interrupts are disabled</span>
+<span class="co">//  when it is called.</span>
+<span class="co">//----------------------------------------------------------------------</span>
+
+<span class="dt">void</span>
+Semaphore::P()
+{
+    IntStatus oldLevel = interrupt-&gt;SetLevel(IntOff);   <span class="co">// disable interrupts</span>
+
+    <span class="cf">while</span> (value == <span class="dv">0</span>) {            <span class="co">// semaphore not available</span>
+        queue-&gt;Append((<span class="dt">void</span> *)currentThread);   <span class="co">// so go to sleep</span>
+        currentThread-&gt;Sleep();
+    }
+    value--;                    <span class="co">// semaphore available, consume its value</span>
+
+    (<span class="dt">void</span>) interrupt-&gt;SetLevel(oldLevel);   <span class="co">// re-enable interrupts</span>
+}
+
+<span class="co">//----------------------------------------------------------------------</span>
+<span class="co">// Semaphore::V</span>
+<span class="co">//  Increment semaphore value, waking up a waiter if necessary.</span>
+<span class="co">//  As with P(), this operation must be atomic, so we need to disable</span>
+<span class="co">//  interrupts.  Scheduler::ReadyToRun() assumes that threads</span>
+<span class="co">//  are disabled when it is called.</span>
+<span class="co">//----------------------------------------------------------------------</span>
+
+<span class="dt">void</span>
+Semaphore::V()
+{
+    Thread *thread;
+    IntStatus oldLevel = interrupt-&gt;SetLevel(IntOff);
+
+    thread = (Thread *)queue-&gt;Remove();
+    <span class="cf">if</span> (thread != NULL)    <span class="co">// make thread ready, consuming the V immediately</span>
+        scheduler-&gt;ReadyToRun(thread);
+    value++;
+    (<span class="dt">void</span>) interrupt-&gt;SetLevel(oldLevel);
+}
+
+<span class="co">//----------------------------------------------------------------------</span>
+<span class="co">// Lock::Lock</span>
+<span class="co">//  Initialize a lock, so that it can be used for synchronization.</span>
+<span class="co">//  A lock is very much like a semaphore with initial value 1.</span>
+<span class="co">//p</span>
+<span class="co">//  &quot;debugName&quot; is an arbitrary name, useful for debugging.</span>
+<span class="co">//----------------------------------------------------------------------</span>
+
+Lock::Lock(<span class="dt">char</span>* debugName)
+{
+    name = debugName;
+    value = <span class="dv">1</span>;
+    queue = <span class="kw">new</span> List;
+}
+
+<span class="co">//---------------------------------------------------------------------</span>
+<span class="co">// Lock::~Lock</span>
+<span class="co">//   Dedestuct a lock, when no longer needed. Assume no one is still</span>
+<span class="co">//   holding a lock!</span>
+<span class="co">//---------------------------------------------------------------------</span>
+Lock::~Lock()
+{
+    <span class="kw">delete</span> queue;
+}
+
+<span class="co">//---------------------------------------------------------------------</span>
+<span class="co">// Lock::Acquire</span>
+<span class="co">//   This function waits for a lock to become free and then acquires</span>
+<span class="co">//   the lock for the current thread.</span>
+<span class="co">//---------------------------------------------------------------------</span>
+<span class="dt">void</span> Lock::Acquire()
+{
+    IntStatus oldLevel = interrupt-&gt;SetLevel(IntOff);
+    <span class="co">// if the lock is acquired by someone else, put the current thread</span>
+    <span class="co">// to the waiting queue and sleep</span>
+    <span class="cf">while</span> (value == <span class="dv">0</span>) {
+        queue-&gt;Append((<span class="dt">void</span>*)currentThread);
+        currentThread-&gt;Sleep();
+    }
+    <span class="co">// acquire the lock</span>
+    value = <span class="dv">0</span>;
+    owner = currentThread;
+    (<span class="dt">void</span>)interrupt-&gt;SetLevel(oldLevel);
+}
+
+<span class="co">//---------------------------------------------------------------------</span>
+<span class="co">// Lock::Release</span>
+<span class="co">//   This function releases a lock that was previously acquired by the</span>
+<span class="co">//   current thread, and wakes up one of the threads waiting for the</span>
+<span class="co">//   lock.</span>
+<span class="co">//---------------------------------------------------------------------</span>
+<span class="dt">void</span> Lock::Release()
+{
+    ASSERT(isHeldByCurrentThread());
+    IntStatus oldLevel = interrupt-&gt;SetLevel(IntOff);
+    <span class="co">// release the lock</span>
+    value = <span class="dv">1</span>;
+    owner = NULL;
+    <span class="co">// put a thread in the waiting queue (if any) to the ready queue</span>
+    Thread *thread = (Thread*)queue-&gt;Remove();    
+    <span class="cf">if</span> (thread != NULL)
+        scheduler-&gt;ReadyToRun(thread);
+    (<span class="dt">void</span>)interrupt-&gt;SetLevel(oldLevel);
+}
+
+<span class="co">//---------------------------------------------------------------------</span>
+<span class="co">// Lock::isHeldByCurrentThread</span>
+<span class="co">//   True if the current thread holds this lock. It is useful for</span>
+<span class="co">//   checking in Release, and in condition variable ops below.</span>
+<span class="co">//---------------------------------------------------------------------</span>
+<span class="dt">bool</span> Lock::isHeldByCurrentThread()
+{
+    <span class="cf">return</span> value == <span class="dv">0</span> &amp;&amp; currentThread == owner;
+}
+
+
+<span class="co">//---------------------------------------------------------------------</span>
+<span class="co">// Condition::Condition</span>
+<span class="co">//   Initializes a condition object.</span>
+<span class="co">//---------------------------------------------------------------------</span>
+Condition::Condition(<span class="dt">char</span>* debugName)
+{
+    name = debugName;
+    queue = <span class="kw">new</span> List;
+}
+
+<span class="co">//---------------------------------------------------------------------</span>
+<span class="co">// Condition::~Condition</span>
+<span class="co">//   Destruct a condition object, when it is no longer needed.</span>
+<span class="co">//---------------------------------------------------------------------</span>
+Condition::~Condition()
+{
+    <span class="kw">delete</span> queue;
+}
+
+<span class="co">//---------------------------------------------------------------------</span>
+<span class="co">// Condition::Wait</span>
+<span class="co">//   Waits for a condition to become free and then acquires the</span>
+<span class="co">//   condition for the current thread.</span>
+<span class="co">//---------------------------------------------------------------------</span>
+<span class="dt">void</span> Condition::Wait(Lock* conditionLock)
+{
+    ASSERT(conditionLock-&gt;isHeldByCurrentThread());
+
+    IntStatus oldLevel = interrupt-&gt;SetLevel(IntOff);
+    conditionLock-&gt;Release();
+    queue-&gt;Append((<span class="dt">void</span>*)currentThread);
+    currentThread-&gt;Sleep();
+    conditionLock-&gt;Acquire();
+    (<span class="dt">void</span>)interrupt-&gt;SetLevel(oldLevel);
+}
+
+<span class="co">//---------------------------------------------------------------------</span>
+<span class="co">// Condition::Signal</span>
+<span class="co">//   Wakes up one of the threads that is waiting on the condition.</span>
+<span class="co">//---------------------------------------------------------------------</span>
+<span class="dt">void</span> Condition::Signal(Lock* conditionLock)
+{
+    ASSERT(conditionLock-&gt;isHeldByCurrentThread());
+
+    Thread *thread = (Thread*)queue-&gt;Remove();
+    <span class="cf">if</span> (thread != NULL)
+        scheduler-&gt;ReadyToRun(thread);
+}
+
+<span class="co">//---------------------------------------------------------------------</span>
+<span class="co">// Condition::Broadcast</span>
+<span class="co">//   Wakes up all threads that are waiting for the condition.</span>
+<span class="co">//---------------------------------------------------------------------</span>
+<span class="dt">void</span> Condition::Broadcast(Lock* conditionLock)
+{
+    ASSERT(conditionLock-&gt;isHeldByCurrentThread());
+
+    Thread *thread;
+    <span class="cf">while</span> ((thread = (Thread*)queue-&gt;Remove()))
+        scheduler-&gt;ReadyToRun(thread);
+}</code></pre></div>
+<h4 id="rwlock">RWLock</h4>
+<div class="sourceCode"><pre class="sourceCode cpp"><code class="sourceCode cpp">RWLock::RWLock() {
+<span class="pp">#ifdef P1_SEMAPHORE</span>
+    read_lock = <span class="kw">new</span> Semaphore(<span class="st">&quot;read lock&quot;</span>, <span class="dv">1</span>);
+    write_lock = <span class="kw">new</span> Semaphore(<span class="st">&quot;write lock&quot;</span>, <span class="dv">1</span>);
+    blocking_writer = <span class="dv">0</span>;
+<span class="pp">#endif</span>
+
+<span class="pp">#ifdef P1_LOCK</span>
+    read_lock = <span class="kw">new</span> Lock(<span class="st">&quot;read lock&quot;</span>);
+    write_lock = <span class="kw">new</span> Lock(<span class="st">&quot;write lock&quot;</span>);
+    blocking_writer = <span class="dv">0</span>;
+<span class="pp">#endif</span>
+
+<span class="pp">#ifdef P1_RWLOCK</span>
+    active_writer = <span class="dv">0</span>;
+    active_reader = <span class="dv">0</span>;
+    waiting_writer = <span class="dv">0</span>;
+    waiting_reader = <span class="dv">0</span>;
+    mutex = <span class="kw">new</span> Lock(<span class="st">&quot;mutex&quot;</span>);
+    ok_to_read = <span class="kw">new</span> Condition(<span class="st">&quot;read cv&quot;</span>);
+    ok_to_write = <span class="kw">new</span> Condition(<span class="st">&quot;write cv&quot;</span>);
+<span class="pp">#endif</span>
+}
+
+RWLock::~RWLock() {
+<span class="pp">#ifdef P1_SEMAPHORE</span>
+    <span class="kw">delete</span> read_lock;
+    <span class="kw">delete</span> write_lock;
+<span class="pp">#endif</span>
+
+<span class="pp">#ifdef P1_LOCK</span>
+    <span class="kw">delete</span> read_lock;
+    <span class="kw">delete</span> write_lock;
+<span class="pp">#endif</span>
+
+<span class="pp">#ifdef P1_RWLOCK</span>
+    <span class="kw">delete</span> mutex;
+    <span class="kw">delete</span> ok_to_read;
+    <span class="kw">delete</span> ok_to_write;
+<span class="pp">#endif</span>
+}
+
+<span class="dt">void</span> RWLock::startWrite() {
+<span class="pp">#ifdef P1_SEMAPHORE</span>
+    write_lock-&gt;P();
+<span class="pp">#endif</span>
+
+<span class="pp">#ifdef P1_LOCK</span>
+    write_lock-&gt;Acquire();
+<span class="pp">#endif</span>
+
+<span class="pp">#ifdef P1_RWLOCK</span>
+    mutex-&gt;Acquire();
+    <span class="cf">while</span> (active_writer + active_reader &gt; <span class="dv">0</span>) {
+        waiting_writer++;
+        ok_to_write-&gt;Wait(mutex);
+        waiting_writer--;
+    }
+    active_writer++;
+    mutex-&gt;Release();
+<span class="pp">#endif</span>
+}
+
+<span class="dt">void</span> RWLock::doneWrite() {
+<span class="pp">#ifdef P1_SEMAPHORE</span>
+    write_lock-&gt;V();
+<span class="pp">#endif</span>
+
+<span class="pp">#ifdef P1_LOCK</span>
+    write_lock-&gt;Release();
+<span class="pp">#endif</span>
+
+<span class="pp">#ifdef P1_RWLOCK</span>
+    mutex-&gt;Acquire();
+    active_writer--;
+    <span class="cf">if</span> (waiting_writer &gt; <span class="dv">0</span>)
+        ok_to_write-&gt;Signal(mutex);
+    <span class="cf">else</span>
+        ok_to_read-&gt;Broadcast(mutex);
+    mutex-&gt;Release();
+<span class="pp">#endif</span>
+}
+
+<span class="dt">void</span> RWLock::startRead() {
+<span class="pp">#ifdef P1_SEMAPHORE</span>
+    read_lock-&gt;P();
+    blocking_writer++;
+    <span class="co">// first reader locks write_lock</span>
+    <span class="cf">if</span> (blocking_writer == <span class="dv">1</span>)
+        write_lock-&gt;P();
+<span class="pp">#endif</span>
+
+<span class="pp">#ifdef P1_LOCK</span>
+    read_lock-&gt;Acquire();
+    blocking_writer++;
+    <span class="co">// first reader locks write_lock</span>
+    <span class="cf">if</span> (blocking_writer == <span class="dv">1</span>)
+      write_lock-&gt;Acquire();
+<span class="pp">#endif</span>
+
+<span class="pp">#ifdef P1_RWLOCK</span>
+    mutex-&gt;Acquire();
+    <span class="cf">while</span> (active_writer &gt; <span class="dv">0</span> || waiting_writer &gt; <span class="dv">0</span>) {
+        waiting_reader++;
+        ok_to_read-&gt;Wait(mutex);
+        waiting_reader--;
+    }
+    active_reader++;
+    mutex-&gt;Release();
+<span class="pp">#endif</span>
+}
+
+<span class="dt">void</span> RWLock::doneRead() {
+<span class="pp">#ifdef P1_SEMAPHORE</span>
+    blocking_writer--;
+    <span class="co">// last reader unlocks write_lock</span>
+    <span class="cf">if</span> (blocking_writer == <span class="dv">0</span>)
+        write_lock-&gt;V();
+    read_lock-&gt;V();
+<span class="pp">#endif</span>
+
+<span class="pp">#ifdef P1_LOCK</span>
+    blocking_writer--;
+    <span class="co">// last reader unlocks write_lock</span>
+    <span class="cf">if</span> (blocking_writer == <span class="dv">0</span>)
+      write_lock-&gt;Release();
+    read_lock-&gt;Release();
+<span class="pp">#endif</span>
+
+<span class="pp">#ifdef P1_RWLOCK</span>
+    mutex-&gt;Acquire();
+    active_reader--;
+    <span class="cf">if</span> (active_reader == <span class="dv">0</span> &amp;&amp; waiting_writer &gt; <span class="dv">0</span>)
+        ok_to_write-&gt;Signal(mutex);
+    mutex-&gt;Release();
+<span class="pp">#endif</span>
+}</code></pre></div>
 </body>
 </html>

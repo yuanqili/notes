@@ -47,7 +47,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <body>
 <h1 id="cs170-midterm-review">CS170 Midterm Review</h1>
 <h2 id="kernels-and-processes">Kernels and processes</h2>
-<p>Four fundamental OS concepts:</p>
+<h4 id="four-fundamental-os-concepts">Four fundamental OS concepts</h4>
 <ul>
 <li><strong>Thread</strong>: single unique execution context; program counter, registers, execution flags, stack</li>
 <li><strong>Address space with translation</strong>: programs execute in an address space that is distinct from the memory space of the physical machine</li>
@@ -68,7 +68,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 </ul>
 <p><strong>Process control block</strong> (PCB) stores information associated with each process: process state, program counter, copy of CPU registers, memory-management information (page table), accounting information, IO status information, etc.</p>
 <p>When CPU switches to another process with a new address space, the system must save the state of the old process and load the saved state for the new process via a <strong>context switch</strong>. The context of a process represented in the PCB.</p>
-<p>Process creation:</p>
+<h4 id="process-creation">Process creation</h4>
 <ul>
 <li>Parent process create child processes, identified via a process id (pid)</li>
 <li>Options in resource sharing: parent and children share all resources; children share subset of parent's resources; parent and children share no resources</li>
@@ -88,13 +88,13 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
     <span class="cf">else</span> <span class="cf">if</span> (pid == <span class="dv">0</span>) { execlp(<span class="st">&quot;/bin/ls&quot;</span>, <span class="st">&quot;ls&quot;</span>, NULL); } <span class="co">// child process</span>
     <span class="cf">else</span> { wait(NULL); exit(<span class="dv">0</span>); } <span class="co">// parent process</span>
 }</code></pre></div>
-<p>Process termination:</p>
+<h4 id="process-termination">Process termination</h4>
 <ul>
 <li>Process executes last statement and asks the OS to delete it (exit)</li>
 <li>Output data from child to parent (via wait), process resources are deallocated</li>
 <li>Parent may terminate children processes: task assigned to child is no longer required of if parent exits</li>
 </ul>
-<p>UNIX signals:</p>
+<h4 id="unix-signals">UNIX signals</h4>
 <ul>
 <li>A event similar to hardware interrupt without priorities</li>
 <li>Used to informa a user process of an event, e.g., user pressed delete key</li>
@@ -118,7 +118,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
     signal(SIGINT, cnt);
     <span class="cf">while</span>(<span class="dv">1</span>);
 }</code></pre></div>
-<p>UNIX pipes for IPC:</p>
+<h4 id="unix-pipes-for-ipc">UNIX pipes for IPC</h4>
 <ul>
 <li>The pipe interface is intended to look a file interface</li>
 <li><code>pipe(fd)</code> creates the pipe and kernel allocates a buffer with two pointers <code>fd[0]</code> to read and <code>fd[1]</code> to write</li>
@@ -144,7 +144,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <li>Same as process: each has its own logical control flow, each can run concurrently, each is context switched</li>
 <li>Different from process: threads share code and data while proceses (typicall) do not, threads are somewhat cheaper than processes with less overhead</li>
 </ul>
-<p>POSIX threads (pthreads) interface</p>
+<h4 id="posix-threads-pthreads-interface">POSIX threads (pthreads) interface</h4>
 <ul>
 <li>Creating and join threads: <code>pthread_create</code>, <code>pthread_join</code></li>
 <li>Determining your tid: <code>pthread_self</code></li>
@@ -162,7 +162,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
     pthread_join(thread0, NULL);
     pthread_join(thread1, NULL);
 }</code></pre></div>
-<p>Nachos threads:</p>
+<h4 id="nachos-threads">Nachos threads</h4>
 <ul>
 <li><code>Thread(char *name)</code>: create a thread</li>
 <li><code>Fork(VoidFunctionPtr func, int arg)</code>: place this thread in a ready queue for executing a function
@@ -176,7 +176,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <li><code>Sleep()</code>: suspend the current thread, change its sate to BLOCKED, and remove it from the ready list</li>
 <li><code>Finish()</code>, <code>~Thread()</code></li>
 </ul>
-<p>Kernel threads vs user-level threads</p>
+<h4 id="kernel-threads-vs-user-level-threads">Kernel threads vs user-level threads</h4>
 <ul>
 <li>Kernel threads are recognized and supported by the OS kernel; OS explicitly performs scheduling and context switching of kernel threads</li>
 <li>User-level thread management done by user-level threads library
@@ -186,21 +186,21 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 </ul></li>
 </ul>
 <h2 id="processthread-synchronization">Process/thread synchronization</h2>
-<p>Synchronization problem</p>
+<h4 id="synchronization-problem">Synchronization problem</h4>
 <ul>
 <li>Race condition: two or more processes (threads) are reading and writing on shared data and the final result depends on who runs precisely and when</li>
 <li>Critical section: the part of the program where shared variables are accessed</li>
 <li>Deadlock: two or more threads (or processes) are waiting indefinitely for an event that can be only caused by one of these waiting processes</li>
 <li>Starvation: indefinite blocking. Deadlock is starvation but not vice versa</li>
 </ul>
-<p>Property of cirtical-section solution</p>
+<h4 id="property-of-cirtical-section-solution">Property of cirtical-section solution</h4>
 <ul>
 <li>Mutual exclusion: only one can enter the critical section, providing safety</li>
 <li>Progress: if some processes wish to enter their critical section and nobody is in the critical section, then one of them will enter in a limited time, providing liveness</li>
 <li>Bounded waiting: if one process starts to wait for entering an critical section, there is a limit on the number of times other processes entering the section before this process enters, providing liveness</li>
 <li>Locks, semaphore, condition variables</li>
 </ul>
-<p><strong>Lock</strong> prevents someone from doing something</p>
+<h4 id="lock-prevents-someone-from-doing-something"><strong>Lock</strong> prevents someone from doing something</h4>
 <ul>
 <li><code>void Acquire()</code> atomically waits until the lock is unlocked, and then sets the lock to be locked.</li>
 <li><code>void Release()</code> atomically changes the state to be unlocked. Only the thread who owns the lock can release.</li>
@@ -210,7 +210,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <li>Lock can be in one of two states: locked or unlocked</li>
 <li>Typically associate a lock with a piece of shared data for mutual exclusion. When a thread needs to access, it first acquires the lock, and then accesses data. Once access completes, it releases the lock</li>
 </ul>
-<p>Lock implementation</p>
+<h4 id="lock-implementation">Lock implementation</h4>
 <ul>
 <li>Atomic load/store are complex and error prone</li>
 <li>Alternatively, interrupt disabling/enabling and hardware primitives; avoid context-switching by
@@ -262,7 +262,7 @@ Release() {
     }
     guard = <span class="kw">false</span>
 }</code></pre></div>
-<p>Semaphore</p>
+<h4 id="semaphore">Semaphore</h4>
 <ul>
 <li><code>void P()</code> atomically waits until the counter is greater than 0 and then decreases the counter</li>
 <li><code>void V()</code> atomically decreases the counter</li>
@@ -276,7 +276,7 @@ Release() {
 <li>Producer thread: <code>space-&gt;P(), data-&gt;V()</code></li>
 <li>Consumer thread: <code>data-&gt;P(), space-&gt;V()</code></li>
 </ul>
-<p>Condition variable</p>
+<h4 id="condition-variable">Condition variable</h4>
 <ul>
 <li><code>void Wait(Lock *myLock)</code> atomically releases the lock and waits. When it is returned, the lock is reacquired again.</li>
 <li><code>void Signal(Lock *myLock)</code> wake up one waiting thread to run. The lock is not released.</li>
@@ -293,14 +293,14 @@ Release() {
 <li>Practically, need to check condition again after wait</li>
 </ul></li>
 </ul>
-<p>Design advices for synchronization</p>
+<h4 id="design-advices-for-synchronization">Design advices for synchronization</h4>
 <ul>
 <li>Allocate one lock for each shared variable or a group of shared variables</li>
 <li>Add condition variables (waking up a thread is triggered by some condition)</li>
 <li>Fine-grain: More performance flexibility and scalability but possibly more design complexity and synchronization overhead</li>
 <li>Coarse-grain: Easy to ensure correctness but possibly difficult to scale</li>
 </ul>
-<p>Read-writer lock</p>
+<h4 id="read-writer-lock">Read-writer lock</h4>
 <ul>
 <li><code>pthread_rwlock_rdlock()</code>: multiple readers can acquire the lock if no writer holds the lock.</li>
 <li><code>pthread_rwlock_wrlock()</code>: the calling thread acquires the write lock if no other thread (reader or writer) holds the read-write lock rwlock. Otherwise, the thread blocks until it can acquire the lock. Writers are favored over readers of the same priority to avoid writer starvation.</li>
@@ -308,14 +308,14 @@ Release() {
 <li>Writer: wait until no active readers or writers; access database; checkout (wakeup waiting readers or writer)</li>
 </ul>
 <h2 id="main-memory-and-address-translation">Main memory and address translation</h2>
-<p>How to translate address</p>
+<h4 id="how-to-translate-address">How to translate address</h4>
 <ul>
 <li>Contiguous memory allocation</li>
 <li>Segmentation</li>
 <li>Address tarnslation with paging</li>
 <li>TLB support and performance impact</li>
 </ul>
-<p>Objective of memory management: run programs</p>
+<h4 id="objective-of-memory-management-run-programs">Objective of memory management: run programs</h4>
 <ul>
 <li>Get CPU cycle and allocate memory</li>
 <li>Load instruction and data segments of executable file into memory</li>
@@ -323,27 +323,27 @@ Release() {
 <li>Set the starting address and execute</li>
 <li>Provide services to it</li>
 </ul>
-<p>Role of memory management</p>
+<h4 id="role-of-memory-management">Role of memory management</h4>
 <ul>
 <li>Manage data/instructions in memory in order to execute</li>
 <li>Keep track of which parts of memory are currently being used by whom</li>
 <li>Decide which processes (or parts thereof) and data to move into and out of memory</li>
 <li>Allocate and deallocate memory space as needed</li>
 </ul>
-<p>Logical vs. physical address space</p>
+<h4 id="logical-vs.-physical-address-space">Logical vs. physical address space</h4>
 <ul>
 <li>Logical (virtual) address: generated by the CPU</li>
 <li>Physical address: address seen by the memory unit</li>
 <li>Same in compile-time and load-time address-binding schemes</li>
 <li>Differ in execution-time address-binding scheme</li>
 </ul>
-<p>Binding of instructions and data to memory</p>
+<h4 id="binding-of-instructions-and-data-to-memory">Binding of instructions and data to memory</h4>
 <ul>
 <li>Compile time (gcc): If memory location known a priori, absolute code can be generated</li>
 <li>Load time (ld): Must generate relocatable code if memory location is not known at compile time</li>
 <li>Execution time (dll): Binding delayed until run time if the process can be moved during its execution from one memory segment to another.</li>
 </ul>
-<p>Address space translation</p>
+<h4 id="address-space-translation">Address space translation</h4>
 <ul>
 <li>Address space
 <ul>
@@ -354,7 +354,7 @@ Release() {
 <li>CPU issues virtual address to MMU which translates to physical memory to memory</li>
 <li>Translation provides protection and process address space isolation. With translation, every program can be linked/loaded into same region of user address space</li>
 </ul>
-<p>Allocation method: Contiguous allocation</p>
+<h4 id="allocation-method-contiguous-allocation">Allocation method: Contiguous allocation</h4>
 <ul>
 <li>Main memory has two partitions: Resident OS usually held in low memory; user processes then held in high momery</li>
 <li>Hardware support and protection
@@ -371,7 +371,7 @@ Release() {
 <li>Hard to do inter-process share</li>
 </ul></li>
 </ul>
-<p>Allocation method: Segmentation</p>
+<h4 id="allocation-method-segmentation">Allocation method: Segmentation</h4>
 <ul>
 <li>Memory-management scheme that supports user semantic view of memory</li>
 <li>A program is a collection of segments</li>
@@ -385,7 +385,7 @@ Release() {
 <li>Internal fragmentation: Don't need all memory within allocated chunks</li>
 </ul></li>
 </ul>
-<p>Allocation method: Paging</p>
+<h4 id="allocation-method-paging">Allocation method: Paging</h4>
 <ul>
 <li>Divide physical memory into fixed-sized blocks called frames or pages</li>
 <li>Divide logical memory into blocks of same size called pages or logical pages</li>
@@ -410,10 +410,11 @@ Release() {
 <li>Each page is associated with permission bits (e.g., valid, read, write, etc.)</li>
 <li>Page table size is determined by the number of pages in virtual space</li>
 </ul>
-<p>TLB for faster address translation</p>
+<h4 id="tlb-for-faster-address-translation"><strong>TLB</strong> for faster address translation</h4>
 <ul>
 <li>Every data/instruction access requires two memory access. Speed can be improved by using a special fast-lookup hardware cache called associative memory or translation look-aside buffers (TLBs)</li>
-<li>Address translation for logical page <span class="math inline"><em>p</em></span>
+<li>The TLB stores the recent translations (i.e., entries) of virtual memory to physical memory and can be called an address-translation cache.</li>
+<li>Address translation for logical page p
 <ul>
 <li>If p is in associative register, get physical page number out</li>
 <li>Otherwise get frame number from page table in memory</li>
@@ -427,7 +428,7 @@ Release() {
 <li>Process control block (PCB): process id data, state data, control data (memory space management, pointer to a page table)</li>
 </ul></li>
 </ul>
-<p>Shared pages through paging</p>
+<h4 id="shared-pages-through-paging">Shared pages through paging</h4>
 <ul>
 <li>Shared code
 <ul>
@@ -445,7 +446,7 @@ Release() {
 <li>COW allows both parent and child processes to initially share the same pages in memory. A shared page is duplicated only when modified. It allows more efficient process creation as only modified pages are copied.</li>
 </ul></li>
 </ul>
-<p>Page table entry (PTE)</p>
+<h4 id="page-table-entry-pte">Page table entry (PTE)</h4>
 <ul>
 <li>Used to memorize a page is shared, detect need for duplication</li>
 <li>Invalid PTE can imply different things: region of address space is actually invalid or the page/directory is just somewhere else than memory</li>
@@ -465,7 +466,7 @@ Release() {
 <li>Often, OS creates zeroed pages in background</li>
 </ul></li>
 </ul>
-<p>One-level page table</p>
+<h4 id="one-level-page-table">One-level page table</h4>
 <ul>
 <li>Maximum size of logical space = # entry * page size</li>
 <li>Each page table needs to fit into a physical memory page because a page table needs consecutive space. Memory allocated to a process is a sparse set of nonconsecutive pages.</li>
@@ -480,7 +481,7 @@ Release() {
 <li>Con: Cannot handle a large (sparse) virtual address space, e.g., on Unix, code starts at 0, stack starts at 2^32-1</li>
 <li>Con: Not all pages are used all the time. It would be nice to have working set of page table in memory</li>
 </ul>
-<p>Two-level page table</p>
+<h4 id="two-level-page-table">Two-level page table</h4>
 <ul>
 <li>Address translation scheme: Logical address is of the form (p1, p2, d), where p1 is an index into the outer level-1 page table, p2 is the displacement within the page of the level-2 inner page table</li>
 <li>Tables are of fixed size (1K entries, 4K per entry, 4KB in total)</li>
@@ -506,8 +507,20 @@ Release() {
 </ul></li>
 </ul></li>
 </ul>
-<p>Three-level page table - Bits of d = log (page size) - Bits of p1 &gt;= log (# entries in level-1 table) - Bits of p2 = log (# entries in level-2 table) - Bits of p3 = log (# entries in level-3 table) - # physical pages &lt;= 2^(entry size of level-3 table) - Physical space size = # physical pages * page size - Logical space size = # entry in level-1 table * # entry in level-2 table * # entry in level-3 table * page size</p>
-<p>Hashed page table</p>
+<h4 id="three-level-page-table">Three-level page table</h4>
+<ul>
+<li>Design consideration on paging
+<ul>
+<li>Bits of d = log (page size)</li>
+<li>Bits of p1 &gt;= log (# entries in level-1 table)</li>
+<li>Bits of p2 = log (# entries in level-2 table)</li>
+<li>Bits of p3 = log (# entries in level-3 table)</li>
+<li># physical pages &lt;= 2^(entry size of level-3 table)</li>
+<li>Physical space size = # physical pages * page size</li>
+<li>Logical space size = # entry in level-1 table * # entry in level-2 table <em> # entry in level-3 table </em> page size</li>
+</ul></li>
+</ul>
+<h4 id="hashed-page-table">Hashed page table</h4>
 <ul>
 <li>Common in address spaces &gt; 32bits</li>
 <li>Size of page table grows proportionally as large as amount of virtual memory allocated to processes</li>
@@ -519,7 +532,7 @@ Release() {
 </ul></li>
 <li>Use this hash table to find the physical page of each logical page: If a match is found, the corresponding physical frame is extracted</li>
 </ul>
-<p>Inverted page table</p>
+<h4 id="inverted-page-table">Inverted page table</h4>
 <ul>
 <li>One hash table for all processes</li>
 <li>One entry for each real page of memory
@@ -528,7 +541,7 @@ Release() {
 </ul></li>
 <li>Decreases memory needed to store each page table, but increases time needed to search the table when a page reference occurs</li>
 </ul>
-<p>Summary</p>
+<h4 id="summary">Summary</h4>
 <table style="width:43%;">
 <colgroup>
 <col width="8%" />
@@ -582,7 +595,7 @@ Release() {
 <li>Inverted page table: Size of page table related to physical memory size</li>
 </ul>
 <h2 id="nachos">Nachos</h2>
-<p>Nachos thread operations:</p>
+<h4 id="nachos-thread-operations">Nachos thread operations</h4>
 <ul>
 <li><code>Thread()</code> creates a thread</li>
 <li><code>Fork(VFP func, int arg)</code> lets a thread execute a function</li>
@@ -590,7 +603,7 @@ Release() {
 <li><code>Sleep()</code> suspends the current thread, changes its state to BLOCKED, and removes it from the ready list</li>
 <li><code>Finish()</code></li>
 </ul>
-<p>Code execution in Nachos</p>
+<h4 id="code-execution-in-nachos">Code execution in Nachos</h4>
 <ul>
 <li>User mode executes instructions which only access the user space.</li>
 <li>Kernel mode executes when Nachos first starts up or when an instruction causes a trap, e.g., illegal instruction, page fault, or system call, etc.</li>
@@ -601,29 +614,29 @@ Release() {
 <li>Repeats until all instructions are executed.</li>
 <li>Handle interrupt/page fault if necessary.</li>
 </ul>
-<p>Scheduler object</p>
+<h4 id="scheduler-object">Scheduler object</h4>
 <ul>
 <li>Decide which thread to run next.</li>
 <li>Invoked when the current thread gives up CPU.</li>
 <li>The current Nachos shceduling polycy is round-robin: slecting the front of ready queue list, appending new threads to the end</li>
 </ul>
-<p>Machine object: implements a MIPS machine</p>
+<h4 id="machine-object-implements-a-mips-machine">Machine object: implements a MIPS machine</h4>
 <ul>
 <li>An instance created when Nachos starts up.</li>
 <li>Supported public variables: 40 registers, 4KB memory (32 pages), single linear page table virtual memory.</li>
 </ul>
-<p>Interrupt object: maintains an event queue with simulated clock</p>
+<h4 id="interrupt-object-maintains-an-event-queue-with-simulated-clock">Interrupt object: maintains an event queue with simulated clock</h4>
 <ul>
 <li><code>SetLevel(IntStatus level)</code> is used to temporarily disable and re-enable interrupts.</li>
 <li><code>OneTick()</code> advances 1 clock tick.</li>
 <li><code>CheckIfDue(bool advanceClock)</code> examines if some event should be serviced.</li>
 <li><code>Idle()</code> advances the clock to the time of the next scheduled event.</li>
 </ul>
-<p>Timer object</p>
+<h4 id="timer-object">Timer object</h4>
 <ul>
 <li>Generates interrupts at regular or random intervals, then Nachos invokes the predefined clock event handling procedure.</li>
 </ul>
-<p>Noff: binary code format</p>
+<h4 id="noff-binary-code-format">Noff: binary code format</h4>
 <ul>
 <li>A Noff-format file contains
 <ul>
@@ -639,7 +652,7 @@ Release() {
 <li>size (in bytes) of that segment</li>
 </ul></li>
 </ul>
-<p>Nachos thread: user process for executing a program</p>
+<h4 id="nachos-thread-user-process-for-executing-a-program">Nachos thread: user process for executing a program</h4>
 <ul>
 <li>A Nachos thread is extended as a process</li>
 <li>Each process has its own address space containing executable code (TEXT), initialized data (DATA), uninitialized data (BSS), and stack space for fucntion call/local variables</li>
@@ -660,6 +673,133 @@ Release() {
 <li><code>StartProcess()</code> allocates a new address space and loads the halt binary. It also initializes registers and sets up the page table.</li>
 <li><code>Machine::Run()</code> executes the halt binary using the MIPS emulator: The halt binary invokes the system call <code>Halt()</code>, which causes a trap back to the Nachos kernel via functions <code>RaiseException()</code> and <code>ExceptionHandler()</code>.</li>
 <li>The execution handler determines that a <code>Halt()</code> system call was requested from user mode, and it halts Nachos.</li>
+</ul></li>
+</ul>
+<h4 id="thread-execution-flow-when-running-nachos-under-thread-directory">Thread execution flow when running Nachos under thread directory</h4>
+<p>When the <em>threads</em> version of NACHOS is started, <code>main()</code> in file <code>main.cc</code> under threads directory performs the following key operations.</p>
+<ol style="list-style-type: decimal">
+<li>Call <code>Initialize()</code> in file <code>system.cc</code> under threads directory to initialize Nachos global data structure. For example, set random yield or not based on parameters, and create an interrupt object and a scheduler object etc.</li>
+<li>Call <code>ThreadTest()</code> in the file <code>threadtest.cc</code> under threads directory. This creates two Nachos threads to execute. This calls two function methods <code>Thread::Fork()</code> and <code>Thread::Yield()</code>.</li>
+<li>Call <code>currentThread-&gt;Finish()</code> in file <code>thread.cc</code> which calls <code>Thread:Sleep()</code>, similar to <code>Thread:Yield()</code>. If the procedure &quot;main&quot; returns, then the program &quot;nachos&quot; will exit (as any other normal program would). But there may be other threads on the ready list. We switch to those threads by saying that the &quot;main&quot; thread is finished, preventing it from returning.</li>
+</ol>
+<div class="sourceCode"><pre class="sourceCode cpp"><code class="sourceCode cpp">DebugInit(debugArgs);                       <span class="co">// initialize DEBUG messages</span>
+stats = <span class="kw">new</span> Statistics();                   <span class="co">// collect statistics</span>
+interrupt = <span class="kw">new</span> Interrupt;                  <span class="co">// start up interrupt handling</span>
+scheduler = <span class="kw">new</span> Scheduler();                <span class="co">// initialize the ready queue</span>
+
+currentThread = <span class="kw">new</span> Thread(<span class="st">&quot;main&quot;</span>);
+currentThread-&gt;setStatus(RUNNING);
+
+interrupt-&gt;Enable();
+CallOnUserAbort(Cleanup);                   <span class="co">// if user hits ctl-C</span></code></pre></div>
+<p><code>Thread::Fork()</code> is defined in <code>thread.cc</code> under threads directory. It calls <code>StackAllocate(func, arg)</code> defined in <code>thread.cc</code> under threads directory. This function allocates stack space and initialize the thread control block and the register state information. Notice that &quot;func&quot; address is assigned to <code>InitialPCState</code> slot of the thread control block. This address will be used as the entrance point when this thread starts to execute, which will be discussed in two assembly functions <code>SWITCH()</code> and <code>ThreadRoot()</code> below.</p>
+<div class="sourceCode"><pre class="sourceCode cpp"><code class="sourceCode cpp"><span class="co">//StackSize is 4K defined in thread.h</span>
+stack = (<span class="dt">int</span> *) AllocBoundedArray(StackSize * <span class="kw">sizeof</span>(<span class="dt">int</span>));
+stackTop = stack + StackSize - <span class="dv">4</span>;   <span class="co">// -4 to be on the safe side!</span>
+machineState[PCState] = (<span class="dt">int</span>) ThreadRoot;
+machineState[StartupPCState] = (<span class="dt">int</span>) InterruptEnable;
+machineState[InitialPCState] = (<span class="dt">int</span>) func;
+machineState[InitialArgState] = arg;
+machineState[WhenDonePCState] = (<span class="dt">int</span>) ThreadFinish;</code></pre></div>
+<p><code>ThreadTest()</code> in the file <code>threadtest.cc</code> calls <code>currentThread-&gt;Yield()</code> to yield CPU to another ready thread and Nachos schedules another thread for execution. <code>Thread::Yield()</code> is defined in <code>thread.cc</code> under threads directory.</p>
+<div class="sourceCode"><pre class="sourceCode cpp"><code class="sourceCode cpp">nextThread = scheduler-&gt;FindNextToRun();
+<span class="cf">if</span> (nextThread) { scheduler-&gt;ReadyToRun(<span class="kw">this</span>); scheduler-&gt;Run(nextThread); }</code></pre></div>
+<ol style="list-style-type: decimal">
+<li><code>FindNextToRun()</code> method defined in <code>scheduler.cc</code> under threads directory finds next thread in the ready queue to run. That essentially removes the first one in the ready queue.</li>
+<li><code>ReadyToRun()</code> in <code>scheduler.cc</code> under threads directory marks the selected thread to be ready and append it to the end of ready list.</li>
+<li><code>Run()</code> in <code>scheduler.cc</code> under threads directory executes the selected thread. It does context switch from old thread to new thread by calling assembly code <code>SWITCH(oldThread, nextThread)</code> in <code>switch.s</code> under threads directory. <code>SWITCH()</code> shifts execution from the old thread to new thread. It saves register state for the old thread and loads the new data from the new thread's control block. For example, if the host hardware is MIPS (actually not as we run on the Intel chip. I use MIPS because its instructions are easy to read.)</li>
+</ol>
+<div class="sourceCode"><pre class="sourceCode cpp"><code class="sourceCode cpp">    <span class="er"># a0 -- pointer to old Thread</span>
+    <span class="er"># a1 -- pointer to new Thread</span>
+
+SWITCH:
+    sw  sp, SP(a0)      <span class="er">#</span> save <span class="kw">new</span> stack pointer
+    sw  s0, S0(a0)      <span class="er">#</span> save all the callee-save registers
+    sw  s1, S1(a0)
+    sw  s2, S2(a0)
+    sw  s3, S3(a0)
+    sw  s4, S4(a0)
+    sw  s5, S5(a0)
+    sw  s6, S6(a0)
+    sw  s7, S7(a0)
+    sw  fp, FP(a0)      <span class="er">#</span> save frame pointer
+    sw  ra, PC(a0)      <span class="er">#</span> save <span class="cf">return</span> address
+    
+    lw  sp, SP(a1)      <span class="er">#</span> load the <span class="kw">new</span> stack pointer
+    lw  s0, S0(a1)      <span class="er">#</span> load the callee-save registers
+    lw  s1, S1(a1)
+    lw  s2, S2(a1)
+    lw  s3, S3(a1)
+    lw  s4, S4(a1)
+    lw  s5, S5(a1)
+    lw  s6, S6(a1)
+    lw  s7, S7(a1)
+    lw  fp, FP(a1)
+    lw  ra, PC(a1)      <span class="er">#</span> load the <span class="cf">return</span> address   
+
+    j   ra
+    .end SWITCH
+
+ThreadRoot:
+    jal StartupPC       <span class="er">#</span> call startup procedure
+    move a0, InitialArg
+    jal InitialPC       <span class="er">#</span> call main procedure
+    jal WhenDonePC      <span class="er">#</span> when were done, call clean up procedure</code></pre></div>
+<p>Constants <code>SP</code>, <code>S0</code>, ..., <code>PC</code> etc are defined in <code>switch.h</code> under threads directory. For example, <code>SP=0</code> for MIPS host. Notice that <code>0</code> means the first position <code>stackTop</code> in the thread control block which is defined in <code>thread.h</code> What does <code>SWITCH()</code> finally call after saving and loading context? Namely what does the return address &quot;ra&quot; point to before executing &quot;j ra&quot;? Notice that <code>StackAllocate(func, arg)</code> has assigned</p>
+<div class="sourceCode"><pre class="sourceCode cpp"><code class="sourceCode cpp">machineState[PCState] = (<span class="dt">int</span>) ThreadRoot;   <span class="er">#</span> in MIPS, PCState = PC/<span class="dv">4-1</span> = <span class="dv">9</span>
+machineState[InitialPCState] = (<span class="dt">int</span>) func;  <span class="er">#</span> in MIPS, InitialPCState = S0/<span class="dv">4-1</span> = <span class="dv">0</span></code></pre></div>
+<p>Thus <code>SWITCH()</code> calls <code>j ra</code> which is <code>ThreadRoot</code>. Then <code>ThreadRoot()</code> will call &quot;func&quot; saved and loaded from <code>InitialPCState</code>.</p>
+<h4 id="scheduler">Scheduler</h4>
+<ul>
+<li><code>ReadyToRun</code>. Mark a thread as ready, but not running. Put it on the ready list, for later scheduling onto the CPU.</li>
+<li><code>FindNextToRun</code>. Return the next thread to be scheduled onto the CPU. If there are no ready threads, return NULL. Thread is removed from the ready list.</li>
+<li><code>Run</code>. Dispatch the CPU to nextThread. Save the state of the old thread, and load the state of the new thread, by calling the machine dependent context switch routine, <code>SWITCH</code>. Note: we assume the state of the previously running thread has already been changed from running to blocked or ready (depending). The global variable currentThread becomes nextThread.</li>
+</ul>
+<h4 id="thread">Thread</h4>
+<p>Data structures for managing threads. A thread represents sequential execution of code within a program. So the state of a thread includes the program counter, the processor registers, and the execution stack. Stack size is fixed.</p>
+<ul>
+<li><code>Thread</code>. Initialize a thread control block, so that we can then call <code>Fork</code>.</li>
+<li><code>~Thread</code>. De-allocate a thread. NOTE: the current thread <em>cannot</em> delete itself directly, since it is still running on the stack that we need to delete. NOTE: if this is the main thread, we can't delete the stack because we didn't allocate it -- we got it automatically as part of starting up Nachos.</li>
+<li><code>Fork</code>. Invoke <code>(*func)(arg)</code>, allowing caller and callee to execute concurrently. NOTE: although our definition allows only a single integer argument to be passed to the procedure, it is possible to pass multiple arguments by making them fields of a structure, and passing a pointer to the structure as &quot;arg&quot;. Implemented as the following steps: (1) Allocate a stack,</li>
+</ul>
+<ol start="2" style="list-style-type: decimal">
+<li>Initialize the stack so that a call to <code>SWITCH</code> will cause it to run the procedure, (3) Put the thread on the ready queue.</li>
+</ol>
+<ul>
+<li><code>Finish</code>. Called by <code>ThreadRoot</code> when a thread is done executing the forked procedure. NOTE: we don't immediately de-allocate the thread data structure or the execution stack, because we're still running in the thread and we're still on the stack! Instead, we set <code>threadToBeDestroyed</code>, so that <code>Scheduler::Run()</code> will call the destructor, once we're running in the context of a different thread. NOTE: we disable interrupts, so that we don't get a time slice between setting threadToBeDestroyed, and going to sleep.</li>
+<li><code>Yield</code>. Relinquish the CPU if any other thread is ready to run. If so, put the thread on the end of the ready list, so that it will eventually be re-scheduled. NOTE: returns immediately if no other thread on the ready queue. Otherwise returns when the thread eventually works its way to the front of the ready list and gets re-scheduled. NOTE: we disable interrupts, so that looking at the thread on the front of the ready list, and switching to it, can be done atomically. On return, we re-set the interrupt level to its original state, in case we are called with interrupts disabled. Similar to <code>Thread::Sleep()</code>, but a little different.</li>
+<li><code>Sleep</code>. Relinquish the CPU, because the current thread is blocked waiting on a synchronization variable (Semaphore, Lock, or Condition). Eventually, some thread will wake this thread up, and put it back on the ready queue, so that it can be re-scheduled. NOTE: if there are no threads on the ready queue, that means we have no thread to run. <code>Interrupt::Idle</code> is called to signify that we should idle the CPU until the next I/O interrupt occurs (the only thing that could cause a thread to become ready to run). NOTE: we assume interrupts are already disabled, because it is called from the synchronization routines which must disable interrupts for atomicity. We need interrupts off so that there can't be a time slice between pulling the first thread off the ready list, and switching to it.</li>
+<li><code>StackAllocate</code>. Allocate and initialize an execution stack. The stack is initialized with an initial stack frame for <code>ThreadRoot</code>, which: (1) enables interrupts, (2) calls <code>(*func)(arg)</code> and (3) calls <code>Thread::Finish</code>.</li>
+<li><code>SaveUserState</code>. Save the CPU state of a user program on a context switch.</li>
+<li><code>RestoreUserState</code>. Restore the CPU state of a user program on a context switch.</li>
+</ul>
+<h2 id="mips">MIPS</h2>
+<h4 id="calling-convention">Calling convention</h4>
+<ul>
+<li><code>$0</code>. Zero register.</li>
+<li><code>$1</code> - <code>$at</code>. The <em>Assembler Temporary</em> used by the assembler in expanding pseudo-ops.</li>
+<li><code>$2-$3</code> - <code>$v0-$v1</code>. Used for return values of a subroutine.</li>
+<li><code>$4-$7</code> - <code>$a0-$a3</code>. Used for arguments of a subroutine.</li>
+<li><code>$8-$15, $24, $25</code> - <code>$t0-t9</code>. Temporary registers.</li>
+<li><code>$16-$23</code> - <code>$s0-$s7</code>. Saved registers.</li>
+<li><code>$26-27</code> - <code>$k0-$k1</code>. Kernel reserved registers. Do not use.</li>
+<li><code>$28</code> - <code>$gp</code>. Globals pointer used for addressing static global variables.</li>
+<li><code>$29</code> - <code>$sp</code>. Stack pointer.</li>
+<li><code>$30</code> - <code>$fp ($s8)</code>. Frame pointer.</li>
+<li><p><code>$31</code> - <code>$ra</code>. Return address in a subroutine call.</p></li>
+<li>Callee saves
+<ul>
+<li>a procedure clears out some registers for its own use</li>
+<li>register values are preserved across procedure calls</li>
+<li>MIPS calls these saved registers, and designates <code>$s0-$s8</code> for this useage</li>
+<li>the called procedure saves register values in its AR, uses the registers for local variables, restores register values before it returns.</li>
+</ul></li>
+<li>Caller saves
+<ul>
+<li>the calling program saves the registers that it does not want a called procedure to overwrite</li>
+<li>register values are NOT preserved across procedure calls</li>
+<li>MIPS calls these temporary registers, and designates <code>$t0-$t9</code> for this useage</li>
+<li>procedures use these registers for local variables, because the values do not need to be preserved outside the scope of the procedure.</li>
 </ul></li>
 </ul>
 </body>

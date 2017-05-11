@@ -1,0 +1,666 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+  <style type="text/css">
+div.sourceCode { overflow-x: auto; }
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+code > span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code > span.dt { color: #902000; } /* DataType */
+code > span.dv { color: #40a070; } /* DecVal */
+code > span.bn { color: #40a070; } /* BaseN */
+code > span.fl { color: #40a070; } /* Float */
+code > span.ch { color: #4070a0; } /* Char */
+code > span.st { color: #4070a0; } /* String */
+code > span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code > span.ot { color: #007020; } /* Other */
+code > span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code > span.fu { color: #06287e; } /* Function */
+code > span.er { color: #ff0000; font-weight: bold; } /* Error */
+code > span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+code > span.cn { color: #880000; } /* Constant */
+code > span.sc { color: #4070a0; } /* SpecialChar */
+code > span.vs { color: #4070a0; } /* VerbatimString */
+code > span.ss { color: #bb6688; } /* SpecialString */
+code > span.im { } /* Import */
+code > span.va { color: #19177c; } /* Variable */
+code > span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code > span.op { color: #666666; } /* Operator */
+code > span.bu { } /* BuiltIn */
+code > span.ex { } /* Extension */
+code > span.pp { color: #bc7a00; } /* Preprocessor */
+code > span.at { color: #7d9029; } /* Attribute */
+code > span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code > span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code > span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+  </style>
+</head>
+<body>
+<h1 id="cs170-midterm-review">CS170 Midterm Review</h1>
+<h2 id="kernels-and-processes">Kernels and processes</h2>
+<p>Four fundamental OS concepts:</p>
+<ul>
+<li><strong>Thread</strong>: single unique execution context; program counter, registers, execution flags, stack</li>
+<li><strong>Address space with translation</strong>: programs execute in an address space that is distinct from the memory space of the physical machine</li>
+<li><strong>Process</strong>: an instance of an executing program is a process consisting of an address space and one or more threads of control; a process in memory includes a program counter, stack and heap, and data/instruction section (PCB)</li>
+<li><strong>Dual mode operation</strong>: onely the system has the ability to access certain resouces; the OS and the hardware are protected from user programs and user programs are isolated from one another by controlling the translation from the program virtual addresses to machine physical addresses
+<ul>
+<li>User to kernel: sets system mode and saves the user PC; OS code carefully puts aside user state then performs the necessary operations</li>
+<li>Kernel to user: user transition clears system mode and restores appropriate user PC; user program returns from interrupt</li>
+</ul></li>
+</ul>
+<p>To run a program, the OS loads code and data segments of executable file into memory, creates stack and heap, trnasfers control to it and provides ervices to it. As a process executes, it changes <strong>state</strong>:</p>
+<ul>
+<li><strong>New</strong>: the process is being created</li>
+<li><strong>Running</strong>: instructions are being executed</li>
+<li><strong>Waiting</strong>: the process is waiting for some event to occur</li>
+<li><strong>Ready</strong>: the process is waiting to be assigned to a processor</li>
+<li><strong>Terminated</strong>: the process has finished execution</li>
+</ul>
+<p><strong>Process control block</strong> (PCB) stores information associated with each process: process state, program counter, copy of CPU registers, memory-management information (page table), accounting information, IO status information, etc.</p>
+<p>When CPU switches to another process with a new address space, the system must save the state of the old process and load the saved state for the new process via a <strong>context switch</strong>. The context of a process represented in the PCB.</p>
+<p>Process creation:</p>
+<ul>
+<li>Parent process create child processes, identified via a process id (pid)</li>
+<li>Options in resource sharing: parent and children share all resources; children share subset of parent's resources; parent and children share no resources</li>
+<li>Parent and children execute concurrently; parent watis until children terminate (by join)</li>
+<li>Options in address space: child duplicate of parent, or has another program being loaded</li>
+<li>In UNIX: <code>fork</code> creates new process with duplicated address space with a copy of some code and data; <code>exec</code> used after a <code>fork</code> to replace the process' memory space with a new program</li>
+<li>Summary of <code>fork</code>
+<ul>
+<li>creates a child PCB with new pid</li>
+<li>allocates memory for the child and duplicate everything from parent, including text/heap/stack, but notice child space is a copy of parent space; all fds that are open in hte parent are duplicated in the child (file <code>read()/write()</code> set offsets are shared); many environmental setings and ahred segments are inherited by child (parent and child can communicate through shared segments)</li>
+<li>add the child process to ready queue</li>
+</ul></li>
+</ul>
+<div class="sourceCode"><pre class="sourceCode cpp"><code class="sourceCode cpp"><span class="dt">int</span> main() {
+    <span class="dt">int</span> pid = fork();
+    <span class="cf">if</span> (pid &lt; <span class="dv">0</span>) { exit(<span class="dv">-1</span>); } <span class="co">// error occured</span>
+    <span class="cf">else</span> <span class="cf">if</span> (pid == <span class="dv">0</span>) { execlp(<span class="st">&quot;/bin/ls&quot;</span>, <span class="st">&quot;ls&quot;</span>, NULL); } <span class="co">// child process</span>
+    <span class="cf">else</span> { wait(NULL); exit(<span class="dv">0</span>); } <span class="co">// parent process</span>
+}</code></pre></div>
+<p>Process termination:</p>
+<ul>
+<li>Process executes last statement and asks the OS to delete it (exit)</li>
+<li>Output data from child to parent (via wait), process resources are deallocated</li>
+<li>Parent may terminate children processes: task assigned to child is no longer required of if parent exits</li>
+</ul>
+<p>UNIX signals:</p>
+<ul>
+<li>A event similar to hardware interrupt without priorities</li>
+<li>Used to informa a user process of an event, e.g., user pressed delete key</li>
+<li>Each signal is represented by a numeric value: e.g., SIGINT(2), SIGKILL(9), etc.</li>
+<li>A UNIX signal is raised by a process using a system call <code>kill(signal, pid)</code> or a shell command <code>kill -s signal pid</code></li>
+<li>Each signal is maintained as a single bit in the process table entry of the receving process: the bit is set when the corresponding signal arrives (no waiting queues)</li>
+<li>A signal is processed as soon as the process enters in user mode</li>
+<li>3 ways to handle a signal
+<ul>
+<li>ignore it: <code>signal(signum, SIG_IGN)</code></li>
+<li>run the default handler: <code>signal(signum, SIG_DFL)</code></li>
+<li>run a user-defined handler: <code>signal(signum, handler)</code></li>
+</ul></li>
+</ul>
+<div class="sourceCode"><pre class="sourceCode cpp"><code class="sourceCode cpp"><span class="pp">#include </span><span class="im">&lt;signal.h&gt;</span>
+<span class="dt">void</span> cnt(<span class="dt">int</span> sig) {
+    <span class="at">static</span> <span class="dt">int</span> count = <span class="dv">0</span>;
+    <span class="cf">if</span> (count == <span class="dv">1</span>) signal(SIGINT, SIG_DFL);
+}
+<span class="dt">int</span> main() {
+    signal(SIGINT, cnt);
+    <span class="cf">while</span>(<span class="dv">1</span>);
+}</code></pre></div>
+<p>UNIX pipes for IPC:</p>
+<ul>
+<li>The pipe interface is intended to look a file interface</li>
+<li><code>pipe(fd)</code> creates the pipe and kernel allocates a buffer with two pointers <code>fd[0]</code> to read and <code>fd[1]</code> to write</li>
+<li>pipe handles are copied on <code>fork</code> (just like a usual fd)</li>
+<li><code>ls|wc</code>
+<ul>
+<li>process1 <code>dup2(fd[1], 1); close(fd[0]); execvp(&quot;ls, ...&quot;)</code></li>
+<li>process2 <code>dup2(fd[0], 0); close(fd[1]); execvp(&quot;wc&quot;, ...)</code></li>
+</ul></li>
+</ul>
+<div class="sourceCode"><pre class="sourceCode cpp"><code class="sourceCode cpp"><span class="dt">int</span> fd[<span class="dv">2</span>]; pipe(fd); <span class="co">// fd[0] is read end, fd[1] is write end</span>
+<span class="cf">if</span> (fork() == <span class="dv">0</span>) { read(fd[<span class="dv">0</span>], buffer, size); } <span class="co">// child process</span>
+<span class="cf">else</span> { write(fd[<span class="dv">1</span>], <span class="st">&quot;hello&quot;</span>, size); } <span class="co">// parent process</span></code></pre></div>
+<h2 id="concurrency-and-threads">Concurrency and threads</h2>
+<p>A thread is a fundamental unit of CPU utilization that forms the basis of multithreaded computer systems</p>
+<ul>
+<li>Shared state: heap, global variables, code</li>
+<li>Per-thread state: thread control block (TCB), stack information, saved registers, thread metadata</li>
+<li>Benefits: responsiveness, resource sharing, economy, scalability</li>
+<li>Thread abstraction: infinite number of processors, threads execute with variable speed</li>
+<li>Programs must be designed to work with any schedule</li>
+<li>Two threads run concurrently if their logical flows overlap in time; otherwise, they are sequential</li>
+<li>Same as process: each has its own logical control flow, each can run concurrently, each is context switched</li>
+<li>Different from process: threads share code and data while proceses (typicall) do not, threads are somewhat cheaper than processes with less overhead</li>
+</ul>
+<p>POSIX threads (pthreads) interface</p>
+<ul>
+<li>Creating and join threads: <code>pthread_create</code>, <code>pthread_join</code></li>
+<li>Determining your tid: <code>pthread_self</code></li>
+<li>Terminating threaads: <code>pthread_cancel</code>, <code>pthread_exit</code>
+<ul>
+<li><code>exit</code> terminates all threads; <code>return</code> terminates current thread</li>
+</ul></li>
+</ul>
+<div class="sourceCode"><pre class="sourceCode cpp"><code class="sourceCode cpp"><span class="pp">#include </span><span class="im">&lt;pthread&gt;</span>
+<span class="dt">void</span> *PrintHello(<span class="dt">void</span> *id) { printf(<span class="st">&quot;...&quot;</span>); }
+<span class="dt">int</span> main() {
+    <span class="dt">pthread_t</span> thread0, thread1;
+    pthread_create(&amp;thread0, NULL, PrintHell, (<span class="dt">void</span>*) <span class="dv">0</span>);
+    pthread_create(&amp;thread1, NULL, PrintHell, (<span class="dt">void</span>*) <span class="dv">1</span>);
+    pthread_join(thread0, NULL);
+    pthread_join(thread1, NULL);
+}</code></pre></div>
+<p>Nachos threads:</p>
+<ul>
+<li><code>Thread(char *name)</code>: create a thread</li>
+<li><code>Fork(VoidFunctionPtr func, int arg)</code>: place this thread in a ready queue for executing a function
+<ul>
+<li>Allocate thread control block (TCB)</li>
+<li>Allocate and setup stack: build stack frame for base of stack; put func and args on stack</li>
+<li>Put thread on ready list, and it will run sometime later</li>
+<li><code>stub(func, args) { (*func)(args); thread_exit(); }</code></li>
+</ul></li>
+<li><code>Yield()</code>: suspend the calling thread and the system selects a new ready one for execution</li>
+<li><code>Sleep()</code>: suspend the current thread, change its sate to BLOCKED, and remove it from the ready list</li>
+<li><code>Finish()</code>, <code>~Thread()</code></li>
+</ul>
+<p>Kernel threads vs user-level threads</p>
+<ul>
+<li>Kernel threads are recognized and supported by the OS kernel; OS explicitly performs scheduling and context switching of kernel threads</li>
+<li>User-level thread management done by user-level threads library
+<ul>
+<li>OS kernel does not know/recognize there are multiple threads running in a user program</li>
+<li>The user program (library) is responsible for scheduling and context switching of its threads</li>
+</ul></li>
+</ul>
+<h2 id="processthread-synchronization">Process/thread synchronization</h2>
+<p>Synchronization problem</p>
+<ul>
+<li>Race condition: two or more processes (threads) are reading and writing on shared data and the final result depends on who runs precisely and when</li>
+<li>Critical section: the part of the program where shared variables are accessed</li>
+<li>Deadlock: two or more threads (or processes) are waiting indefinitely for an event that can be only caused by one of these waiting processes</li>
+<li>Starvation: indefinite blocking. Deadlock is starvation but not vice versa</li>
+</ul>
+<p>Property of cirtical-section solution</p>
+<ul>
+<li>Mutual exclusion: only one can enter the critical section, providing safety</li>
+<li>Progress: if some processes wish to enter their critical section and nobody is in the critical section, then one of them will enter in a limited time, providing liveness</li>
+<li>Bounded waiting: if one process starts to wait for entering an critical section, there is a limit on the number of times other processes entering the section before this process enters, providing liveness</li>
+<li>Locks, semaphore, condition variables</li>
+</ul>
+<p><strong>Lock</strong> prevents someone from doing something</p>
+<ul>
+<li><code>void Acquire()</code> atomically waits until the lock is unlocked, and then sets the lock to be locked.</li>
+<li><code>void Release()</code> atomically changes the state to be unlocked. Only the thread who owns the lock can release.</li>
+<li>Thread waits if there is a lock.</li>
+<li>It enters the critical after acquiring a lock.</li>
+<li>Only the thread who locks can unlock.</li>
+<li>Lock can be in one of two states: locked or unlocked</li>
+<li>Typically associate a lock with a piece of shared data for mutual exclusion. When a thread needs to access, it first acquires the lock, and then accesses data. Once access completes, it releases the lock</li>
+</ul>
+<p>Lock implementation</p>
+<ul>
+<li>Atomic load/store are complex and error prone</li>
+<li>Alternatively, interrupt disabling/enabling and hardware primitives; avoid context-switching by
+<ul>
+<li>preventing external events by disabling interrupts</li>
+<li>Avoid internal events</li>
+</ul></li>
+<li>But interrupt disabling/enabling doesn't work/scale well on multiprocessor</li>
+<li>ALternatively, atomic instruction sequences
+<ul>
+<li>These instructions read a value from memory and write a new value atomically</li>
+<li>Hardware is responsible for implementing this correctly</li>
+<li>Unlike disabling interrupts, can be used on both uniprocessors and multiprocessors</li>
+</ul></li>
+<li>Examples of atomic instructions
+<ul>
+<li><code>TestAndSet(&amp;address)</code> fetch old value, set it to 1</li>
+<li><code>Swap(&amp;address, register)</code> swap value in the address and register</li>
+<li><code>CompareAndSwap(&amp;address, reg1, reg2)</code> sets address to reg2 if it equals reg1</li>
+</ul></li>
+<li>Spin lock using <code>TestAndSet</code>: mutual exclusion but not bounded waiting, busy waiting
+<ul>
+<li>shared boolean variable as lock: true means it is acquired by others; initialized to false</li>
+<li>acquire: <code>while(TestAndSet(&amp;lock))</code></li>
+<li>release: <code>lock = false</code></li>
+<li>Bette with sleep: minimizes busy waiting, only busy-waiting to atomically check lock value</li>
+<li>pro: machine can receive interrupts; work on a multiprocessor</li>
+<li>con: inefficient spin lock; no guarantee on bounded waiting</li>
+</ul></li>
+</ul>
+<div class="sourceCode"><pre class="sourceCode cpp"><code class="sourceCode cpp"><span class="dt">int</span> guard = <span class="kw">false</span>; <span class="dt">int</span> value = free;
+Acquire() {
+    <span class="cf">while</span>(test&amp;set(guard));
+    <span class="cf">if</span> (value == busy) {
+        put thread on waiting queue
+        sleep <span class="kw">and</span> set guard to <span class="kw">false</span>
+    } <span class="cf">else</span> {
+        value = busy
+        guard = <span class="kw">false</span>
+    }
+}
+Release() {
+    <span class="cf">while</span>(test&amp;set(guard));
+    <span class="cf">if</span> anyone on waiting queue {
+        take thread off waiting queue
+        place it on ready queue
+    } <span class="cf">else</span> {
+        value = free
+    }
+    guard = <span class="kw">false</span>
+}</code></pre></div>
+<p>Semaphore</p>
+<ul>
+<li><code>void P()</code> atomically waits until the counter is greater than 0 and then decreases the counter</li>
+<li><code>void V()</code> atomically decreases the counter</li>
+<li>It uses a nonnegative integer variable, can only be accessed/modified via two individual (atomic) operations
+<ul>
+<li><code>wait(S) { while S &lt;= 0: wiating in a queue; S--; }</code></li>
+<li><code>signal(S) { wakeup some waiting thread; S++; }</code></li>
+</ul></li>
+<li>Counting semaphore: initial value representing how many threads can be in the critical section</li>
+<li>Binary semaphore (aka mutex lock): integer value ranged between 0 and 1</li>
+<li>Producer thread: <code>space-&gt;P(), data-&gt;V()</code></li>
+<li>Consumer thread: <code>data-&gt;P(), space-&gt;V()</code></li>
+</ul>
+<p>Condition variable</p>
+<ul>
+<li><code>void Wait(Lock *myLock)</code> atomically releases the lock and waits. When it is returned, the lock is reacquired again.</li>
+<li><code>void Signal(Lock *myLock)</code> wake up one waiting thread to run. The lock is not released.</li>
+<li><code>void Broadcast(Lock *myLock)</code> wake up all threads waiting on the condition. The lock is not released.</li>
+<li>Hoare-style scheduling
+<ul>
+<li>Signaler gives lock, CPU to waiter; waiter runs immediately</li>
+<li>Waiter gives up lock, processor back to signaler when it exits critical section or if it waits again</li>
+</ul></li>
+<li>Mesa-style shceduling
+<ul>
+<li>Signaler keeps lock and continues to process</li>
+<li>Waiter placed on ready queue with no special priority</li>
+<li>Practically, need to check condition again after wait</li>
+</ul></li>
+</ul>
+<p>Design advices for synchronization</p>
+<ul>
+<li>Allocate one lock for each shared variable or a group of shared variables</li>
+<li>Add condition variables (waking up a thread is triggered by some condition)</li>
+<li>Fine-grain: More performance flexibility and scalability but possibly more design complexity and synchronization overhead</li>
+<li>Coarse-grain: Easy to ensure correctness but possibly difficult to scale</li>
+</ul>
+<p>Read-writer lock</p>
+<ul>
+<li><code>pthread_rwlock_rdlock()</code>: multiple readers can acquire the lock if no writer holds the lock.</li>
+<li><code>pthread_rwlock_wrlock()</code>: the calling thread acquires the write lock if no other thread (reader or writer) holds the read-write lock rwlock. Otherwise, the thread blocks until it can acquire the lock. Writers are favored over readers of the same priority to avoid writer starvation.</li>
+<li>Reader: wait until no writers; access database; checkout (wake up a waiting writer)</li>
+<li>Writer: wait until no active readers or writers; access database; checkout (wakeup waiting readers or writer)</li>
+</ul>
+<h2 id="main-memory-and-address-translation">Main memory and address translation</h2>
+<p>How to translate address</p>
+<ul>
+<li>Contiguous memory allocation</li>
+<li>Segmentation</li>
+<li>Address tarnslation with paging</li>
+<li>TLB support and performance impact</li>
+</ul>
+<p>Objective of memory management: run programs</p>
+<ul>
+<li>Get CPU cycle and allocate memory</li>
+<li>Load instruction and data segments of executable file into memory</li>
+<li>Create stack and heap</li>
+<li>Set the starting address and execute</li>
+<li>Provide services to it</li>
+</ul>
+<p>Role of memory management</p>
+<ul>
+<li>Manage data/instructions in memory in order to execute</li>
+<li>Keep track of which parts of memory are currently being used by whom</li>
+<li>Decide which processes (or parts thereof) and data to move into and out of memory</li>
+<li>Allocate and deallocate memory space as needed</li>
+</ul>
+<p>Logical vs. physical address space</p>
+<ul>
+<li>Logical (virtual) address: generated by the CPU</li>
+<li>Physical address: address seen by the memory unit</li>
+<li>Same in compile-time and load-time address-binding schemes</li>
+<li>Differ in execution-time address-binding scheme</li>
+</ul>
+<p>Binding of instructions and data to memory</p>
+<ul>
+<li>Compile time (gcc): If memory location known a priori, absolute code can be generated</li>
+<li>Load time (ld): Must generate relocatable code if memory location is not known at compile time</li>
+<li>Execution time (dll): Binding delayed until run time if the process can be moved during its execution from one memory segment to another.</li>
+</ul>
+<p>Address space translation</p>
+<ul>
+<li>Address space
+<ul>
+<li>All the addresses and state a process can touch</li>
+<li>Each process and kernel has different address space</li>
+</ul></li>
+<li>Program operates in an address space that is distinct from the physical memory space of the machine</li>
+<li>CPU issues virtual address to MMU which translates to physical memory to memory</li>
+<li>Translation provides protection and process address space isolation. With translation, every program can be linked/loaded into same region of user address space</li>
+</ul>
+<p>Allocation method: Contiguous allocation</p>
+<ul>
+<li>Main memory has two partitions: Resident OS usually held in low memory; user processes then held in high momery</li>
+<li>Hardware support and protection
+<ul>
+<li>Base register contains value of smallest physical address</li>
+<li>Limit register contains range of logical addresses (each logical address must be less than the limit register)</li>
+<li>MMU maps logical address dynamically</li>
+</ul></li>
+<li>During switch, kernel loads new base/limit from PCB</li>
+<li>Issues with simple R&amp;B method
+<ul>
+<li><strong>External fragment</strong> problem (free gaps between used slots): Not every process is the same size; over time, memory space becomes fragmented</li>
+<li>Missing support for sparse address space: Would like to have multiple chunks/program, e.g., code, data, stack</li>
+<li>Hard to do inter-process share</li>
+</ul></li>
+</ul>
+<p>Allocation method: Segmentation</p>
+<ul>
+<li>Memory-management scheme that supports user semantic view of memory</li>
+<li>A program is a collection of segments</li>
+<li>A segment is a logical unit such as code, data, stack (can be shared)</li>
+<li>Each segment is given region of contiguous memory: base and limit, can reside anywhere in physical memory</li>
+<li>CPU issues a virtual address <code>(seg, offset)</code>, if <code>offset &lt; ST[seg].limit</code>, then the physical address is <code>ST[seg].base + offset</code>; otherwise raises an exception</li>
+<li>Issues with segmentation
+<ul>
+<li>High overhead of managing a large number of variable size and dynamically growing memory: Memory is divided into many used/unused regions over time; not easy to find space to fit for a new segment</li>
+<li>External fragmentation: Free gaps between allocated chunks</li>
+<li>Internal fragmentation: Don't need all memory within allocated chunks</li>
+</ul></li>
+</ul>
+<p>Allocation method: Paging</p>
+<ul>
+<li>Divide physical memory into fixed-sized blocks called frames or pages</li>
+<li>Divide logical memory into blocks of same size called pages or logical pages</li>
+<li>Translation conducted by page table which is kept in main memory
+<ul>
+<li>Page-table base register (PTBR) points to the page table</li>
+<li>Page-table length register (PRLR) indicates size of the page table</li>
+</ul></li>
+<li>Useful constants: 2^10 = 1K, 2^20 = 1M, 2^30 = 1G, 2^40 = 1T</li>
+<li>A page table per process is needed to translate logical to physical addresses</li>
+<li>We can use a vector of bits to represent availability of each page</li>
+<li>Address generated by CPU is divided into a page number (p) and a page offset</li>
+</ul>
+<ol start="4" style="list-style-type: lower-alpha">
+<li><ul>
+<li>Offset from virtual address copied to physical address</li>
+<li>Virtual page number is all remaining bit, the translated physical page number is copied from page table into physical address</li>
+<li>Physical address = <code>PageTable[LogicalPageNumber] + PageOffset</code></li>
+</ul></li>
+</ol>
+<ul>
+<li>Each page is associated with permission bits (e.g., valid, read, write, etc.)</li>
+<li>Page table size is determined by the number of pages in virtual space</li>
+</ul>
+<p>TLB for faster address translation</p>
+<ul>
+<li>Every data/instruction access requires two memory access. Speed can be improved by using a special fast-lookup hardware cache called associative memory or translation look-aside buffers (TLBs)</li>
+<li>Address translation for logical page <span class="math inline"><em>p</em></span>
+<ul>
+<li>If p is in associative register, get physical page number out</li>
+<li>Otherwise get frame number from page table in memory</li>
+</ul></li>
+<li>Typical TLB: 8~4096 entries; 0.5~1 clock cycle to access; 10~100 cycles miss penalty; 0.01~10% miss rate</li>
+<li>Effective (average) address translation cost: cost(TLB lookup) + cost(full translation) * TLB miss rate</li>
+<li>Total memory access cost: cost(avg address translation) + cost(memory access)</li>
+<li>Memory control infomation are stored infomation in
+<ul>
+<li>Thread control block (TCB): stack info, registers and machine state</li>
+<li>Process control block (PCB): process id data, state data, control data (memory space management, pointer to a page table)</li>
+</ul></li>
+</ul>
+<p>Shared pages through paging</p>
+<ul>
+<li>Shared code
+<ul>
+<li>One copy of read-only code shared among processes</li>
+<li>Shared code must appear in same location in the logical address space of all processes</li>
+</ul></li>
+<li>Private code and data
+<ul>
+<li>Each process keeps a separate copy of the code and data</li>
+<li>The pages for the private code and data can appear anywhere in the logical address space</li>
+</ul></li>
+<li>Copy-on-write (COW): Lazy copy during process creation
+<ul>
+<li>Optimization of Unix system call <code>fork</code>: A child process copies address space of parent. Most of time it is wasted as the child performs <code>exec</code>.</li>
+<li>COW allows both parent and child processes to initially share the same pages in memory. A shared page is duplicated only when modified. It allows more efficient process creation as only modified pages are copied.</li>
+</ul></li>
+</ul>
+<p>Page table entry (PTE)</p>
+<ul>
+<li>Used to memorize a page is shared, detect need for duplication</li>
+<li>Invalid PTE can imply different things: region of address space is actually invalid or the page/directory is just somewhere else than memory</li>
+<li>Validaty checked first: OS can use other bits for location info</li>
+<li>COW uses PTE which contains bit indicating a page is shared with a parent</li>
+<li>Demand paging keeps only active pages in memory, place others on disk and mark their PTEs invalid</li>
+<li>x86 PTE
+<ul>
+<li>Address format: (10, 10, 12-bit offset)</li>
+<li>Intermediate page tables called directories: (20-bit page frame number, 12-bit flags)</li>
+</ul></li>
+<li>Zero fill on demand
+<ul>
+<li>Security and performance advantages: New pages carry no information</li>
+<li>Give new pages to a process initially with PTEs marked as invalid</li>
+<li>During access time, page fault causes physical frames to be allocated and filled with zeros</li>
+<li>Often, OS creates zeroed pages in background</li>
+</ul></li>
+</ul>
+<p>One-level page table</p>
+<ul>
+<li>Maximum size of logical space = # entry * page size</li>
+<li>Each page table needs to fit into a physical memory page because a page table needs consecutive space. Memory allocated to a process is a sparse set of nonconsecutive pages.</li>
+<li>One-level page table cannot handle large space, for example
+<ul>
+<li>32-bit address space with 4KB per page</li>
+<li>Page table would contain 2<sup>32/2</sup>12 = 1 million entries</li>
+<li>4B per entry: Need a 4MB page table with contiguous space (impossible)</li>
+<li>Only 4KB / 4B = 1K entries, hence 1K * 4KB = 4MB logical space</li>
+</ul></li>
+<li>Pro: Simple memory allocation, easy to share</li>
+<li>Con: Cannot handle a large (sparse) virtual address space, e.g., on Unix, code starts at 0, stack starts at 2^32-1</li>
+<li>Con: Not all pages are used all the time. It would be nice to have working set of page table in memory</li>
+</ul>
+<p>Two-level page table</p>
+<ul>
+<li>Address translation scheme: Logical address is of the form (p1, p2, d), where p1 is an index into the outer level-1 page table, p2 is the displacement within the page of the level-2 inner page table</li>
+<li>Tables are of fixed size (1K entries, 4K per entry, 4KB in total)</li>
+<li>Valid bits on PTE: Not every level-2 table is needed. Even when exist, level-2 tables can reside on disk if not in use</li>
+<li>Design consideration on paging
+<ul>
+<li>Bits of d = log (page size)</li>
+<li>Bits of p1 &gt;= log (# entries in level-1 table)</li>
+<li>Bits of p2 = log (# entries in level-2 table)</li>
+<li># physical pages &lt;= 2^(PTE size of level-2 table)</li>
+<li>Physical space size = # physical pages * page size</li>
+<li>Logical space size = # entry in level-1 table * # entry in level-2 table * page size</li>
+</ul></li>
+<li>Example: A logical address (32-bit machine with 4KB page size) is divded into
+<ul>
+<li>A page number area with 20 bits, a page offset consisting of 12 bits</li>
+<li>Each PTE uses 4B: Hence it is divided into 10-10-12-bit</li>
+<li>Maximum logical space size: 1K * 1K * 4KB = 4GB</li>
+<li>What if we use 2B for each PTE?
+<ul>
+<li>Logical space size remains the same (0.5K * 2K * 4KB)</li>
+<li>Physical space decreases (2^16 * 4K)</li>
+</ul></li>
+</ul></li>
+</ul>
+<p>Three-level page table - Bits of d = log (page size) - Bits of p1 &gt;= log (# entries in level-1 table) - Bits of p2 = log (# entries in level-2 table) - Bits of p3 = log (# entries in level-3 table) - # physical pages &lt;= 2^(entry size of level-3 table) - Physical space size = # physical pages * page size - Logical space size = # entry in level-1 table * # entry in level-2 table * # entry in level-3 table * page size</p>
+<p>Hashed page table</p>
+<ul>
+<li>Common in address spaces &gt; 32bits</li>
+<li>Size of page table grows proportionally as large as amount of virtual memory allocated to processes</li>
+<li>Use hash table to limit the cost of search
+<ul>
+<li>To one, or at most a few, page-table entries</li>
+<li>One hash table per process</li>
+<li>This page table contains a chain of elements hasing to the same location</li>
+</ul></li>
+<li>Use this hash table to find the physical page of each logical page: If a match is found, the corresponding physical frame is extracted</li>
+</ul>
+<p>Inverted page table</p>
+<ul>
+<li>One hash table for all processes</li>
+<li>One entry for each real page of memory
+<ul>
+<li>Entry consists of the virtual address of the page stored in that real memory location, with information about the process that owns that page</li>
+</ul></li>
+<li>Decreases memory needed to store each page table, but increases time needed to search the table when a page reference occurs</li>
+</ul>
+<p>Summary</p>
+<table style="width:43%;">
+<colgroup>
+<col width="8%" />
+<col width="15%" />
+<col width="19%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th></th>
+<th>Advantages</th>
+<th>Disadvantages</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Segmentation</td>
+<td>Fast context switching: Segment mapping maintained by CPU</td>
+<td>External fragmentation</td>
+</tr>
+<tr class="even">
+<td>Paging (single level)</td>
+<td>No external fragmentation, fast easy allocation</td>
+<td>Large table size ~ virtual memory, internal fragmentation</td>
+</tr>
+<tr class="odd">
+<td>Paged segmentation, two-level paging</td>
+<td>Table size ~ # of pages in virtual memory, fast easy allocation</td>
+<td>Multiple memory references per page access</td>
+</tr>
+<tr class="even">
+<td>Inverted table</td>
+<td>Table ~ # of pages in physical memory</td>
+<td>Hash function more complex</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>Page tables
+<ul>
+<li>Memory divided into fixed-size chunks of memory</li>
+<li>Virtual page number from virutal address mapped through page table to physical page number</li>
+<li>Offset of virtual address is same as physical address</li>
+<li>Large page tables can be placed into virtual memory</li>
+</ul></li>
+<li>Useage of PTE: page sharing, copy on write, page on demand, zero fill on demand</li>
+<li>Multiple page tables
+<ul>
+<li>Virtual address mapped to series of tables</li>
+<li>Permit sparse population of address space</li>
+</ul></li>
+<li>Inverted page table: Size of page table related to physical memory size</li>
+</ul>
+<h2 id="nachos">Nachos</h2>
+<p>Nachos thread operations:</p>
+<ul>
+<li><code>Thread()</code> creates a thread</li>
+<li><code>Fork(VFP func, int arg)</code> lets a thread execute a function</li>
+<li><code>Yield()</code> suspends the calling thread and select a new one for execution</li>
+<li><code>Sleep()</code> suspends the current thread, changes its state to BLOCKED, and removes it from the ready list</li>
+<li><code>Finish()</code></li>
+</ul>
+<p>Code execution in Nachos</p>
+<ul>
+<li>User mode executes instructions which only access the user space.</li>
+<li>Kernel mode executes when Nachos first starts up or when an instruction causes a trap, e.g., illegal instruction, page fault, or system call, etc.</li>
+<li>Load instructions into the machine's memory</li>
+<li>Initializes registers (PC, etc.)</li>
+<li>Tell the machine to start executing instructions.</li>
+<li>The machine fetches the instruction, decodes it, and executes it.</li>
+<li>Repeats until all instructions are executed.</li>
+<li>Handle interrupt/page fault if necessary.</li>
+</ul>
+<p>Scheduler object</p>
+<ul>
+<li>Decide which thread to run next.</li>
+<li>Invoked when the current thread gives up CPU.</li>
+<li>The current Nachos shceduling polycy is round-robin: slecting the front of ready queue list, appending new threads to the end</li>
+</ul>
+<p>Machine object: implements a MIPS machine</p>
+<ul>
+<li>An instance created when Nachos starts up.</li>
+<li>Supported public variables: 40 registers, 4KB memory (32 pages), single linear page table virtual memory.</li>
+</ul>
+<p>Interrupt object: maintains an event queue with simulated clock</p>
+<ul>
+<li><code>SetLevel(IntStatus level)</code> is used to temporarily disable and re-enable interrupts.</li>
+<li><code>OneTick()</code> advances 1 clock tick.</li>
+<li><code>CheckIfDue(bool advanceClock)</code> examines if some event should be serviced.</li>
+<li><code>Idle()</code> advances the clock to the time of the next scheduled event.</li>
+</ul>
+<p>Timer object</p>
+<ul>
+<li>Generates interrupts at regular or random intervals, then Nachos invokes the predefined clock event handling procedure.</li>
+</ul>
+<p>Noff: binary code format</p>
+<ul>
+<li>A Noff-format file contains
+<ul>
+<li>The Noff header, describing the contents of the rest of the file</li>
+<li>TEXT: Executable code segment.</li>
+<li>DATA: Initialized data segment.</li>
+<li>BSS: Uninitialized data segment: stagically-allocated variables</li>
+</ul></li>
+<li>Each segment has the following information
+<ul>
+<li>virtualAddr: virtual address that segment begins at</li>
+<li>inFileAddr: pointer within the Noff file where that scetion actually begins</li>
+<li>size (in bytes) of that segment</li>
+</ul></li>
+</ul>
+<p>Nachos thread: user process for executing a program</p>
+<ul>
+<li>A Nachos thread is extended as a process</li>
+<li>Each process has its own address space containing executable code (TEXT), initialized data (DATA), uninitialized data (BSS), and stack space for fucntion call/local variables</li>
+<li>Each addrspace is as big as <code>code.size + data.size + bss.size + userStackSize</code></li>
+<li>A process owns some other objects, such as open file descriptors</li>
+<li>Steps in user process creation
+<ul>
+<li>Create an address space</li>
+<li>Zero out all of physical memory</li>
+<li>Read the binary into physical memory and initialize data segment</li>
+<li>Initialize the translation tables to do a one-to-one mapping between virtual and physical address</li>
+<li>Zero all registers, setting PCReg, NextPCReg to 0 and 4 respectively</li>
+<li>Set the stackpointer to the largest virtual address of the process</li>
+</ul></li>
+<li>Actions of <code>nachos -x halt</code>
+<ul>
+<li>The main thread starts by running function <code>StartProcess()</code> in <code>progtest.cc</code>. This thread is used to run halt binary.</li>
+<li><code>StartProcess()</code> allocates a new address space and loads the halt binary. It also initializes registers and sets up the page table.</li>
+<li><code>Machine::Run()</code> executes the halt binary using the MIPS emulator: The halt binary invokes the system call <code>Halt()</code>, which causes a trap back to the Nachos kernel via functions <code>RaiseException()</code> and <code>ExceptionHandler()</code>.</li>
+<li>The execution handler determines that a <code>Halt()</code> system call was requested from user mode, and it halts Nachos.</li>
+</ul></li>
+</ul>
+</body>
+</html>

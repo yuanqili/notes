@@ -1807,5 +1807,1363 @@ close(fd);</code></pre></div>
 <li>Hadoop jobs (e.g. MapReduce) tend to execute over several minutes and hours.</li>
 </ul></li>
 </ul>
+<h2 id="problem-set">Problem Set</h2>
+<h3 id="exercise-1">Exercise 1</h3>
+<p><strong>Q1</strong> Which of the following services is considered as a common service provided by OS?</p>
+<ol style="list-style-type: decimal">
+<li>Compiler</li>
+<li>User graphical interface</li>
+<li><strong>Process and memory management</strong></li>
+</ol>
+<p><strong>Q2</strong> Which of the following instructions should be privileged and executed in a kernel mode?</p>
+<ol style="list-style-type: decimal">
+<li>Set value of application timer based on CPU clock value.</li>
+<li>Read the clock.</li>
+<li>Issue a trap signal instruction.</li>
+<li>Access I/O device.</li>
+</ol>
+<p><strong>Q3</strong> What is the purpose of system calls?</p>
+<ol style="list-style-type: decimal">
+<li>They are functions which can be executed in an OS.</li>
+<li>They allow user-level processes to request services of the operating system.</li>
+<li>They provide the multi-threading or processing capability.</li>
+</ol>
+<p><strong>Q4</strong> When a process creates a new process using the <code>fork()</code> operation, which of the following state is shared between the parent process and the child process?</p>
+<ol style="list-style-type: decimal">
+<li>Stack</li>
+<li>Heap</li>
+<li><strong>Shared memory segments</strong>. Only the shared memory segments are shared between the parent process and the newly forked child process. Copies of the stack and the heap are made for the newly created process.</li>
+</ol>
+<p><strong>Q5</strong> Which of the following statements is true on user-level threads and kernel-level threads?</p>
+<ol style="list-style-type: decimal">
+<li>User-level threads and kernel threads are both aware by the kernel.</li>
+<li><strong>User threads are scheduled by the thread library and the OS kernel schedules kernel threads.</strong></li>
+<li>Kernel or user threads are associated with only one process.</li>
+</ol>
+<p><strong>Q6</strong> Which of the following statements is true on context-switch among threads?</p>
+<ol style="list-style-type: decimal">
+<li><strong>Context switching between threads require saving the value of the CPU registers from the thread being switched out.</strong></li>
+<li>Context switching between kernel threads typically do not require saving the value of the CPU registers from the thread being switched out.</li>
+<li>Context switch restores the CPU registers of the new thread being scheduled if this new thread is a user thread.</li>
+</ol>
+<p><strong>Q7</strong> Trace this program without actually running in a machine.</p>
+<div class="sourceCode"><pre class="sourceCode c++"><code class="sourceCode cpp"><span class="dt">void</span> main() {
+    <span class="dt">char</span> *cmd[] = {“echo”, “hello”,<span class="dv">0</span>};
+    <span class="dt">int</span> pid, x = <span class="dv">10</span>, y;
+    pid = fork();
+    <span class="cf">if</span> (pid == <span class="dv">0</span>) {
+        y=<span class="dv">1</span>; x=x+y;
+        printf(<span class="st">&quot;x is </span><span class="sc">%d</span><span class="st">. y is </span><span class="sc">%d</span><span class="st"> </span><span class="sc">\n</span><span class="st">&quot;</span>, x,y);
+        execvp(cmd[<span class="dv">0</span>], cmd);
+        printf(<span class="st">&quot;x is </span><span class="sc">%d</span><span class="st">. y is </span><span class="sc">%d</span><span class="st"> </span><span class="sc">\n</span><span class="st">&quot;</span>, x,y);
+    } <span class="cf">else</span> {
+        y=<span class="dv">2</span>; x=x+y;
+        wait(NULL);
+        printf(<span class="st">&quot;x is </span><span class="sc">%d</span><span class="st">. y is </span><span class="sc">%d</span><span class="st"> </span><span class="sc">\n</span><span class="st">&quot;</span>, x,y);
+    }
+}</code></pre></div>
+<ul>
+<li>Output: <code>x = 11, y = 1; hello; x = 13, y = 2</code>.</li>
+<li>The child process's x value is not shared with parent. Thus the modification is not reflected in the parent process.</li>
+<li>Function excevp() loads a new program and thus wipes out the parent's code. But if for any reason, loading this program (shell) fails, the print statement (x=11,y=1) does appear.</li>
+<li>The order of printing is fixed because the parent process waits the child process.</li>
+</ul>
+<p><strong>Q8</strong> How many times does this program print &quot;hello&quot;? (6 times)</p>
+<div class="sourceCode"><pre class="sourceCode cpp"><code class="sourceCode cpp"><span class="dt">void</span> main() { fork(); printf(<span class="st">&quot;hello</span><span class="sc">\n</span><span class="st">&quot;</span>); fork(); printf(<span class="st">&quot;hello</span><span class="sc">\n</span><span class="st">&quot;</span>); }</code></pre></div>
+<p><strong>Q9</strong> Given this program started from empty file tmpfile1</p>
+<pre><code>int main() {
+    int pid, fd; char *s1;
+    pid = fork();
+    fd = open(&quot;tmpfile1&quot;, O_WRONLY|O_CREAT, 0666);
+    if (pid &gt; 0) {
+      s1 = &quot;Parent&quot;;
+    } else {
+      sleep(1);
+      s1 = &quot;Child&quot;;
+    }
+    write(fd, s1, strlen(s1));
+    close(fd);
+}</code></pre>
+<p>Output is <code>childt</code>. The child process writes the same file from position 0 after the parent writes from offset position 0 also.</p>
+<p><strong>Q10</strong> Given this program started from empty file tmpfile1</p>
+<div class="sourceCode"><pre class="sourceCode cpp"><code class="sourceCode cpp"><span class="dt">int</span> main() {
+    <span class="dt">int</span> pid, fd; <span class="dt">char</span> *s1;
+    fd = open(<span class="st">&quot;tmpfile1&quot;</span>, O_WRONLY| O_CREAT, <span class="bn">0666</span>);
+    pid = fork();
+    <span class="cf">if</span> (pid &gt; <span class="dv">0</span>) {
+        s1 = <span class="st">&quot;Parent&quot;</span>;
+    } <span class="cf">else</span> {
+        sleep(<span class="dv">1</span>);
+        s1 = <span class="st">&quot;Child&quot;</span>;
+    }
+    write(fd, s1, strlen(s1)); close(fd);
+}</code></pre></div>
+<p>Output is <code>ParentChild</code>. The child process shares the file descriptors of the parent and thus shares the file seek pointer (offset) also.</p>
+<h3 id="exercise-2">Exercise 2</h3>
+<p><strong>Q1</strong> Choose one which does not answer the question on &quot;what is a race condition&quot;?</p>
+<ol style="list-style-type: decimal">
+<li>When the behavior of a program relies on the interleaving of operations of different threads.</li>
+<li>Two or more processes (threads) are reading and writing on shared data and the final result depends on who runs precisely &amp; when.</li>
+<li><strong>Two or more processes (threads) are reading and writing on shared data and the final result depends on who runs precisely &amp; when.</strong></li>
+</ol>
+<p><strong>Q2</strong> A semaphore puts a thread to sleep</p>
+<ol style="list-style-type: decimal">
+<li>If it increments the semaphore's value above 0.</li>
+<li><strong>If it tries to decrement the semaphore's value below 0.</strong></li>
+<li>Until another thread issues a signal to notify this semaphore.</li>
+<li>Until the semaphore's value reaches a certain number.</li>
+</ol>
+<p><strong>Q3</strong> Given three statements</p>
+<ol style="list-style-type: decimal">
+<li><ol start="6" style="list-style-type: upper-alpha">
+<li>A semaphore can be implemented using conditional variables with locks.</li>
+</ol></li>
+<li><ol start="20" style="list-style-type: upper-alpha">
+<li>A condition variable can be implemented using semaphores.</li>
+</ol></li>
+<li><ol start="20" style="list-style-type: upper-alpha">
+<li>A lock can be implemented using a semaphore.</li>
+</ol></li>
+</ol>
+<p><strong>Q4</strong> Which statement is false about starvation and deadlock</p>
+<ol style="list-style-type: decimal">
+<li>Starvation implies that a thread cannot make progress because other threads are using resources it needs.</li>
+<li>Starvation can be recovered, for example when the other processes finish.</li>
+<li>Deadlock is a circular wait without preemption that can never be recovered from.</li>
+<li><strong>Starvation is a deadlock.</strong> (P.S. But deadlock is a starvation)</li>
+</ol>
+<p><strong>Q5</strong> Trace the following pthreads C program running on a time sharing OS in dynamic context switching is possible, select one answer on the possible output of x.</p>
+<div class="sourceCode"><pre class="sourceCode cpp"><code class="sourceCode cpp"><span class="dt">int</span> x=<span class="dv">0</span>;
+<span class="dt">pthread_mutex_t</span> Lock;
+<span class="dt">void</span> * tcode(<span class="dt">void</span> *arg) {
+    pthread_mutex_lock(&amp;Lock);
+    x++;
+    pthread_mutex_unlock(&amp;Lock);
+}
+
+<span class="dt">void</span> main() {
+    <span class="dt">pthread_t</span> t1,t2;
+    pthread_mutex_init(&amp;Lock,NULL);
+    pthread_create(&amp;t1, NULL, tcode, NULL);
+    pthread_create(&amp;t2, NULL, tcode, NULL);
+    x++;
+    pthread_join(t1, NULL);
+    pthread_join(t2, NULL);
+    printf(<span class="st">&quot;x: </span><span class="sc">%d</span><span class="st"> </span><span class="sc">\n</span><span class="st">&quot;</span>,x);
+}</code></pre></div>
+<ol style="list-style-type: decimal">
+<li>0, 1, 2, 3</li>
+<li><strong>1, 2, 3</strong></li>
+<li>2, 3</li>
+<li>3</li>
+</ol>
+<p>The two threads that perform x++ can make the x value increase from 0 to 2. The main program does x++ also, which is not synchronized and can create a race condition. The main thread can either get x as 0, 1, 2 to increase, which can make the final x value as 1,2, or 3.</p>
+<p><strong>Q6</strong> The following C code is a simplified version of lock implementation using a Pthread semaphore..</p>
+<div class="sourceCode"><pre class="sourceCode cpp"><code class="sourceCode cpp"><span class="kw">typedef</span> <span class="kw">struct</span> locks {
+    <span class="dt">sem_t</span> sem;
+    <span class="dt">pthread_t</span> thread;
+} <span class="dt">lock_t</span>;
+
+<span class="dt">int</span> mutex_init(<span class="dt">lock_t</span> *lockp) {
+    <span class="co">//return 0 when successful</span>
+    lockp-&gt;thread= pthread_self();
+    <span class="cf">return</span> sem_init(&amp;lockp-&gt;sem,<span class="dv">0</span>,<span class="dv">1</span>); <span class="co">// (1)</span>
+}
+
+<span class="dt">int</span> mutex_lock(<span class="dt">lock_t</span> *lockp) {
+    <span class="co">// return 0 when successful</span>
+    <span class="cf">if</span> (pthread_equal(lockp-&gt;thread, pthread_self()))
+        <span class="cf">return</span> sem_wait( &amp;lockp-&gt;sem); <span class="co">// (2)</span>
+    <span class="cf">return</span> <span class="dv">-1</span>;
+}
+
+<span class="dt">int</span> mutex_unlock(<span class="dt">lock_t</span> *lockp) {
+    <span class="co">// return 0 when successful</span>
+    <span class="cf">if</span> (pthread_equal(lockp-&gt;thread, pthread_self()))
+        <span class="cf">return</span> sem_post(&amp;lockp-&gt;sem); <span class="co">// (3)</span>
+    <span class="cf">return</span> <span class="dv">-1</span>;
+}</code></pre></div>
+<p><strong>Q7</strong> The following program manages a set of free memory blocks used by multiple threads. Each thread calls <code>allocate()</code> to get a free block to use and calls <code>free()</code> to release a specific block so others can use. The program maintains an array <code>available[NB]</code> whose elements are non-zero if the corresponding blocks are available (<code>NB</code> is a constant indicating the total memory blocks available initially).</p>
+<div class="sourceCode"><pre class="sourceCode cpp"><code class="sourceCode cpp"><span class="dt">int</span> available[NB];
+<span class="dt">int</span> allocate() { <span class="co">/* Returns index of available free blocks. */</span>
+    <span class="cf">while</span>(<span class="dv">1</span>)
+        <span class="cf">for</span> (<span class="dt">int</span> i=<span class="dv">0</span>; i &lt; NB; i++)
+            <span class="cf">if</span> (available [i] != <span class="dv">0</span>) { available[i] = <span class="dv">0</span>; <span class="cf">return</span> i; }
+}
+free (<span class="dt">int</span> i) { available[i] = <span class="dv">1</span>; }</code></pre></div>
+<p>Modify the above code using 1) locks and condition variables so that the multiple threads are well symphonized in accessing the critical section and busy waiting is minimized. 2) using semaphores only. You can express your solution using either Pthreads or Nachos synchronization primitives.</p>
+<p>Lock and condition variable solution</p>
+<div class="sourceCode"><pre class="sourceCode cpp"><code class="sourceCode cpp"><span class="co">// Next condition indicates there is no memory available and threads are waiting</span>
+Condition* noMemory = <span class="kw">new</span> Condition(<span class="st">&quot;noMemory&quot;</span>);
+<span class="co">// Next lock is used for mutual exclusion in checking the available array.</span>
+Lock *mutex = <span class="kw">new</span> Lock(<span class="st">&quot;mutex&quot;</span>);
+
+<span class="dt">int</span> allocate() {
+    mutex-&gt;Acquire();
+    <span class="cf">while</span>(<span class="dv">1</span>) {
+      <span class="cf">for</span> (<span class="dt">int</span> i = <span class="dv">0</span>; i &lt; NB; i++)
+          <span class="cf">if</span> (available [i] != <span class="dv">0</span>) { available[i] = <span class="dv">0</span>; mutex-&gt;Release(); <span class="cf">return</span> i; }
+      noMemory-&gt;Wait(mutex);
+    }
+}
+<span class="dt">int</span> free(<span class="dt">int</span> i) {
+    mutex-&gt;Acquire(); available[i] = <span class="dv">1</span>; noMemory-&gt;Signal(mutex); mutex-&gt;Release();
+}</code></pre></div>
+<p>Semaphore solution</p>
+<div class="sourceCode"><pre class="sourceCode cpp"><code class="sourceCode cpp"><span class="co">// next semaphore indicates if there are free memory blocks available.</span>
+<span class="co">// Initially there are NB blocks available</span>
+Semaphore *freeBlocks = <span class="kw">new</span> Semaphore(<span class="st">&quot;Free Blocks&quot;</span>, NB);
+<span class="co">// Next semaphore is used for mutex exclusion in accessing available array</span>
+Semaphore *mutex = <span class="kw">new</span> Semaphore(<span class="st">&quot;mutex&quot;</span>, <span class="dv">1</span>);
+
+<span class="dt">int</span> allocate() {
+    <span class="cf">while</span>(<span class="dv">1</span>) {
+        freeBlocks-&gt;P();
+        mutex-&gt;P();
+        <span class="cf">for</span> (<span class="dt">int</span> i = <span class="dv">0</span>; i &lt; NB; i++)
+            <span class="cf">if</span> (available [i] != <span class="dv">0</span>) { available[i] = <span class="dv">0</span>; mutex-&gt;V(); <span class="cf">return</span> i; }
+        mutex-&gt;V();
+    }
+}
+<span class="dt">void</span> free(<span class="dt">int</span> i) {
+    mutex-&gt;P(); available[i] = <span class="dv">1</span>; freeBlocks-&gt;V(); mutex-&gt;V();
+}</code></pre></div>
+<h3 id="exercise-3">Exercise 3</h3>
+<p><strong>Q2</strong> What is the possible output of running this nachos program <code>ThreadTest()</code>? Give an explanation without actually running this code on a machine.</p>
+<div class="sourceCode"><pre class="sourceCode cpp"><code class="sourceCode cpp"><span class="dt">int</span> x = <span class="dv">10</span>;
+<span class="dt">void</span> SimpleThread(<span class="dt">int</span> y) {
+    printf(<span class="st">&quot; Before yield, Thread </span><span class="sc">%d</span><span class="st">: x is </span><span class="sc">%d</span><span class="st">.</span><span class="sc">\n</span><span class="st">&quot;</span>, y, x);
+    currentThread-&gt;Yield();
+    x = x + y;
+    printf(<span class="st">&quot; After yield, Thread </span><span class="sc">%d</span><span class="st">: x is </span><span class="sc">%d</span><span class="st">. </span><span class="sc">\n</span><span class="st">&quot;</span>, y, x);
+}
+<span class="dt">void</span> ThreadTest() {
+    Thread *t = <span class="kw">new</span> Thread(<span class="st">&quot;forked thread&quot;</span>);
+    t-&gt;Fork(SimpleThread, <span class="dv">1</span>);
+    SimpleThread(<span class="dv">2</span>);
+}</code></pre></div>
+<ul>
+<li><strong>Before yield, Thread 2: x is 10. Before yield, Thread 1: x is 10. After yield, Thread 2: x is 12. After yield, Thread 1: x is 13.</strong></li>
+<li>Before yield, Thread 1: x is 10. Before yield, Thread 2: x is 10. After yield, Thread 1: x is 11. After yield, Thread 2: x is 13.</li>
+</ul>
+<p>The parent thread places the child thread in the ready queue, and executes <code>SimpleTread(2)</code> first and prints, then it yields. The child thread starts now and prints one sentence, then yields.</p>
+<p><strong>Q4</strong> Which of the following steps is not necessary to run a program.</p>
+<ol style="list-style-type: decimal">
+<li>Obtain CPU cycle and allocate memory.</li>
+<li>Load code/data into memory. Setup stack/heap.</li>
+<li><strong>Copy the allocated in-memory content to disk in case the program is being swapped out.</strong></li>
+<li>Load starting address and begin execution.</li>
+<li>Provide the service with address translation and system calls, and control the execution.</li>
+</ol>
+<p><strong>Q5</strong> Which statement is not true regarding difference between logical and physical addresses.</p>
+<ol style="list-style-type: decimal">
+<li>A logical address does not refer to an actual existing address; rather, it refers to an abstract address in an abstract address space.</li>
+<li><strong>A physical address refers to an address of a data item used by a program.</strong></li>
+<li>A logical address is generated by the CPU and is translated into a physical address by the memory management unit(MMU).</li>
+<li>Physical addresses are generated by the MMU.</li>
+</ol>
+<p><strong>Q6</strong> Consider a logical address space of 64 pages of 1KB each, mapped onto a physical memory of 32 pages. How many bits are there in the logical address? How many bits are there in the physical address?</p>
+<ol style="list-style-type: decimal">
+<li>Logical address: 64 bits. Physical address: 32 bits</li>
+<li><strong>Logical address: 16 bits. Physical address: 15 bits</strong></li>
+<li>Logical address: 16 bits. Physical address: 16 bits</li>
+<li>Logical address: 15 bits. Physical address: 15 bits</li>
+</ol>
+<p><strong>Q7</strong> Given a one-level paging scheme for memory address mapping, if TLB access takes 10 nanosecond and each physical memory access takes 100 nanoseconds, what will be the desired TLB hit ratio to have the effective memory access time within 120 nanoseconds to complete both logical address translation and physical memory data fetching?</p>
+<p>Solve <span class="math inline">\(10 + (1-x) * 100 + 100 = 120\)</span> for <span class="math inline">\(x = 0.9\)</span>.</p>
+<p><strong>Q8</strong> Given a one-level paging scheme where physical memory is divided into a set of pages with uniform size 8K bytes and each page table entry uses 4 bytes, what is the maximum size of a logical memory space for each process with this paging scheme? Explain your reason.</p>
+<p>The one-level page table has to fit into one page and thus at most 8K bytes. Since each entry uses 4 bytes, there are 8K/4 = 2K entries in a page table. Thus there are total of 2K pages, the maximum size of logical memory space is 2K*8KB = 16MB.</p>
+<p><strong>Q9</strong> Design a 2-level paging scheme for a 38-bit logical space and illustrate the address translation steps. Each physical page is of size 16K bytes and each page table entry uses 4 bytes. Each 38-bit logical address is translated into a 38-bit physical address.</p>
+<ul>
+<li>The scheme is 2-level paging and 38-bit will be split to 12, 12, 14.</li>
+<li>Physical page size is 16K bytes, and bits for a page use log(16K) = 14 bits.</li>
+<li>Each physical page can host 16K/4 =4K entries. Thus a page table using one physical page can map at most 4K x 16K=64MB physical space. A two-level table can map at most 64MB*4K=256GB space which is 2^38.</li>
+<li>The outer table has 4K entries, and log(4K)=12. That needs 12 bits to identify a particular entry. Thus the outer table part of the logical address needs 12 bits.</li>
+<li>Consequently, the inner table part of logical address needs 12 bits.</li>
+</ul>
+<p><strong>Q10</strong> Design a 3-level paging scheme for a 64-bit logical space. Each physical page is of size 4K bytes and each page table entry uses 4 bytes.</p>
+<p>(10, 10, 10, 12)</p>
+<p><strong>Q11</strong> What is the maximum size of logical and physical spaces that can be mapped by the 3-level paging scheme in Question 10?</p>
+<ul>
+<li>Logical: 4TB.</li>
+<li>Physical: 16TB = 2^32 x 2^12 = 2^34.</li>
+</ul>
+<p><strong>Q12</strong> The following C program access a C array with a million of integer elements, running on a Linux machine. How does increasing of the page size affect the TLB miss rate? Explain the reason.</p>
+<div class="sourceCode"><pre class="sourceCode cpp"><code class="sourceCode cpp"><span class="dt">int</span> i, sum = <span class="dv">0</span>;
+<span class="cf">for</span> (i = <span class="dv">0</span>; i &lt; <span class="dv">10000000</span>; i++)
+    sum += a[i];</code></pre></div>
+<ol style="list-style-type: decimal">
+<li><strong>The increasing of the page size can decrease TLB miss rate</strong></li>
+<li>The decreasing of the page size can decrease TLB miss rate</li>
+<li>The increasing of the page size does not affect TLB miss rate</li>
+<li>The decreasing of the page size does not affect TLB miss rate</li>
+</ol>
+<p>For example, the typical size of Linux OS page is 4KB and each integer in C takes 4 bytes. Thus each page can host 1K integers. This program accesses the array a[] in a consecutive way. Thus when TLB misses the first element of a page, it will hit the rest of integer numbers in this page. The TLB miss rate is 1 out of 1K. When increasing the page size to 8K, the TLB miss rate decreases to 1 out of 2K.</p>
+<h3 id="exercise-4">Exercise 4</h3>
+<p><strong>Question 1</strong> Given the following C code, assume x is allocated to a register. Initially the binary code (text) and stack segments of this program is in memory, but others segments are not in memory. All OS kernel pages are in memory.</p>
+<pre><code>int x=1; // Line 1
+x = open(&quot;tmpfile1&quot;, O_WRONLY, 0666); //Line 2
+close(x); // Line 3</code></pre>
+<p>The execution of the following lines in above code triggers a page fault:</p>
+<ol style="list-style-type: decimal">
+<li>Line 1, Line 2, Line 3</li>
+<li>Line 2, Line 3</li>
+<li><strong>Line 2</strong> accesses &quot;tmpfile1&quot; which sits in the initialized data segment which is not in memory.</li>
+<li>Line 3</li>
+</ol>
+<p><strong>Question 2</strong> Which statement is not true when a page fault occurs?</p>
+<ol style="list-style-type: decimal">
+<li>The process that causes this page fault may enter a sleep mode.</li>
+<li>A free frame is located and I/O is requested to read the needed page into the free frame.</li>
+<li>Upon completion of page fault handling, the page table of the process that triggers page fault is modified. The corresponding instruction is restarted again.</li>
+<li><strong>The process of the victim page will be locked until this page is available again in memory</strong>.</li>
+</ol>
+<p><strong>Question 3</strong> Which of the following data access patterns are often “good” for a demand-paged environment in terms of exploiting data locality for good time efficiency? Which are often bad?</p>
+<ol style="list-style-type: decimal">
+<li>Stack-based assignments (Good: Stack with push and pop calls. Access of a consecutive part of a stack exhibits a good spatial locality.)</li>
+<li>Sequential search (Good: Scan a list of elements sequentially and one can use an array to implement. Thus it tends to have a good spatial locality.)</li>
+<li>Binary search (Bad: Binary search using a tree accesses a set of data objects scattered in memory and there is no access locality. Binary search of a big sorted array jumps from one memory address to another, which has no locality.)</li>
+<li>Object traversal with many pointer indirections (e.g., linked list or graph traversal) (Bad: Jumping around objects does not exhibit spatial or temporal locality normally.)</li>
+</ol>
+<p>Explanation: Physical memory is a cache for virtual pages. If a program accesses data has some temporal or spatial locality, such a program has a better performance (content of a virtual page loaded to memory can be used again and again).</p>
+<p><strong>Question 4</strong> Consider a demand-paging system that costs about 10,000 microseconds to deal with a page fault. Addresses are translated through a TLB and a one-level page table in the main memory. The cost for accessing TLB is considered as 0 and cost of each memory access is 0.1 microsecond. Assume that 99 percent of the accesses is in the TLB and virtual pages translated by TLB are always in memory. For the remaining 1% of the accesses, address translation is completed through the page table, but virtual pages may not reside in memory. What is the effective memory access time when the page fault rate is 0.01%.</p>
+<ol style="list-style-type: decimal">
+<li>1 ms</li>
+<li><strong>1.101 ms</strong></li>
+<li>1.2 ms</li>
+</ol>
+<p>If there is no page fault, average memory access time in microseconds is <span class="math inline">\(0.99 (0 + 0.1) + 0.01 (0.1 + 0.1) = 0.101\)</span>. Effective memory access when possibility of pages fault is considered: <span class="math inline">\(0.99 (0.101) + 0.01 (0.101 + 10000) = 1.101\)</span>.</p>
+<p><strong>Question 5</strong> Consider the following page-replacement algorithms. Rank these algorithms from the best to the worst according to their page-fault rate: LRU replacement, FIFO replacement, Optimal (MIN) replacement, Second-chance replacement.</p>
+<ol style="list-style-type: decimal">
+<li><strong>MIN, LRU, Second-chance, FIFO</strong></li>
+<li>MIN, Second-chance, LRU, FIFO</li>
+<li>MIN, FIFO, LRU, Second-chance</li>
+<li>MIN, LRU, FIFO, Second-chance</li>
+</ol>
+<p><strong>Question 6</strong> Given 3 empty physical pages as the total memory available, an application access memory in the following page reference sequence (x,y,z,w,y,u,y). Each letter represents a distinct virtual memory page. What is the number of page faults with the LRU, second-chance, and FIFO replacement algorithms respectively?</p>
+<ol style="list-style-type: decimal">
+<li><strong>5, 5, 6</strong></li>
+<li>5, 6, 6</li>
+<li>5, 5, 7</li>
+<li>6, 6, 6</li>
+</ol>
+<ul>
+<li>LRU: xF, yF, zF, wF (replace x), y, uF (replace z), y</li>
+<li>SC: xF, yF, zF, wF, y, uF, y</li>
+<li>FIFO: xF, yF, zF, wF (replace x), y, uF (replace y), yF (replace z)</li>
+</ul>
+<p><strong>Question 7</strong> Given the following C program which access a 2D integer array <code>a[1024][1024]</code>. A demand-paging memory is divided into a set of uniform 1K byte pages. Each integer uses 4 bytes. Assume that the binary instructions for the following program are always in separate memory space. The LRU page replacement algorithm is used to manage a 512KB memory that stores the array. Initially data array <code>a[][]</code> is not in memory.</p>
+<pre><code>for (i = 0; i &lt; 1024; i++) for (j = 0; j &lt; 1024; j++) a[j][i] = 100;</code></pre>
+<p>What is the number of page faults in running this program?</p>
+<ol style="list-style-type: decimal">
+<li>1024</li>
+<li><strong>1024 * 1024</strong></li>
+<li>0</li>
+</ol>
+<p>The C program stores this array in a row-wise format. Each row needs 1024*4/1K = 4 memory pages. 512KB memory can hold 512 pages. The code accesses column 1, requiring the loading of 1K pages with 1K page faults. For column 2, old data loaded is swapped out, and thus it takes another 1K page faults. In summary, 1024x1024 page faults occur.</p>
+<p><strong>Question 8</strong> For 7, if the memory increases to 1MB, what is the number of page faults in running this program?</p>
+<ol style="list-style-type: decimal">
+<li>1024</li>
+<li>1024 * 1024</li>
+<li><strong>4096</strong></li>
+<li>0</li>
+</ol>
+<p>If memory is 1MB, then memory can hold 1K pages. Each row of the matrix requires 4 pages as it has size 4KB. After column 1 access, data in memory can still be used for column 2, column 3, ..., up to column 256. Then the miss starts again. Thus we ca reason that accessing each row generates 4 page faults. The total number of page faults will be 1024*4= 4K.</p>
+<p><strong>Question 9</strong> Which statement is false on OS scheduling?</p>
+<ol style="list-style-type: decimal">
+<li>Preemptive scheduling allows a process to be interrupted in the midst of its execution, taking the CPU away and allocating it to another process.</li>
+<li>Nonpreemptive scheduling ensures that a process relinquishes control of the CPU only when it finishes with its current CPU burst.</li>
+<li><strong>Round robin scheduling improves job response time, and average turn-around time.</strong></li>
+<li>Different time-quantum sizes are used at different queues at a multilevel feedback queuing system.</li>
+</ol>
+<p><strong>Question 10</strong> Suppose that the following processes arrive for execution at the times indicated. Each process will run for the amount of time listed in the burst time column. .Assume the context switch cost = 0.</p>
+<ul>
+<li>P1: Arrival time = 0, Burst time = 8</li>
+<li>P2: Arrival time = 1, Burst time = 4</li>
+<li>P3: Arrival time = 2, Burst time = 1</li>
+</ul>
+<p>What is the average turnaround time for these processes with the FIFO non-preemptive, SJF non-preemptive, RR preemptive scheduling algorithm with quantum 1?</p>
+<ol style="list-style-type: decimal">
+<li><strong>10, 9, 7.33</strong></li>
+<li>11, 10, 7</li>
+<li>10, 6, 6</li>
+</ol>
+<ul>
+<li>FIFO: <span class="math inline">\((8-0 + 12-1 + 13-2) / 3\)</span></li>
+<li>SJF: <span class="math inline">\((8-0 + 9-2 + 13-1) / 3\)</span></li>
+<li>RR: <span class="math inline">\((13-0 + 9-1 + 3-2) / 3\)</span></li>
+</ul>
+<p>Remember that turnaround time is finishing time minus arrival time, so you have to subtract the arrival times to compute the turnaround times. FIFO's turnaround time is 11 if you forget to subtract arrival time. Another mistake is that SJF schedules all tasks following the job length without considering their arrival time. SJF (P3, P2, P1). Turnaround time would become <span class="math inline">\((3-2 + 5-1 + 13-0)/3 = 6\)</span> which is wrong.</p>
+<h3 id="exercise-5">Exercise 5</h3>
+<p><strong>Q1</strong> Select a statement which is not true</p>
+<ol style="list-style-type: decimal">
+<li>The <code>open()</code> operation informs the system that the named file is about to become active.</li>
+<li>The <code>close()</code> operation informs the system that the named file is no longer in active use by the user who issued the close operation.</li>
+<li><strong>The OS always have file descriptors available for new files to be opened even other programs do not close files.</strong></li>
+<li>The files may not be saved properly if a program does not close all files written while exiting abnormally as OS often buffers writing before writing data out to disk.</li>
+</ol>
+<p><strong>Q2</strong> Given two applications: 1) Print the entire content of a file; 2) Access a record in a file given its index. The position of this record in this file is indexed. They should be accessed:</p>
+<ol style="list-style-type: decimal">
+<li><strong>sequentially, randomly</strong></li>
+<li>randomly, sequentially</li>
+<li>both sequentially</li>
+<li>both randomly</li>
+</ol>
+<p><strong>Q3</strong> Consider a system that supports 5,000 users. Suppose that you want to allow 4,990 of these users to be able to access one file. How would you specify this protection scheme in UNIX/Linux?</p>
+<ol style="list-style-type: decimal">
+<li>Specify 10 users as non-accessible.</li>
+<li><strong>Put these 4990 users in one group and set the group access accordingly.</strong></li>
+<li>Give a soft link of this file to these 4990 users so they are able to access while other 10 users cannot access as they do not know the file name.</li>
+<li>Not possible.</li>
+</ol>
+<p><strong>Q4</strong> We use indexed allocation to store a file on a disk and we assume that each disk file block is of size 16KB. Each data pointer entry in an i-node takes 4 bytes. Answer the following questions with an explanation.</p>
+<p>What is the maximum size of a file with one-level direct mapping (one index block containing a set of direct pointers to data blocks) can map?</p>
+<ol style="list-style-type: decimal">
+<li>16 KB</li>
+<li><strong>64 MB</strong></li>
+<li>256 MB</li>
+</ol>
+<p><strong>Q5</strong> For Q4, What is the minimum levels of index indirection required to map a file of 16 gigabytes?</p>
+<ol style="list-style-type: decimal">
+<li>One-level direct mapping</li>
+<li><strong>Two-level single indirection</strong></li>
+<li>Three-level double indirection</li>
+</ol>
+<p><span class="math inline">\(16K/4B=4K\)</span> entries per index block. The maximum size of a file with single indirect block = <span class="math inline">\(4K*16KB= 64MB\)</span>. Maximum size for two levels: <span class="math inline">\(4K*4K*16K = 256GB\)</span>. 16GB would require 2 levels.</p>
+<p><strong>Q6</strong> Given an i-node design as UNIX file control block structure, what is the least number of the set of disk blocks that must be read into memory in order to access a UNIX file &quot;/cs170/final.txt&quot;?</p>
+<ol style="list-style-type: decimal">
+<li>1</li>
+<li>2</li>
+<li>4</li>
+<li><strong>6</strong></li>
+</ol>
+<ul>
+<li>Read in file header for root / (fixed spot on disk).</li>
+<li>Read in first data block for root / as its directory content and search cs170.</li>
+<li>Read in file header for directory &quot;cs170&quot;</li>
+<li>Read in first data block for directory &quot;cs170&quot;; search for &quot;final.txt&quot;</li>
+<li>Read in the file header i-node for &quot;final.txt&quot;</li>
+<li>Read in first data block for &quot;final.txt&quot;</li>
+</ul>
+<p><strong>Q7</strong> Suppose this disk drive spins at 12000 RPM, and has a sector size of 512 bytes, and holds 50 sectors per track. What is the maximum transfer rate of this driver accomplishable without seek overhead.</p>
+<ol style="list-style-type: decimal">
+<li><strong>5 MB/s</strong></li>
+<li>6 MB/s</li>
+<li>12 MB/s</li>
+</ol>
+<p><strong>Q8</strong> For Q7, Assume average seek time for the above drive is 7.3 milliseconds, what is the effective transfer rate for random-access of two consecutive sectors on a disk track? (Namely find the position first, then transfer two sectors together).</p>
+<ol style="list-style-type: decimal">
+<li><strong>0.1 MB/s</strong></li>
+<li>0.133 MB/s</li>
+<li>5 MB/s</li>
+<li>6 MB/s</li>
+</ol>
+<ul>
+<li>Average rotational cost is time to travel half track: 1/200 * 0.5 = 2.5ms.</li>
+<li>Transfer time = 7.3ms to seek + 0.2ms to read = 10 ms.</li>
+<li>Effective transferring rate: 1KB/0.01s = 0.1MB/s.</li>
+</ul>
+<p><strong>Q9</strong> Suppose that a disk drive has 200 cylinders, numbered from 0 to 199. The drive is currently serving a request at cylinder 120, and the previous request was at cylinder 100. The queue of pending requests, in FIFO order is: 80, 190, 40, 110. Illustrate the disk arm movement using the FCFS and SCAN algorithms. Compute the total movement in cylinders for each algorithm.</p>
+<ol style="list-style-type: decimal">
+<li>220, 370</li>
+<li><strong>370, 220</strong></li>
+<li>388, 189</li>
+<li>189, 388</li>
+</ol>
+<ul>
+<li>FCFS: 120, 80, 190, 40, 110</li>
+<li>SCAN: 120, 190, 110, 80, 40</li>
+</ul>
+<p><strong>Q10</strong> Assume the annual failure rate of a disk drive is 2% and each server machine has 5 disk drives installed. Given 1000 servers installed in a computer cluster, how often does one of their disk drives fail?</p>
+<ol style="list-style-type: decimal">
+<li>Once a day</li>
+<li>Once a week</li>
+<li>Once a month</li>
+<li><strong>Twice a week</strong></li>
+</ol>
+<p><strong>Q11</strong> Which statement is false?</p>
+<ol style="list-style-type: decimal">
+<li>RAID 0 improves access bandwidth (parallel read or write), but there is no extra redundancy added to deal with a disk failure.</li>
+<li>RAID 1 improves reliability and can tolerate one disk fail, and it doubles read throughput. But 50% of disk space is wasted.</li>
+<li><strong>RAID 5 improves access bandwidth while it can tolerate up to 5 disk failures.</strong></li>
+<li>RAID 1+0 improves access bandwidth while it can tolerate one disk failure.</li>
+</ol>
+<p><strong>Q12</strong> Given one data block contains content in binary value 0011, and another block 1011. What is the binary value of the parity block for these two blocks? If the parity block of two blocks A and B is 0011 and block A is 1011, B is lost during a failure. What is B in the binary value that can be recover from the parity block and block A?</p>
+<ol style="list-style-type: decimal">
+<li>0111, 0111</li>
+<li><strong>1000, 1000</strong></li>
+<li>0111, 1000</li>
+<li>1000, 01111</li>
+</ol>
+<p><strong>Q13</strong> Considering A and B with initial value 1. Transaction T is: A=3; B=4; commit. Select one of following transaction processing that violates ACID properties.</p>
+<ol style="list-style-type: decimal">
+<li><strong>T crashes after A=3. The final state after recovery is A=3, B=1.</strong></li>
+<li>T crashes after A=3. The final state after recovery is A=1, B=1.</li>
+<li>T execution is successful. The final state is A=3, B=4.</li>
+</ol>
+<p><strong>Q14</strong> Answer true or false for each of the following statements</p>
+<ul>
+<li><strong>T</strong>. For a key-vale store with multiple replicas, using quorum consensus a writer can return before the data has been written to all replicas.</li>
+<li><strong>T</strong>. The directory server as master can be a bottleneck point for a key-value store.</li>
+</ul>
+<p><strong>Q15</strong> Answer true or false for each of the following statements</p>
+<ul>
+<li><strong>F</strong>. Hadoop distributed file system allocates 3 replicas by default and accesses a replica for reading randomly.</li>
+<li><strong>T</strong>. Hadoop distributed file system is optimized for handling large files with large file blocks and heavy sequential read workload.</li>
+</ul>
+<h3 id="f12-midterm">F12 midterm</h3>
+<p><strong>Q1.1</strong> What are the key OS actions taken during context switching between two processes? What are their process states before and after switching?</p>
+<ul>
+<li>Suspend the current process.</li>
+<li>Save current process control information in a process control block (PCB).</li>
+<li>Restore the process control information for the new process from its PCB.</li>
+<li>Setup memory mapping (e.g. page table) and activate the execution of the new process.</li>
+<li>The PCB information contains registers (including stack pointer, program counter), page table, and other process-oriented OS information.</li>
+<li>The state change: Run-&gt;Ready for the old process and Ready-&gt;Run for the new process.</li>
+</ul>
+<p><strong>Q1.2</strong> Given the following c program that uses Linux <code>fork()/wait()</code> system calls</p>
+<pre><code>int main() {
+    int pid, x=10, y;
+    pid = fork();
+    if (pid == 0) {
+        y = 1;
+        x = x + y;
+        printf(&quot;x is %d. y is %d \n&quot;, x,y);
+    } else {
+        y = 2;
+        x = x + y;
+        wait(NULL);
+        printf(&quot;x is %d. y is %d \n&quot;, x,y);
+    }
+}</code></pre>
+<pre><code>x is 11, y is 1
+x is 12, y is 2</code></pre>
+<p><strong>Q2.1</strong> What is the main diﬀerence between a process and a thread?</p>
+<p>Threads allocate separate stack space within the same process resource, share memory for code/data segments. Processes don't share memory normally. Separate resource (address space) is allocated from the system for each process. Each process is recognized by OS during resource allocation and scheduling while a thread created within a process may or may not be recognized by the OS during scheduling.</p>
+<p><strong>Q2.2</strong> Explain what Nachos OS does in the following four statements during Nachos thread forking.</p>
+<pre><code>Thread::Fork(VoidFunctionPtr func, int arg) {
+    StackAllocate(func, arg);
+    IntStatus oldLevel = interrupt-&gt;SetLevel(IntOff);
+    scheduler-&gt;ReadyToRun(this);
+    (void) interrupt-&gt;SetLevel(oldLevel);
+}</code></pre>
+<ul>
+<li>Allocate stack space and setup thread control block properly used for thread context switch (e.g. setup stack pointer, the thread starting address, and argument location).</li>
+<li>Disable interruption.</li>
+<li>Put this thread into a queue with a ready state Enable interruption.</li>
+<li>Enable interruption.</li>
+</ul>
+<p><strong>Q3.1</strong> What is a race condition?</p>
+<p>Multiple threads or processes may operate on the same shared data at the same time; the result depends on their data access time and execution order.</p>
+<p><strong>Q3.2</strong> For Project 1, if we change <code>ThreadTest()</code> in file <code>threadtest.cc</code> as follows:</p>
+<div class="sourceCode"><pre class="sourceCode cpp"><code class="sourceCode cpp"><span class="dt">int</span> x = <span class="dv">10</span>;
+<span class="dt">void</span> SimpleThread(<span class="dt">int</span> y) {
+    currentThread-&gt;Yield();
+    x = x + y;
+    printf(<span class="st">&quot;x is </span><span class="sc">%d</span><span class="st">. y is </span><span class="sc">%d</span><span class="st"> </span><span class="sc">\n</span><span class="st">&quot;</span>, x, y);
+}
+<span class="dt">void</span> ThreadTest() {
+    Thread *t = <span class="kw">new</span> Thread(<span class="st">&quot;forked thread&quot;</span>);
+    t-&gt;Fork(SimpleThread, <span class="dv">1</span>);
+    SimpleThread(<span class="dv">2</span>);
+}</code></pre></div>
+<p>In this case, Nachos threads only yield to each other when executing <code>Yield()</code>. List and explain the values of &quot;x&quot; and &quot;y&quot; printed in executing <code>ThreadTest()</code>.</p>
+<pre><code>x = 12, y = 2
+x = 13, y = 1</code></pre>
+<p>The parent thread executes <code>SimpleTread(2)</code> first, but yields. The child thread starts <code>SimpleTread(1)</code>, but yields. Then parent thread continues and prints. After its completion, the child thread resumes and prints.</p>
+<p><strong>Q4.1</strong> What is the beneﬁt of TLB for a paging scheme?</p>
+<p>Speed up looking up of address translation using a fast hardware cache.</p>
+<p><strong>Q4.2</strong> Given a one-level paging scheme for memory address mapping, if TLB access takes 10 nanosecond and each physical memory access takes 100 nanoseconds, what will be the desired TLB hit ratio to have the eﬀective memory access time within 120 nanoseconds to complete both logical address translation and physical memory data fetching?</p>
+<p>Solve <span class="math inline">\(10 + (1-x)*100 + 100 = 120\)</span> for <span class="math inline">\(x = 0.9\)</span>.</p>
+<p><strong>Q5.1</strong> Given a one-level paging scheme where physical memory is divided into a set of pages with uniform size 8K bytes and each page table entry uses 4 bytes, what is the maximum size of a logical memory space for each process with this paging scheme? Explain your reason.</p>
+<p>The page table is also 8K bytes, each entry uses 4 bytes, thus 8K/4 = 2K entries in a page table; thus there are total of 2K pages, the maximum size of memory space is 2K*8KB = 16MB.</p>
+<p><strong>Q5.2</strong> Design a 2-level paging scheme for a 38-bit logical space and illustrate the address translation steps. Each physical page is of size 16K bytes and each page table entry uses 4 bytes.</p>
+<p>(12, 12, 14)</p>
+<ul>
+<li>Physical page size is 16K bytes, and offset for a page use log(16K) = 14 bits.</li>
+<li>Each physical page can host 16K/4 = 4K entries. Thus a page table using one physical page can map at most 4Kx16K=64MB physical space. A two-level table can map at most 64MB*4K=256GB space which is 2^38.</li>
+<li>The level-1 outer table has 4K entries, and log(4K)=12. That needs 12 bits to identify a particular entry. Thus the outer table part of the logical address needs 12 bits.</li>
+<li>Consequently the level-2 inner table part of logical address needs 12 bits. The scheme is 2-level paging and 38 bits will be split as 12, 12, and 14.</li>
+</ul>
+<p><strong>Q6</strong> The following pseudo code for a producer-consumer problem needs a synchronization.</p>
+<div class="sourceCode"><pre class="sourceCode cpp"><code class="sourceCode cpp"><span class="co">// Consumer thread</span>
+<span class="cf">while</span> (<span class="dv">1</span>) { <span class="co">/* consume next data item */</span> }
+<span class="co">// Producer thread</span>
+<span class="cf">while</span> (<span class="dv">1</span>) { <span class="co">/* produce next data item */</span> }</code></pre></div>
+<p>Extend the above code and use condition variables and a lock to synchronize the critical section and avoid busy waiting so that a producer waits if there is no buﬀer space to store data and a consumer waits if there is no data to consume.</p>
+<div class="sourceCode"><pre class="sourceCode cpp"><code class="sourceCode cpp"><span class="co">// Consumer thread</span>
+<span class="cf">while</span>(<span class="dv">1</span>){
+    lock-&gt;acquire();
+    <span class="cf">while</span> (queue is empty) {
+        condData-&gt;wait(lock)
+    }
+    Consume next data item;
+    condSpace-&gt;signal(lock);
+    lock-&gt;release();
+}
+<span class="co">// Producer thread</span>
+<span class="cf">while</span> (<span class="dv">1</span>) {
+    lock-&gt;acquire();
+    <span class="cf">while</span> (queue is full) {
+        condSpace-&gt;wait(lock)
+    }
+    Produce next data item;
+    condData-&gt;signal(lock);
+    lock-&gt;release();
+}</code></pre></div>
+<h3 id="f12-final">F12 final</h3>
+<p><strong>Q1.1</strong> What is the benefit of incorporating the copy-on-write feature in process forking?</p>
+<p>Delay page duplication when creating a child process until this page is modified by the child process. If no pages are modiﬁed in the child process, and then cost of duplication can be eliminated.</p>
+<p><strong>Q1.2</strong> Given the following C program that uses Linux <code>fork()/wait()</code> system calls, Assume <code>printf()</code> is an atomic operation. Show all possible results printed when running a multiprogramming Linux system.</p>
+<div class="sourceCode"><pre class="sourceCode cpp"><code class="sourceCode cpp"><span class="dt">int</span> main() {
+    <span class="dt">int</span> pid, x = <span class="dv">100</span>, y = <span class="dv">1</span>;
+    pid = fork();
+    <span class="cf">if</span> (pid == <span class="dv">0</span>) {
+        x = x + <span class="dv">1</span>;
+        y = y + x;
+        printf(<span class="st">&quot;x is </span><span class="sc">%d</span><span class="st">. y is </span><span class="sc">%d</span><span class="st"> </span><span class="sc">\n</span><span class="st">&quot;</span>, x,y);
+    } <span class="cf">else</span> {
+        x = x + <span class="dv">2</span>;
+        y = y + x;
+        printf(<span class="st">&quot;x is </span><span class="sc">%d</span><span class="st">. y is </span><span class="sc">%d</span><span class="st"> </span><span class="sc">\n</span><span class="st">&quot;</span>, x,y);
+    }
+}</code></pre></div>
+<pre><code>x is 101. y is 102
+x is 102. y is 103
+
+x is 102. y is 103
+x is 101. y is 102</code></pre>
+<p><strong>Q2.1</strong> Explain the advantages and disadvantages of Shortest-Job-First (SJF) scheduling. Explain why the Multi-Level-Feedback-Queue can be considered as an approximation to SJF while addressing the weakness of SJF?</p>
+<ul>
+<li>Advantage of SJF: reduce aveage job waiting time.</li>
+<li>Disadvantage of SJF: there could a starvation for some long jobs.</li>
+<li>In multi-queue scheduling, short jobs can be assigned in one queue with more resource. Long jobs can be assigned to another queue. Allocating resource proportionaly among queues avoids starvation.</li>
+</ul>
+<p><strong>Q2.2</strong> Consider the following set of processes, with the length of the CPU-burst time given in milliseconds. The processes are assumed to have arrived in the order P1,P2,P3,P4,P5, all at time 0. Draw 3 charts illustrating the execution of these processes using FCFS (First-come-ﬁrst-serve), SJF (shortest-job-ﬁrst), and RR (round-robing with quantum=1) scheduling. What is the waiting time and turnaround time of process P1 for each of the scheduling algorithms?</p>
+<ul>
+<li>P1, arrival time = 0, burst time = 10</li>
+<li>P2, arrival time = 0, burst time = 1</li>
+<li>P3, arrival time = 0, burst time = 2</li>
+<li>P4, arrival time = 0, burst time = 1</li>
+<li>P5, arrival time = 0, burst time = 5</li>
+<li>FCFS: P1 P2 P3 P4 P5, turnaround = 10, waiting = 0</li>
+<li>SJF: P2 P4 P3 P5 P1, turnaround = 19, waiting = 9</li>
+<li>RR: P1 P2 P3 P4 P5 P1 P3 P5 P1 P5 P1 P5 P1 P5 P1, turnaround = 19, waiting = 9</li>
+</ul>
+<p><strong>Q3.1</strong> What is the role of dirty-bits in Nachos virtual memory implementation in Project 3? How does this help in improving execution performance.</p>
+<p>Dirty bits indicate if a memory page has been modiﬁed. It can be used to check if a page should be written back the swapping store or not when a page is evicted from memory. It can save disk I/O and avoid unncessary writes.</p>
+<p><strong>Q3.2</strong> A demand-paging memory system translates an address using a TLB and a one-level page table in the main memory. The TLB hit ratio is 99% and it takes 0 nanosecond for TLB access. Each physical memory access takes 100 nanoseconds. If this virtual page is not in memory, then page fault handling takes 10,000 microseconds. What will be the maximum page fault rate that makes the overall average effective memory access time to be less than 1 microsecond?</p>
+<p>If there is no page fault, average memory access time in ms is <span class="math inline">\(0.99*(0+0.1) + 0.01*(0.1+0.1) = 0.101\)</span>. Then solve <span class="math inline">\((1-f)*0.101 + f(0.101+10000) = 1\)</span> for <span class="math inline">\(f = 0.008999%\)</span>.</p>
+<p><strong>Q3.3</strong> Given 3 empty physical pages, draw ﬁgures to illustrate how a page replacement scheme deals with the following reference string (1, 2, 3, 4, 2, 5, 2) using the LRU strategy. Compute the number of page faults.</p>
+<p>Five faults: 1F, 2F, 3F, 4F(replace 1), 2, 5F(replace 3), 2.</p>
+<p><strong>Q3.4</strong> Given the following C program which access a 2D integer array <code>a[1024][1024]</code>. A demand-paging memory is divided into a set of uniform 1K byte pages. Each integer uses 4 bytes. Assume that the binary instructions for the following program are always in separate memory space. The LRU page replacement algorithm is used to manage a 512KB memory that stores the array. Initially data array <code>a[][]</code> is not in memory. Derive and explain the number of page faults in running this program. If the memory increases to 1MB, what is the number of page faults in running this program?</p>
+<div class="sourceCode"><pre class="sourceCode cpp"><code class="sourceCode cpp"><span class="cf">for</span> (i = <span class="dv">0</span>; i &lt; <span class="dv">1024</span>; i++) <span class="cf">for</span> (j = <span class="dv">0</span>; j &lt; <span class="dv">1024</span>; j++) a[j][i] = <span class="dv">100</span>;</code></pre></div>
+<p>The C program stores this array in a row-wise format. Each row needs 1024*4/1K = 4 memory pages. 512KB memory means 512 pages. The code accesses column 1, requiring the loading of 1K pages with 1K page faults. For column 2, old data loaded is swapped out, and thus it takes another 1K page faults.</p>
+<p>In summary, 1024x1024 page faults occur.</p>
+<p>If memory is 1MB, then memory can hold 1K pages. After column 1 access, data in memory can be used for column 2 access. Thus total faults will be 1024*4 = 4K.</p>
+<p><strong>Q4.1</strong> What are advantages and disadvantages of RAID 0 and RAID 1?</p>
+<p>RAID 0 improves access bandwidth (paralell read or write), but there is no extra redudancy added to deal with a disk failure. RAID 1 improves reliability and can torelate one disk fail, and it doubles read throughput. But 50% of disk space is wasted.</p>
+<p><strong>Q4.2</strong> The original Nachos file system implementation (before Project 3 extension) uses a single-level indexed allocation. Given a file currently consisting of 1 disk block, how many disk block read or write operations are required to add a block to the end of this file?</p>
+<p>Total 2 operations. 1 IO operation to load the file header. Then the kernel modifies the file header to add one block. Then it does 1 IO operation to store the added data block. (If they answer 3, then the third has to be writing the index header to the disk. Then it is ﬁne).</p>
+<p><strong>Q4.3</strong> We use indexed allocation to store a file on a disk and we assume that each disk block is of size 16K bytes. Each entry in an index block takes 4 bytes. What is the maximum size of a file that can be mapped by a single-level indexed allocation? Illustrate with a ﬁgure to show the levels of index indirection required to map a file of size 16 gigabytes?</p>
+<ul>
+<li>16K/4=4K entries per index block.</li>
+<li>The maximum size of a ﬁle with single indirect block = 4K x 16K bytes = 64MB.</li>
+<li>Maximum size for two levels: 4K x 4K x 16K = 256GB.</li>
+<li>16GB would require 2 levels.</li>
+</ul>
+<p><strong>Q6.1</strong> Suppose that a disk drive has 200 cylinders, numbered from 0 to 199. The drive is currently serving a request at cylinder 120, and the previous request was at cylinder 100. The queue of pending requests, in FIFO order is: 80, 190, 40, 110. Illustrate the disk arm movement using the FCFS and SCAN algorithms. Compute the total movement in cylinders for each algorithm.</p>
+<ul>
+<li>FCFS: 120, 80, 190, 40, 110. In total 370.</li>
+<li>SCAN: 120, 190, 110, 80, 40. In total 220.</li>
+</ul>
+<p><strong>Q6.2</strong> Suppose this disk drive spins at 12000 RPM, and has a sector size of 512 bytes, and holds 50 sectors per track. What is sustained transfer rate of this drive in megabytes per second? Assume average seek time for the above drive is 7.3 milliseconds, what is the eﬀective transfer rate for random-access of two consecutive sectors on a disk track? (Namely ﬁnd the position ﬁrst, then transfer two sectors together)</p>
+<ul>
+<li>Each second spins 12000/60 = 200 times.</li>
+<li>Each spin transfers a track of 25 KB (50 sectors x 0.5 KB).</li>
+<li>Sustained average transfer rate is 200 x 25 KB = 5 MB/s.</li>
+<li>Average rotational cost is time to travel track: 1/100 x 0.5 = 2.5 ms.</li>
+<li>Transfer time is 7.3 ms to seek + 2.5 ms rotational latency + 0.2 ms (reading two sectors takes 0.001 MB / 5 MB) = 10 ms.</li>
+<li>Effective transferring rate: 1KB / 0.01s = 0.1 MB/s.</li>
+</ul>
+<p><strong>Q7</strong> The following pseudo code is executed by each thread and the code uses <code>Swap()</code> atomic instruction to implement a critical section solution to synchronize threads.</p>
+<div class="sourceCode"><pre class="sourceCode cpp"><code class="sourceCode cpp">ThreadFunction() {
+    <span class="dt">int</span> key = TRUE;
+    <span class="dt">int</span> lock = TRUE;
+    <span class="cf">while</span> (key == TRUE)
+        Swap (&amp;lock, &amp;key);
+    <span class="co">// Perform critical section code</span>
+    lock = FALSE;
+}</code></pre></div>
+<p><strong>Q7.1</strong> Should variables <code>lock</code> and <code>key</code> be shared among threads? Correct the above code and initialize variables properly.</p>
+<p>lock is shared, key is not.</p>
+<div class="sourceCode"><pre class="sourceCode cpp"><code class="sourceCode cpp"><span class="dt">int</span> lock = FALSE;
+ThreadFunction() {
+    <span class="dt">int</span> key = TRUE;
+    <span class="cf">while</span> (key == TRUE)
+        Swap (&amp;lock, &amp;key);
+    <span class="co">// Perform critical section code</span>
+    lock = FALSE;
+}</code></pre></div>
+<p><strong>Q7.2</strong> Does the above corrected solution satisfy each of the following three properties: mutual exclusion, progress, bounded waiting?</p>
+<p>Mutual exclusion: yes. Progress: yes. Bounded waiting: no.</p>
+<p><strong>Q7.3</strong> Chapter 5 of the text book discussed a solution for the readers-writers problem. In this problem, a data set is shared among a number of threads. A synchronization solution is required so that multiple readers can read at the same time. But when one writer is accessing a shared data item, other writers or readers cannot access this shared item.</p>
+<div class="sourceCode"><pre class="sourceCode cpp"><code class="sourceCode cpp">Lock *w = <span class="kw">new</span> Lock(<span class="st">&quot;Write-Lock&quot;</span>);
+
+<span class="co">// Writer thread:</span>
+<span class="cf">while</span>(<span class="dv">1</span>) {
+  w-&gt;Acquire();
+  <span class="co">// Writing is performed</span>
+  w-&gt;Release();
+}
+
+<span class="co">// Reader thread:</span>
+<span class="cf">while</span>(<span class="dv">1</span>) {
+  w-&gt;Acquire();
+  <span class="co">// Reading is performed</span>
+  w-&gt;Release();
+}</code></pre></div>
+<p>Explain if the following solution meets the requirement? If not, explain and provide a solution with pseudo code.</p>
+<div class="sourceCode"><pre class="sourceCode cpp"><code class="sourceCode cpp">Semaphore mutex initialized to <span class="dv">1</span> (they may use a lock)
+Semaphore wrt initialized to <span class="dv">1</span> (it is wrong to use a lock <span class="cf">for</span> wrt)
+Integer readcount initialized to <span class="dv">0</span>
+
+<span class="co">// Writer thread</span>
+<span class="cf">while</span>(<span class="dv">1</span>) {
+  wrt-&gt;P();
+  <span class="co">// Writing is performed</span>
+  wrt-&gt;V();
+}
+
+<span class="co">// Reader thread</span>
+<span class="cf">while</span>(<span class="dv">1</span>) {
+  mutex.P();
+  readcount++;
+  <span class="cf">if</span> (readcount == <span class="dv">1</span>) wrt.P();
+  mutex.V()
+  <span class="co">// reading is performed</span>
+  mutex.P();
+  readcount--;
+  <span class="cf">if</span> (readcount == <span class="dv">0</span>) wrt.V();
+  mutex.V();
+}</code></pre></div>
+<p>Extend this solution and allow at most 10 readers that can read at the same time.</p>
+<div class="sourceCode"><pre class="sourceCode cpp"><code class="sourceCode cpp">Semaphore mutex initialized to <span class="dv">1</span>
+Semaphore wrt initialized to <span class="dv">1</span>
+Semaphore rd initialized to <span class="dv">10</span>
+Integer readcount initialized to <span class="dv">0</span>
+
+<span class="co">// Writer thread</span>
+<span class="cf">while</span>(<span class="dv">1</span>) {
+    wrt-&gt;P();
+    <span class="co">// Writing is performed</span>
+    wrt-&gt;V();
+}
+
+<span class="co">// Reader thread</span>
+<span class="cf">while</span>(<span class="dv">1</span>) {
+    rd.P();
+    mutex.P();
+    readcount++;
+    <span class="cf">if</span> (readcount == <span class="dv">1</span>) wrt.P();
+    mutex.V()
+    <span class="co">// reading is performed</span>
+    mutex.P();
+    readcount--;
+    <span class="cf">if</span> (readcount == <span class="dv">0</span>) wrt.V();
+    mutex.V();
+    rd.V();
+}</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode cpp"><code class="sourceCode cpp">Lock mutex
+Semaphore wrt initialized to <span class="dv">1</span>
+Integer readcount initialized to <span class="dv">0</span>
+Cond as condition variable
+
+<span class="co">// Writer thread</span>
+<span class="cf">while</span>(<span class="dv">1</span>) {
+    wrt-&gt;P();
+    <span class="co">// Writing is performed</span>
+    wrt-&gt;V();
+}
+
+<span class="co">// Reader thread</span>
+<span class="cf">while</span>(<span class="dv">1</span>) {
+    mutex.Acquire();
+    <span class="cf">while</span> (readcount &gt;= <span class="dv">10</span>) Cond-&gt;Wait(mutex);
+    readcount++;
+    <span class="cf">if</span> (readcount == <span class="dv">1</span>) wrt.P();
+    mutex.Relase();
+    <span class="co">// reading is performed</span>
+    mutex.Acquire();
+    readcount--;
+    Cond-&gt;Signal(mutex);
+    <span class="cf">if</span> (readcount == <span class="dv">0</span>) wrt.V();
+    mutex.Relase();
+}</code></pre></div>
+<h2 id="code">Code</h2>
+<h3 id="rwlock-implementation">RWLock implementation</h3>
+<pre><code>//----------------------------------------------------------------------
+// Semaphore::Semaphore
+//  Initialize a semaphore, so that it can be used for synchronization.
+//
+//  &quot;debugName&quot; is an arbitrary name, useful for debugging.
+//  &quot;initialValue&quot; is the initial value of the semaphore.
+//----------------------------------------------------------------------
+
+Semaphore::Semaphore(char* debugName, int initialValue)
+{
+    name = debugName;
+    value = initialValue;
+    queue = new List;
+}
+
+//----------------------------------------------------------------------
+// Semaphore::~Semaphore
+//  De-allocate semaphore, when no longer needed.  Assume no one
+//  is still waiting on the semaphore!
+//----------------------------------------------------------------------
+
+Semaphore::~Semaphore()
+{
+    delete queue;
+}
+
+//----------------------------------------------------------------------
+// Semaphore::P
+//  Wait until semaphore value &gt; 0, then decrement.  Checking the
+//  value and decrementing must be done atomically, so we
+//  need to disable interrupts before checking the value.
+//
+//  Note that Thread::Sleep assumes that interrupts are disabled
+//  when it is called.
+//----------------------------------------------------------------------
+
+void
+Semaphore::P()
+{
+    IntStatus oldLevel = interrupt-&gt;SetLevel(IntOff);   // disable interrupts
+
+    while (value == 0) {            // semaphore not available
+        queue-&gt;Append((void *)currentThread);   // so go to sleep
+        currentThread-&gt;Sleep();
+    }
+    value--;                    // semaphore available, consume its value
+
+    (void) interrupt-&gt;SetLevel(oldLevel);   // re-enable interrupts
+}
+
+//----------------------------------------------------------------------
+// Semaphore::V
+//  Increment semaphore value, waking up a waiter if necessary.
+//  As with P(), this operation must be atomic, so we need to disable
+//  interrupts.  Scheduler::ReadyToRun() assumes that threads
+//  are disabled when it is called.
+//----------------------------------------------------------------------
+
+void
+Semaphore::V()
+{
+    Thread *thread;
+    IntStatus oldLevel = interrupt-&gt;SetLevel(IntOff);
+
+    thread = (Thread *)queue-&gt;Remove();
+    if (thread != NULL)    // make thread ready, consuming the V immediately
+        scheduler-&gt;ReadyToRun(thread);
+    value++;
+    (void) interrupt-&gt;SetLevel(oldLevel);
+}
+
+//----------------------------------------------------------------------
+// Lock::Lock
+//  Initialize a lock, so that it can be used for synchronization.
+//  A lock is very much like a semaphore with initial value 1.
+//p
+//  &quot;debugName&quot; is an arbitrary name, useful for debugging.
+//----------------------------------------------------------------------
+
+Lock::Lock(char* debugName)
+{
+    name = debugName;
+    value = 1;
+    queue = new List;
+}
+
+//---------------------------------------------------------------------
+// Lock::~Lock
+//   Dedestuct a lock, when no longer needed. Assume no one is still
+//   holding a lock!
+//---------------------------------------------------------------------
+Lock::~Lock()
+{
+    delete queue;
+}
+
+//---------------------------------------------------------------------
+// Lock::Acquire
+//   This function waits for a lock to become free and then acquires
+//   the lock for the current thread.
+//---------------------------------------------------------------------
+void Lock::Acquire()
+{
+    IntStatus oldLevel = interrupt-&gt;SetLevel(IntOff);
+    // if the lock is acquired by someone else, put the current thread
+    // to the waiting queue and sleep
+    while (value == 0) {
+        queue-&gt;Append((void*)currentThread);
+        currentThread-&gt;Sleep();
+    }
+    // acquire the lock
+    value = 0;
+    owner = currentThread;
+    (void)interrupt-&gt;SetLevel(oldLevel);
+}
+
+//---------------------------------------------------------------------
+// Lock::Release
+//   This function releases a lock that was previously acquired by the
+//   current thread, and wakes up one of the threads waiting for the
+//   lock.
+//---------------------------------------------------------------------
+void Lock::Release()
+{
+    ASSERT(isHeldByCurrentThread());
+    IntStatus oldLevel = interrupt-&gt;SetLevel(IntOff);
+    // release the lock
+    value = 1;
+    owner = NULL;
+    // put a thread in the waiting queue (if any) to the ready queue
+    Thread *thread = (Thread*)queue-&gt;Remove();
+    if (thread != NULL)
+        scheduler-&gt;ReadyToRun(thread);
+    (void)interrupt-&gt;SetLevel(oldLevel);
+}
+
+//---------------------------------------------------------------------
+// Lock::isHeldByCurrentThread
+//   True if the current thread holds this lock. It is useful for
+//   checking in Release, and in condition variable ops below.
+//---------------------------------------------------------------------
+bool Lock::isHeldByCurrentThread()
+{
+    return value == 0 &amp;&amp; currentThread == owner;
+}
+
+
+//---------------------------------------------------------------------
+// Condition::Condition
+//   Initializes a condition object.
+//---------------------------------------------------------------------
+Condition::Condition(char* debugName)
+{
+    name = debugName;
+    queue = new List;
+}
+
+//---------------------------------------------------------------------
+// Condition::~Condition
+//   Destruct a condition object, when it is no longer needed.
+//---------------------------------------------------------------------
+Condition::~Condition()
+{
+    delete queue;
+}
+
+//---------------------------------------------------------------------
+// Condition::Wait
+//   Waits for a condition to become free and then acquires the
+//   condition for the current thread.
+//---------------------------------------------------------------------
+void Condition::Wait(Lock* conditionLock)
+{
+    ASSERT(conditionLock-&gt;isHeldByCurrentThread());
+
+    IntStatus oldLevel = interrupt-&gt;SetLevel(IntOff);
+    conditionLock-&gt;Release();
+    queue-&gt;Append((void*)currentThread);
+    currentThread-&gt;Sleep();
+    conditionLock-&gt;Acquire();
+    (void)interrupt-&gt;SetLevel(oldLevel);
+}
+
+//---------------------------------------------------------------------
+// Condition::Signal
+//   Wakes up one of the threads that is waiting on the condition.
+//---------------------------------------------------------------------
+void Condition::Signal(Lock* conditionLock)
+{
+    ASSERT(conditionLock-&gt;isHeldByCurrentThread());
+
+    Thread *thread = (Thread*)queue-&gt;Remove();
+    if (thread != NULL)
+        scheduler-&gt;ReadyToRun(thread);
+}
+
+//---------------------------------------------------------------------
+// Condition::Broadcast
+//   Wakes up all threads that are waiting for the condition.
+//---------------------------------------------------------------------
+void Condition::Broadcast(Lock* conditionLock)
+{
+    ASSERT(conditionLock-&gt;isHeldByCurrentThread());
+
+    Thread *thread;
+    while ((thread = (Thread*)queue-&gt;Remove()))
+        scheduler-&gt;ReadyToRun(thread);
+}</code></pre>
+<h3 id="rwlock-usage">RWLock usage</h3>
+<pre><code>#include &quot;rwlock.h&quot;
+#pragma GCC diagnostic ignored &quot;-Wwrite-strings&quot;
+
+RWLock::RWLock() {
+#ifdef P1_SEMAPHORE
+    read_lock = new Semaphore(&quot;read lock&quot;, 1);
+    write_lock = new Semaphore(&quot;write lock&quot;, 1);
+    blocking_writer = 0;
+#endif
+
+#ifdef P1_LOCK
+    read_lock = new Lock(&quot;read lock&quot;);
+    write_lock = new Lock(&quot;write lock&quot;);
+    blocking_writer = 0;
+#endif
+
+#ifdef P1_RWLOCK
+    active_writer = 0;
+    active_reader = 0;
+    waiting_writer = 0;
+    waiting_reader = 0;
+    mutex = new Lock(&quot;mutex&quot;);
+    ok_to_read = new Condition(&quot;read cv&quot;);
+    ok_to_write = new Condition(&quot;write cv&quot;);
+#endif
+}
+
+RWLock::~RWLock() {
+#ifdef P1_SEMAPHORE
+    delete read_lock;
+    delete write_lock;
+#endif
+
+#ifdef P1_LOCK
+    delete read_lock;
+    delete write_lock;
+#endif
+
+#ifdef P1_RWLOCK
+    delete mutex;
+    delete ok_to_read;
+    delete ok_to_write;
+#endif
+}
+
+void RWLock::startWrite() {
+#ifdef P1_SEMAPHORE
+    write_lock-&gt;P();
+#endif
+
+#ifdef P1_LOCK
+    write_lock-&gt;Acquire();
+#endif
+
+#ifdef P1_RWLOCK
+    mutex-&gt;Acquire();
+    while (active_writer + active_reader &gt; 0) {
+        waiting_writer++;
+        ok_to_write-&gt;Wait(mutex);
+        waiting_writer--;
+    }
+    active_writer++;
+    mutex-&gt;Release();
+#endif
+}
+
+void RWLock::doneWrite() {
+#ifdef P1_SEMAPHORE
+    write_lock-&gt;V();
+#endif
+
+#ifdef P1_LOCK
+    write_lock-&gt;Release();
+#endif
+
+#ifdef P1_RWLOCK
+    mutex-&gt;Acquire();
+    active_writer--;
+    if (waiting_writer &gt; 0)
+        ok_to_write-&gt;Signal(mutex);
+    else
+        ok_to_read-&gt;Broadcast(mutex);
+    mutex-&gt;Release();
+#endif
+}
+
+void RWLock::startRead() {
+#ifdef P1_SEMAPHORE
+    read_lock-&gt;P();
+    blocking_writer++;
+    // first reader locks write_lock
+    if (blocking_writer == 1)
+        write_lock-&gt;P();
+#endif
+
+#ifdef P1_LOCK
+    read_lock-&gt;Acquire();
+    blocking_writer++;
+    // first reader locks write_lock
+    if (blocking_writer == 1)
+      write_lock-&gt;Acquire();
+#endif
+
+#ifdef P1_RWLOCK
+    mutex-&gt;Acquire();
+    while (active_writer &gt; 0 || waiting_writer &gt; 0) {
+        waiting_reader++;
+        ok_to_read-&gt;Wait(mutex);
+        waiting_reader--;
+    }
+    active_reader++;
+    mutex-&gt;Release();
+#endif
+}
+
+void RWLock::doneRead() {
+#ifdef P1_SEMAPHORE
+    blocking_writer--;
+    // last reader unlocks write_lock
+    if (blocking_writer == 0)
+        write_lock-&gt;V();
+    read_lock-&gt;V();
+#endif
+
+#ifdef P1_LOCK
+    blocking_writer--;
+    // last reader unlocks write_lock
+    if (blocking_writer == 0)
+      write_lock-&gt;Release();
+    read_lock-&gt;Release();
+#endif
+
+#ifdef P1_RWLOCK
+    mutex-&gt;Acquire();
+    active_reader--;
+    if (active_reader == 0 &amp;&amp; waiting_writer &gt; 0)
+        ok_to_write-&gt;Signal(mutex);
+    mutex-&gt;Release();
+#endif
+}</code></pre>
+<h2 id="project-readme">Project README</h2>
+<h3 id="project-2-multiprogramming">Project 2 Multiprogramming</h3>
+<h4 id="first-part">First part</h4>
+<p>In the first part of this assignment, you are to implement the <code>Fork()</code>, <code>Yield()</code>, <code>Exit()</code>, <code>Exec()</code>, and <code>Join()</code> system calls that act as follows:</p>
+<ul>
+<li>The <code>Fork(func)</code> system call creates a new user-level (child) process, whose address space starts out as an exact copy of that of the caller (the parent), but immediately the child abandons the program of the parent and starts executing the function supplied by the single argument. Notice this definition is different from the one in the <code>syscall.h</code> file in Nachos.</li>
+<li>The <code>Yield()</code> call is used by a process executing in user mode to temporarily relinquish the CPU to another process.</li>
+<li>The <code>Exit(int)</code> call takes a single argument, which is an integer status value as in Unix. The currently executing process is terminated and returns the exit code.</li>
+<li>The <code>Exec(filename)</code> system call spawns a new user-level process with a new address space that begins executing a new program given by the object code in the Nachos file whose name is supplied as an argument to the call. It should return to the parent a <code>SpaceId</code> which can be used to uniquely identify the newly created process. <code>syscall.h</code> defines 4 arguments and please ignore the other 3 arguments.</li>
+<li>The <code>Join()</code> call waits and returns only after a process with the specified ID (supplied as an argument to that call) has finished. It collects and returns the exit code from the targeted process.</li>
+</ul>
+<h4 id="second-part">Second part</h4>
+<p>In the second part of this assignment, you are to implement the file system calls: <code>Creat()</code>, <code>Open()</code>, <code>Read()</code>, <code>Write()</code>, and <code>Close()</code>. The semantics of these calls are specified in <code>syscall.h</code>. You should extend your file system implementations to handle the console as well as normal files.</p>
+<h4 id="issues-to-consider">Issues to consider</h4>
+<p>Here is an outline of the the major issues you will have to deal with to make Nachos into a multiprogrammed system:</p>
+<p>In order to handle the various system calls, you will need to modify the <code>ExceptionHandler()</code> function in <code>exception.cc</code> to determine which system call or exception occurred, and to transfer control to an appropriate function. You might want to consider introducing &quot;stubs&quot; (functions with empty bodies or with debugging printout so you can tell when they are called) for all the system calls right away, and then postpone their actual implementation until a bit later. This strategy will help you understand better how control is transferred from user mode to system mode when a system call is executed.</p>
+<p>The Nachos code you have been given is extremely simple-minded about memory management. In particular, the constructor function <code>AddrSpace::AddrSpace()</code> simply determines the amount of memory that will be required by the application to be run and then allocates that much space contiguously starting at address zero in physical memory. The page tables (which control the address translation hardware) are set up so that the logical addresses (what the user program sees) are identical to the physical addresses (where the data is actually stored).</p>
+<p>The above scheme is inadequate for running more than one application at a time. You will need to design and implement a scheme for allocating and freeing physical memory, and you will need to arrange to set up the page tables so that the logical address space seen by a user application is a contiguous region starting from address zero, even though the data is stored at different physical addresses. You will want to implement a memory management scheme that is flexible enough to extend to virtual memory later in the semester. We suggest implementing a C++ class with methods for allocating and freeing physical memory one page at a time. By setting up the page tables properly, you can give the user application a contiguous logical address space even though each page of actual data might be stored anywhere in physical memory.</p>
+<p>The <code>Fork()</code> system call is the most difficult part of this assignment. It is different from the system call <code>Exec</code> in that <code>Fork</code> will start a new process that runs a user function specified by the argument of the call, while <code>Exec</code> will start a process that runs a different executable file. The parameter types for <code>Fork()</code> and <code>Exec()</code> also differ. <code>Fork(func)</code> takes an argument func which is a pointer to a function. The function must be compiled as part of the user program that is currently running. By making this system call <code>Fork(func)</code>, the user program expects the following: a new thread will be generated for use by the user program; and this thread will run func in an address space that is an exact copy of the current one. This implementation of Fork makes it possible to have and to access multiple entry points in an executable file.</p>
+<p>To make the system call <code>Fork(func)</code> work for the user program, you will need to know how to find the entry point of the function that is passed as the parameter. The parameter convention is determined by the cross-compiler which produces executable code from the user source program. Look at the file <code>exception.cc</code> to see that this entry point, which is an address in the executable code's address space, is already loaded into register 4 when the trap to the exception handler occurs. All you need to do is to insert code into the exception handler (or call a new function of your own) which does the following: set up an address space which is a copy of the address space of the current thread, and load the address that is in register 4 into the program counter. After these steps, use <code>Thread::Fork()</code> to create a new thread, initialize the MIPS registers for the new process, and have both the new and old processes return to user mode. The parent should return to user mode by returning from the exception handler, the child process should continue to run from the address that is now in the program counter, which is the entry point of the function. To implement Fork, you will need to introduce modifications to the AddrSpace class in addrspace.cc so that you can make a `<code>clone'' of a running user application program. We suggest adding a function that will create a new address space as an exact copy of the original. You will have to allocate additional physical memory for this copy, set up the page tables properly for the new address space, and copy the data from the old address space to the new. Once the physical memory has been allocated and the page tables set up, you will use</code>Thread::Fork()<code>to create a new kernel thread, initialize the MIPS registers for the new process, and then have both the old and the new processes return to user mode. The child process should continue by finishing the</code>Fork()<code>system call. The parent should return to user mode merely by returning from the</code>ExceptionHandler()` function.</p>
+<p>The <code>Exit()</code> system call should work by calling <code>Thread::Finish()</code>, but only after deallocating any physical memory and other resources that are assigned to the thread that is exiting.</p>
+<p>In order to implement the <code>Exec()</code> system call, you will need a method for transferring data (the name of the executable, supplied as the argument to the system call) between the user address space and the kernel. You are not to use functions <code>Machine::ReadMem()</code> and <code>Machine::WriteMem()</code> in <code>machine/translate.cc</code>. Instead, you will have to code your own functions that take into account the address translations described by the page tables to locate the proper physical address for any given logical address. (Recall that strings in C are stored as sequences of characters in successive memory locations, terminated by a null character.)</p>
+<p>Once the name of the executable has been copied into the kernel, and the file has been verified to exist, the executable file should be consulted to determine the amount of physical memory required for the new program. This physical memory should be allocated and initialized with data from the executable file, the page tables thread should be adjusted for the new program, the MIPS registers should be reinitialized for starting at the beginning of the new program, and control should return to user mode. File progtest.cc contains a sample for executing a binary program.</p>
+<p>If you use <code>machine-&gt;Run</code> to execute a user program, it terminates the current thread. Since <code>Exec()</code> needs to return a space ID to the caller, you should find a way to do that.</p>
+<p>NOTE: The object code produced by the MIPS cross-compiler assumes that the data segment begins at the physical address immediately following the text segment. In particular, there is no page alignment, so that if the text segment ends in the middle of a page, then the data segment will start just after it and the page will contain both code and data.</p>
+<p><code>Yield()</code> system call will call <code>Thread::Yield()</code> after making sure to save any necessary state information about the currently executing process.</p>
+<p>Be sure to synchronize your code correctly. You will need to put lock operations in your code to ensure that it will work properly. Your locking should be fine grained enough to eliminate any spurious latency problems caused by coarse grained locking. For example, any time a thread accesses the disk or the console it should not hold a lock that would prevent another thread from accessing some other I/O device or piece of data.</p>
+<p>You should buffer user file reads in a disk buffer called diskBuffer (defined in <code>system.cc</code>). All of your user-level file I/O must go through the <code>diskBuffer</code>.</p>
+<p>You will need to solve a synchronization problem that occurs when multiple processes try to read or write from a file at the same time.</p>
+<h4 id="threads-and-processes">Threads and processes</h4>
+<p><code>Thread::Fork()</code> spawns a new kernel thread that uses the same AddrSpace as the thread that spawned it. If that address space is duplicated and not shared, it is no longer a kernel thread but a Forked Process. If that AddrSpace instead contains code and data loaded in from a separate file, it is no longer a forked process, but an executed process. The details of <code>Fork()</code> and <code>Exec()</code> are covered in steps 1) and 7) below.</p>
+<h4 id="system-calls">System calls</h4>
+<p>In <code>code/userprog/exception.cc</code>, put function calls for each system call. Just print debug statements in these functions for now, so you can see when system calls get executed. The function may need to return or take an argument. Because the argument lies in user space, you will need to transfer it over using machine register reads and writes. A sample stub illustrating this is shown below.</p>
+<div class="sourceCode"><pre class="sourceCode cpp"><code class="sourceCode cpp"><span class="cf">case</span> SC_Join:
+    <span class="dt">int</span> result = myJoin(machine-&gt;ReadRegister(<span class="dv">4</span>));
+    machine-&gt;WriteRegister(<span class="dv">2</span>, result);
+    <span class="cf">break</span>;</code></pre></div>
+<p>If the system calls: <code>Fork()</code>, <code>Yeild()</code>, <code>Exec()</code>, <code>Join()</code> and <code>Exit()</code> are implemented in that order, you will not have to worry about the call you are currently working on depending upon unimplemented calls.</p>
+<p>Remember that the last thing the <code>ExceptionHandler</code> function needs to do when executing a system call is increment the program counter. Write a helper function to do this - it needs to update <code>PCreg</code>, <code>NextPCreg</code>, and <code>PrevPCreg</code>. They should all incriment by 32 bits (4 bytes).</p>
+<h4 id="steps-to-a-multi-programmed-nachos">10 steps to a multi-programmed Nachos</h4>
+<ol style="list-style-type: decimal">
+<li><p>Implement <code>Fork()</code>. Fork will create a new kernel thread and set it's AddrSpace to be a duplicate of the CurrentThread's space. It sets then <code>Yields()</code>. The new thread runs a dummy function that will will copy back the machine registers, PC and return registers saved from before the yield was performed. You did save the PC, return and other machine registers didn't you?</p>
+<p>Duplicating the AddrSpace requires the implementation of a Memory Manager detailed in steps 2-4. <code>Fork()</code> will not work completely until the completion of step 4. Don't get stuck on step 1), steps 2-4 are much more important.</p></li>
+<li><p>Write a Memory Manager that will be used to facilitate contiguous virtual memory. The amount of memory available to the user space is the same as the amount of physical memory, it's not until project 3 that you will have to implement swapping virtual memory.</p>
+<p>You will need just two methods at first 1) <code>allocFrame()</code> allocates the first free frame (in physical memory) and 2) <code>freeFrame(int i)</code> takes the index of a frame and marks it free. You can use a <code>Bitmap</code> (in <code>code/userprog/bitmap.*</code>) with one bit per page to track allocation or use your own integer array, which ever you prefer.</p>
+<p>Modify <code>AddrSpace</code> (<code>code/userprog/addrspace.*</code>) to use the memory manager. first, modify the page table constructors to use pages allocated by your memory manager for the physical page index. The later modification will come in step 4.</p></li>
+<li><p>Write the<code>AddrSpace::Translate</code> function, which converts a virtual address to a physical address. It does so by breaking the virtual address into a page table index and an offset. It then looks up the physical page in the page table entry given by the page table index and obtains the final physical address by combining the physical page address with the page offset. It might help to pass a pointer to the space you would like the physical address to be stored in as a paramter. This will allow the function to return a boolean TRUE or FALSE depending on whether or not the virtual address was valid. If confused, consult the text book on memory management and page table or <code>Machine::Translate()</code> in <code>machine/translate.cc</code>.</p></li>
+<li><p>Write the <code>AddrSpace::ReadFile</code> function, which loads the code and data segments into the translated memory, instead of at position 0 like the code in the AddrSpace constructor already does. This is needed not only for <code>Exec()</code> but for the initial startup of the machine when executing any test program with virtual memory.</p>
+<p>You should buffer user file reads in a disk buffer called diskBuffer (defined in <code>system.h</code>). All of your user-level file I/O must go through the diskBuffer. Be sure to to under or over run the buffer during the copy. Also be sure not to write too much of the file into memeory. You can use the following prototype for the function.</p>
+<div class="sourceCode"><pre class="sourceCode cpp"><code class="sourceCode cpp"> <span class="dt">int</span> AddrSpace::ReadFile(<span class="dt">int</span> virtAddr,
+                         OpenFile* file,
+                         <span class="dt">int</span> size,
+                         <span class="dt">int</span> fileAddr);</code></pre></div>
+<p>You will also need to use the functions: <code>File::ReadAt(buff,size,addr)</code> and <code>bcopy(src,dst,num)</code> as well as the memory locations at <code>machine-&gt;mainMemory[physAddr]</code>.</p>
+<p>At this point, test programs should work the same as before. That is, the halt program and other system calls will still operate the way they did before you modified AddrSpace. Also <code>Fork()</code> should be working. Test your implementation appropriately.</p></li>
+<li><p>Write the PCB and a process manager. Create a PCB class that will store the necessary information about a process. Don't worry about putting everything in it right now, you can always add more as you go along. To start, it should have a <code>PID</code>, <code>parent PID</code>, and <code>Thread*</code>. The process manager should do the same thing as the memory manager - it has <code>getPID</code> and <code>clearPID</code> methods, which return an unused process id and clear a process id respectively. Again, use a bitmap or similar integer array. You'll also need an array of <code>PCB*</code> to store the PCBs. Modify the AddrSpace constructors to include a PCB as an attribute.</p></li>
+<li><p>With the process manager implemented you will have to modify <code>progtest.cc</code> so that the first process started by the system is given a PCB. The function <code>StartProcess()</code> is defined in <code>progtest.cc</code> and called from <code>threads/main.cc</code>. It loads and runs the first program (the one you passed in with -x). Modify <code>StartProcess()</code> so that a PCB is created for the first process. This process won't have a parent -- be sure to handle this accordingly.</p></li>
+<li><p>Implement <code>Yield()</code>. Given that forked processes are almost the same as kernel threads, this one should be trivial.</p></li>
+<li><p>Implement <code>Exec()</code>. Exec is creating a new process (kernel thread) with new code and data segments loaded from the OpenFile object constructed from the filename passed in by the user. In order to get that file name you will have to write a function that copies over the string from user space. This function will start copying memory from the physical address pointed to by the virtual address in <code>machine-&gt;ReadRegister(4)</code>. It should go until it hits a <code>NULL</code> byte.</p>
+<p>Fork the new thread to run a dummy function that sets the machine registers straight and runs the machine. The calling thread should yield to give control to the newly spawned thread. At this point you should be able to call test files from other test using <code>Exec(someTestFile)</code> from <code>someOtherTestFile.c</code> (in the <code>test/</code> dir).</p></li>
+<li><p>Implement <code>Join()</code>. Join should force the current running thread to wait for some process to finish. The PCB manager can keep track of who is waiting for who using a condition variable for each PCB.</p></li>
+<li><p>Implement <code>Exit(int status)</code>. This function should set set the status in the PCB being exited. It should also force any threads waiting on the exiting process to wake up.</p></li>
+<li><p>Test your system calls using your own test programs, then the ones in <code>~cs170/nachos-projtest/proj2</code> that don't rely on part 2. If you have time, test using some programs to do crazy or malicious things.</p></li>
+</ol>
+<h4 id="part-2-implementation-suggestions">Part 2 implementation suggestions</h4>
+<p>We will be using Nachos files exclusivly in part 2. This will be good preparation for project 3. Nachos files are similar to Unix files except they are stored on avirtual disk that is implemented as one big Unix file. The interface to <code>Create</code>, <code>Open</code>, <code>Close</code>, <code>WriteAt</code> and <code>ReadAt</code> to those files are defined in <code>filesys/filesys.cc</code>, <code>filesys/openfile.cc</code> and<code>filesys/filehdr.h</code>. You may want to look through those files when getting ready to call these functions for the first time.</p>
+<h3 id="steps-to-an-io-enabled-nachos">10 steps to an I/O enabled Nachos</h3>
+<ol style="list-style-type: decimal">
+<li><p>Create a <code>SysOpenFile</code> object class that contains a pointer to the file system's <code>OpenFile</code> object as well as the systems <code>FileID</code> and <code>fileName</code> for that file and the number of user processes accessing currently it. Declare an array of <code>SysOpenFile</code> objects for use by all system calls implemented in part 2.</p></li>
+<li><p>Create a <code>UserOpenFile</code> object class that contains the <code>fileName</code>, an index into the global <code>SysOpenFile</code> table and an integer offset represeting a processes current position in that file.</p></li>
+<li><p>Modify the <code>AddrSpace</code>'s' PCB to contain an array of <code>OpenUserFiles</code>. Limit the number to something reasonable, but greater than 20. Write a method (in <code>PCBManager</code>) that returns an <code>OpenUserFile</code> object given the filename.</p></li>
+<li><p>Implement <code>Create(char *fileName)</code>. This is a straight forward call that should simply get the <code>fileName</code> from user space then use <code>fileSystem-&gt;Create(fileName,0)</code> to create a new instance of an <code>OpenFile</code> object. Until a user opens the file for IO it is not necessary to do anything further.</p></li>
+<li><p>Implement <code>Open(char *fileName)</code>. This function will use an <code>OpenFile</code> object created previously by <code>fileSystem-&gt;Open(fileName)</code>. Once you have this object, check to see if it is already open by some other process in the global <code>SysOpenFile</code> table. If so, incriment the <code>userOpens</code> count. If not, create a new <code>SysOpenFile</code> and store it's pointer in the global table at the next open slot. You can obtain the <code>FileID</code> by looking up the name in your <code>SysOpenFile</code> table.</p>
+<p>Then create a new instance of an <code>OpenUserFile</code> object (given a <code>SysOpenFile</code> object) and store it in the current thread's PCB's <code>OpenUserFile</code> array.</p>
+<p>Finally, return the <code>FileID</code> to the user.</p></li>
+<li><p>Implement a function to read/write into <code>MainMem</code> and a buffer given a staring virtual address and a size. It should operate in the same way <code>AddrSpace::ReadFile</code> writes into the main memory one <code>diskBuffer</code> at a time. It may help to put the section of the code in <code>ReadFile</code> into a <em>helper</em> function called <code>userReadWrite()</code> that is general enough that both <code>ReadFile()</code>, <code>myRead()</code> and <code>myWrite()</code> can call. It need only be parameterized by the type of operation to be performed (<code>Read</code> or <code>Write</code>).</p>
+<p>When called by <code>Write()</code>, it will read from the <code>MainMem</code> addressed by the virtual addresses. It writes into the given (empty) buffer. <code>Write()</code>, will then put that buffer into an <code>OpenFile</code>. When called by <code>Read()</code>, It will write into <code>MainMem</code> the data in the given (full) buffer that <code>Read()</code> read from an <code>OpenFile</code>.</p></li>
+<li><p>Implement <code>Write(char *buffer, int size, OpenFileId (int)id)</code>. First you will need to get the arguments from the user by reading registers 4-6. If the <code>OpenFileID</code> is <code>ConsoleOutput</code> (defined in <code>syscall.h</code>), then you call <code>PutChar()</code> in <code>console.cc</code> to print the buffer content. Otherwise, grab a handle to the <code>OpenFile</code> object from the user's openfile list pointing to the global file list. Why can't you just go directly to the global file list? Becuase the user may not have opened that file before trying to write to it. Once you have the <code>OpenFile</code> object, you should fill up a buffer using your <code>userReadWrite()</code> function. Then simply call <code>OpenFileObject-&gt;Write(myOwnBuffer, size)</code>;</p></li>
+<li><p>Implement <code>Read(char *buffer, int size, OpenFileId id)</code>. Get the arguments from the user in the same way you did for <code>Write()</code>. If the <code>OpenFileID</code> is <code>ConsoleInput</code>, use a routine (<code>GetChar()</code> in <code>console.cc</code>) to read into a buffer one character at a time. Otherwise, grab a handle to the <code>OpenFile</code> object in the same way you did for <code>Write()</code> and use <code>OpenFileObject-&gt;ReadAt(myOwnBuffer,size,pos)</code> to put <em>n</em> characters into your buffer. <code>pos</code> is the position listed in the <code>UserOpenFile</code> object that represents the place in the current file you are writing to. The number read is returned from <code>ReadAt()</code>.</p>
+<p>Now that your buffer is full of the read, you must write that buffer into the user's memory using the <code>userReadWrite()</code> function. Finally, return the number of bytes written.</p></li>
+<li><p>Test your system calls using your own test programs, then the ones in <code>~cs170/nachoos-projtest/proj2</code> Now that both parts are finished all test programs should work.</p></li>
+<li><p>Test some more.</p></li>
+</ol>
+<h4 id="faq">FAQ</h4>
+<blockquote>
+<p><strong>Question</strong>: How can I test part one (why doesn't printf work in my test programs)?</p>
+</blockquote>
+<p><strong>Answer</strong>: Until you have part 2 done you will have to test part 1 based on flow of execution. For example: to test if Fork/Exec works you Fork/Exec a function/executable and then call Halt() in the function/executable. If Nachos halts when you run your test program then your system call is probably working. Once you have the Write system call implemented you can further test part 1 by putting your Write statements where ever you wish to print something out. This will be useful for testing Join.</p>
+<blockquote>
+<p><strong>Question</strong>: What does a process control block contain?</p>
+</blockquote>
+<p><strong>Answer</strong>: A process control block (pcb) contains the attributes of a process. Some of the major attributes are the thread, the pid (SpaceID), open files, etc (remember that the thread has a pointer to the addrspace which is an indirect attribute of a pcb). There should be a global table of process control blocks as well. Remember that you will also want to be able to get a particular process's condition so that it can be waited on in Join (if necessary) and broadcast in Exit. It may not seem like you are using the process control blocks much in part 1 of the project (except for adding and deleting them) but you will use them more in part 2 of the project).</p>
+<blockquote>
+<p><strong>Question</strong>: How do I translate the name of the executable when implementing Exec?</p>
+</blockquote>
+<p><strong>Answer</strong>: You will want to put a translate function in addrspace that is similar to the translate function in Machine. You will use this function to translate a virtual address into a physical address (one page at a time).</p>
+<blockquote>
+<p><strong>Question</strong>: Is there a difference between the parameters of Exec and Fork?</p>
+</blockquote>
+<p><strong>Answer</strong>: Yes there is. Exec takes the string representing the relative path (from where you run Nachos - userprog in this case) to the test program you wish to exec [ie. Exec(&quot;../test/myExecedProgram&quot;)]. Fork takes the name of the function you wish to fork. It is not a string, but a function pointer so it has the form Fork(myFunction) where you have implemented void myFunction() previously in you test program. In Exec you are translating the string that is passed in and in Fork you are using the pointer to myFunction as the PCReg value for when you run the new thread. If you try to pass a string to Fork or a name (not in string form) to Exec you will have serious problems</p>
+<blockquote>
+<p><strong>Question</strong>: Does a Forked thread use the same addrspace as the thread who Forked it?</p>
+</blockquote>
+<p><strong>Answer</strong>: No it does not. It uses a COPY of the addrspace from the thread who Forked it. This means you must create a new addrspace that has the same size page table as the Forking thread and then you must copy the Forking thread's pages in memory into the Forked threads pages in memory.</p>
+<blockquote>
+<p><strong>Question</strong>: The project spec says we need to add a function ReadFile to Addrspace. What is this used for?</p>
+</blockquote>
+<p><strong>Answer</strong>: This is used for copying the executable's code and data segments into memory (in the constructor for Addrspace (that Exec calls). noffH.code.virtualAddr is the logical address of the executable's code segment and noffH.initData.virtualAddr is the logical address of the executable's data segment. You no longer want to zero out (bzero) the memory. You need to copy these sections page by page into main memory. You will use your Addrspace::Translate to translate the logical data/code address to the physical address (in memory). Then you can use the C/C++/Unix &quot;bcopy&quot; to copy it over.</p>
+<blockquote>
+<p><strong>Question</strong>: Where should we put the global structures/classes?</p>
+</blockquote>
+<p><strong>Answer</strong>: You can put these in system.h in the threads directory. Only put the global variables (their declaration) in this file. Make sure you actually instantiate the global structures (like memory manager) in the system.cc file in the initialize function under the correct #ifdef's (for userprog in this case).</p>
+<blockquote>
+<p><strong>Question</strong>: Does the Exit system call take a parameter? What is that parameter?</p>
+</blockquote>
+<p><strong>Answer</strong>: The Exit system call should take an integer parameter. This parameter is the exit value of the process. This is the same as the exit values in Unix (0 -&gt; good, 1 -&gt; bad). For our purposes you can use any integer here. It only matters that if another process was &quot;Join&quot;ing on your process that the Join call would return the value that your process exited with (as per the project spec). This means that you need to save your exit value some how in the Exit system call so that Join can return it if necessary (even if you've already exited when someone calls Join on your process).</p>
+<blockquote>
+<p><strong>Question</strong>: What should we do when we can't allocate enough physical pages in Addrspace constructor for a new thread?</p>
+</blockquote>
+<p><strong>Answer</strong>: You should let Fork/Exec know that you don't have enough memory so that it can let the user know (return pid of -1) that it didn't Fork/Exec a new process. Make sure that you check if there is enough free pages in physical memory to facilitate the number of pages for your new process before trying to allocate the physical pages for each logical page. If you do not do this one of your allocates will return -1 and you will have to deallocate all the pages you just allocated before you can let Fork/Exec know of the error.</p>
+<blockquote>
+<p><strong>Question</strong>: Do Exec and Fork call thread-&gt;Fork?</p>
+</blockquote>
+<p><strong>Answer</strong>: Yes they do. After you have set all other information up (as in the project spec) you need to thread-&gt;fork a dummy function (that's in exception.cc). In this dummy function you will want to initialize and restore the registers (for Fork and Exec) and then set up the PC registers and return register address (for Exec only). After this you will call machine-&gt;Run() from the dummy function (for both Fork and Exec).</p>
+<h3 id="project-3-virtual-memory-management">Project 3 Virtual memory management</h3>
+<h4 id="additional-information">Additional information</h4>
+<p>In this assignment, we will leverage the following three bits maintained in each page table entry defined in <code>machine/translate.h</code>: <strong>valid</strong>, <strong>dirty</strong>, and <strong>use</strong> bits.</p>
+<p>The valid bit indicates if a page is resident in physical memory or not. If the valid bit in a particular page table entry is set, the MIPS machine assumes that the corresponding virtual page is loaded into physical memory in the physical page frame specified by the physicalPage field. Whenever the program generates an access to that virtual page, the MIPS machine accesses the physical page. If the valid bit is not set, the system generates a page fault exception whenever the program accesses that virtual page. Your exception handler will then find a free physical page frame, read the page in from the backing store SWAP to that physical page frame, update the page table to reflect the new virtual to physical mapping, and restart the program. The MIPS machine will then resume the execution of the program at the instruction that generated the fault. This time the access should go through, since the page has been loaded into physical memory.</p>
+<p>The dirty bit indicates if this page has been modified or not. To find a free frame, your page fault handler may need to eject an in-memory victim page. If the ejected victim page has been modified in the physical memory indicated by the dirty bit in the corresponding page table entry, the page fault handling code must write the page out to the backing store before reading the accessed page into its physical page frame.</p>
+<p>The use bit indicates if this page has been recently accessed. On a page fault, the kernel must decide which page to replace; ideally, it will throw out a page that will not be referenced for a long time, keeping pages in memory those that are soon to be referenced. You are asked to implement the second chance algorithm leveraging this use bit. This bit is set to <code>TRUE</code> every time a user program reads or writes this page. The second chance algorithm follows a clockwise order to find the next victim whose use bit is <code>FALSE</code>. If it sees a page with the use bit value <code>TRUE</code>, it gives this page the second chance to stay, and the use bit of this page should be set as <code>FALSE</code>.</p>
+<h4 id="qa">Q&amp;A</h4>
+<blockquote>
+<p>Where to modify for Task 1?</p>
+</blockquote>
+<p>For this part, you will extend <code>virtualmemorymanager.cc</code> to rewrite Function <code>swapPageIn()</code>.</p>
+<blockquote>
+<p>What are relevant files to read?</p>
+</blockquote>
+<p>Files in <code>vm</code> directory, <code>userprog</code> and <code>machine</code> directories. The given starter code is one possible approach and other designs are also possibles.</p>
+<blockquote>
+<p>Where to start?</p>
+</blockquote>
+<p>First, understand how address translation works in method <code>Machine::Translate</code> in <code>machine/translate.cc</code>, where this method is used, and how <code>PageFaultException</code> can be thrown in this process.</p>
+<p>Figure out how memory access is implemented and where the virtual to physical translation is performed in using the above method. You can trace the MIPS simulator (in <code>machine/mipssim.cc</code>) in executing instructions which trigger Page Fault.</p>
+<p>It is during the translation process that the machine can determine if the virtual address it is trying to access belongs to a page which does not reside in physical memory. Figure out how, when and where the <code>PageFaultException</code> is thrown.</p>
+<blockquote>
+<p>Where is the page fault handled?</p>
+</blockquote>
+<p>The page fault exception is handled in a manner similar to system calls in <code>exception.cc</code>. As a part of raising the page fault exception, the MIPS machine saves the faulting virtual address in a register that will be used by <code>exception.cc</code> to call <code>VirtualMemoryManager::swapPageIn()</code>.</p>
+<blockquote>
+<p>When is the process image stored on the disk and how is SWAP managed?</p>
+</blockquote>
+<p>When a binary file is loaded, its process image including binary code and data sections is stored in the SWAP area.</p>
+<p>For Project 3, SWAP is essentially a Linux file implemented through the stub interface of the Nachos file system (look into <code>filesys/filesys.h</code> and <code>filesys/openfile.h</code>). SWAP contains 512 sectors and each sector has 128 bytes with the same size of a memory page.</p>
+<p>A swap bitmap (<code>swapSectorMap</code>) is allocated in <code>VirtualMemoryManager</code> to keep track the use of each sector of SWAP with a bit. Function <code>virtualMemoryManager::allocSwapSector()</code> is used by <code>addrspace.cc</code> to allocate a sector to store a page of the process image during binary loading.</p>
+<blockquote>
+<p>How many memory pages are allocated to each process when it starts during initial loading (Nachos <code>-x</code> option), <code>Exec()</code>, or <code>Fork()</code>?</p>
+</blockquote>
+<p>Zero. As this process executes an instruction or accesses a user-space data address, this generates page fault exception and triggers the page fault exception handling.</p>
+<blockquote>
+<p>In Task 1, what are main steps of page fault handling in Function <code>SwapPageIn()</code>?</p>
+</blockquote>
+<p>The number of C++ code lines you write for this task is within 50.</p>
+<ul>
+<li>Perform the second-chance algorithm as approximated LRU by checking the use bit of the next page.</li>
+<li>If the next page's use bit is <code>TRUE</code>, give a second chance by setting the use bit as <code>FALSE</code>.</li>
+<li>If the next's use bit is <code>FALSE</code>, you find a victim page.</li>
+<li>Check if the selected victim page is dirty, initiate I/O to write the contents of the victim page to SWAP.</li>
+<li>Adjust the pagetable for the process to which the victim page belongs to reflect the fact that it is no longer resident in memory.</li>
+<li>Initiate I/O to load the desired page for which the fault was generated from the backing store SWAP.</li>
+<li>Adjust the pagetable for the faulting process to reflect the fact that this selected physical page points to the new process space and the desired virtual page is now resident in memory.</li>
+</ul>
+<blockquote>
+<p>What are main data structures and functions that can be leveraged in Function <code>SwapPageIn()</code>?</p>
+</blockquote>
+<ul>
+<li>The basic data structure manipulated by this function is page table entries. The fields of a page table entry defined in <code>machine/translate.h</code> of this starter code include the virtual page number of a process space (<code>virtualPage</code>), the physical page number (<code>physicalPage</code>), the use bit (<code>use</code>), the dirty bit (<code>dirty</code>), the valid bit (<code>valid</code>). The page table entry defined in the starter code also includes The offset of the corresponding sector in SWAP by bytes (<code>locationOnDisk</code>). We ask you to remove this storage location field and store such information in the process address space in <code>addrspace.h</code>.</li>
+<li><code>FrameInfo</code> data structure for a physical page includes the process space this physical page belongs to and the virtual page number (<code>pageTableIndex</code>) in that space.</li>
+<li>Other key functions in <code>VirtualMemoryManger</code> include <code>allocSwapSector()</code> to get a free SWAP sector, <code>writeToSwap()</code> that performs disk I/O to write back a page to a sector in SWAP, <code>loadPagetoCurrVictim()</code> that loads the corresponding virtual page to the assigned physical page.</li>
+<li><code>VirtualMemoryManager::getPageTableEntry(FrameInfo *physPageInfo)</code> returns the page table entry of process space that currently owns this physical page.</li>
+</ul>
+<blockquote>
+<p>How to do Task 2?</p>
+</blockquote>
+<p>The total number of line changes is expected to be small.</p>
+<ul>
+<li>Use <code>grep LocationOnDisk */*.cc</code> or compile after removing <code>LocationOnDisk</code> field in <code>machine/translate.h</code> to see where this filed has been used. Understand how it has been used in storing/loading a process page to/from the disk.</li>
+<li>Add a field in <code>AddrSpace</code> class that is initialized as a pointer to an integer array that gives the SWAP section location of each virtual page.</li>
+<li>Implement <code>putLocationOnDisk(int virtualPage)</code> and <code>getLocationOnDisk(int   virtualPage)</code> methods.</li>
+<li>Replace the read/write access of <code>LocationOnDisk</code> field in all files with the above two methods.</li>
+</ul>
+<blockquote>
+<p>How to print more debugging info?</p>
+</blockquote>
+<p>Use <code>-d v</code> argument. For example, <code>../vm/nachos -d v -x testvmfork</code>. The output format is explained as follows. For the following outputs, <code>pid</code> is the id of the process on which behalf the operation is performed. <code>virtualPage</code> is the involved virtual page number (i.e. the page index into the process virtual address space) and <code>physicalPage</code> is the involved physical page number (i.e., the page index into the physical memory of the Nachos virtual machine).</p>
+<ol style="list-style-type: decimal">
+<li><p>Whenever a page is loaded into physical memory, print</p>
+<pre><code>L [pid]: [virtualPage] -&gt; [physicalPage]</code></pre></li>
+<li><p>Whenever a page is evicted from physical memory and written to the swap area, print</p>
+<pre><code>S [pid]: [physicalPage]</code></pre></li>
+<li><p>Whenever a page is evicted from physical memory and not written to the swap area, print</p>
+<pre><code>E [pid]: [physicalPage]</code></pre></li>
+<li><p>Whenever a process obtains a zero-filled demand page for the first time (i.e., when you allocate and zero the page out), print</p>
+<pre><code>Z [pid]: [virtualPage]</code></pre></li>
+</ol>
+<blockquote>
+<p>Is synchronization needed for concurrent processes in executing system calls?</p>
+</blockquote>
+<p>You should worry about synchronization issues. In general, two kernel activities such as system calls or exception handling may be handled concurrently and context switch is possible. For example, one process handles page fault, which triggers asynchronous I/O for dirty page disk writing or page loading and can sleep in the kernel while another process may initiate I/O on the same page at the same time. Synchronization such as locks can be needed for each memory page.</p>
+<p>In Project 3, the concern is less as long as there is no explicit kernel yield or sleep involved to trigger context switching during the middle of a kernel service. Notice that Nachos disk I/O involved in Projects 2 and 3 uses the Linux file system in the lower level synchronously, which does not trigger kernel thread yield/sleep, and that is not true in a real OS.</p>
+<blockquote>
+<p>Is TLB used in Nachos?</p>
+</blockquote>
+<p>The current implementation disable s the TLB feature available in Nachos.</p>
 </body>
 </html>

@@ -1,0 +1,248 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;} pre{background-color: #222; color: #fff; padding: 1em;}</style>
+  <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_CHTML-full" type="text/javascript"></script>
+</head>
+<body>
+<div id="TOC">
+<ul>
+<li><a href="#graph-algorithms">Graph Algorithms</a><ul>
+<li><a href="#minimum-spanning-tree">Minimum spanning tree</a><ul>
+<li><a href="#growing-a-mst">Growing a MST</a></li>
+<li><a href="#kruskals-algorithm">Kruskal's algorithm</a></li>
+<li><a href="#prims-algorithm">Prim's algorithm</a></li>
+<li><a href="#variants">Variants</a></li>
+</ul></li>
+<li><a href="#single-source-shortest-paths">Single-source shortest paths</a><ul>
+<li><a href="#optimal-substructure-of-a-shortest-path">Optimal substructure of a shortest path</a></li>
+<li><a href="#negative-weight-edges">Negative-weight edges</a></li>
+<li><a href="#shortest-paths-tree">Shortest-paths tree</a></li>
+<li><a href="#relaxation">Relaxation</a></li>
+<li><a href="#properties-of-shortest-paths-and-relaxation">Properties of shortest paths and relaxation</a></li>
+<li><a href="#the-bellman-ford-algorithm">The Bellman-Ford algorithm</a></li>
+<li><a href="#single-source-shortest-paths-in-directed-acyclic-graphs">Single-source shortest paths in directed acyclic graphs</a></li>
+<li><a href="#dijkstras-algorithm">Dijkstra's algorithm</a></li>
+</ul></li>
+<li><a href="#all-pairs-shortest-paths">All-pairs shortest paths</a><ul>
+<li><a href="#shortest-paths-and-matrix-multiplication">Shortest paths and matrix multiplication</a></li>
+<li><a href="#the-floyd-warshall-algorithm">The Floyd-Warshall algorithm</a></li>
+</ul></li>
+</ul></li>
+</ul>
+</div>
+<h1 id="graph-algorithms">Graph Algorithms</h1>
+<h2 id="minimum-spanning-tree">Minimum spanning tree</h2>
+<p>Given a connected, undireted graph <span class="math inline">\(G=(V,E)\)</span>. For each edge <span class="math inline">\((u,v) \in E\)</span>, we have a weight <span class="math inline">\(w(u,v)\)</span> specifying the cost to connect <span class="math inline">\(u\)</span> and <span class="math inline">\(v\)</span>. We wish to find an acyclic subset <span class="math inline">\(T \subseteq E\)</span> that connects all of the vertices and whose total weight <span class="math inline">\(w(T) = \sum_{(u,v) \in T} w(u,v)\)</span> is minimized.</p>
+<p>Kruskal's algorithm and Prim's algorithm both solve the MST problem in time <span class="math inline">\(O(E \lg V)\)</span> using ordinary binary heaps.</p>
+<h3 id="growing-a-mst">Growing a MST</h3>
+<p>The generic method manages a set of edges <span class="math inline">\(A\)</span>, maintaining the following loop invariant:</p>
+<blockquote>
+<p>Prior to each iteration, <span class="math inline">\(A\)</span> is a subset of some MST.</p>
+</blockquote>
+<p>We first need some definitions:</p>
+<ul>
+<li>An edge <span class="math inline">\((u,v)\)</span> is <strong>safe</strong> for <span class="math inline">\(A\)</span> if we can add it to <span class="math inline">\(A\)</span> without violating the invariant, i.e., <span class="math inline">\(A\cup\{(u,v)\}\)</span> is also a subset of a MST.</li>
+<li>A <strong>cut</strong> <span class="math inline">\((S,V-S)\)</span> of an undirected graph <span class="math inline">\(G=(V,E)\)</span> is a partition of <span class="math inline">\(V\)</span>.</li>
+<li>An edge <span class="math inline">\((u,v) \in E\)</span> <strong>crosses</strong> the cut <span class="math inline">\((S,V-S)\)</span> if one of its endpoints is in <span class="math inline">\(S\)</span> and the other is in <span class="math inline">\(V-S\)</span>.</li>
+<li>A cut <strong>respects</strong> a set <span class="math inline">\(A\)</span> of edges if no edge in <span class="math inline">\(A\)</span> crosses the cut.</li>
+<li>An edge is a <strong>light edge</strong> crossing a cut if its weight is the minimum of any edge crossing the cut.</li>
+</ul>
+<p><strong>Theorem</strong>. Let <span class="math inline">\(G=(V,E)\)</span> be a connected, undirected graph with a real-valued weight function <span class="math inline">\(w\)</span> defined on <span class="math inline">\(E\)</span>. Let <span class="math inline">\(A\)</span> be a subset of <span class="math inline">\(E\)</span> that is included in some MST for <span class="math inline">\(G\)</span>, let <span class="math inline">\((S,V-S)\)</span> be any cut of <span class="math inline">\(G\)</span> that respects <span class="math inline">\(A\)</span>, and let <span class="math inline">\((u,v)\)</span> be a light edge crossing <span class="math inline">\((S,V-S)\)</span>. Then, edge <span class="math inline">\((u,v)\)</span> is safe for <span class="math inline">\(A\)</span>.</p>
+<p><strong>Proof</strong>. Let <span class="math inline">\(T\)</span> be a MST such that <span class="math inline">\(A \subseteq T\)</span> and <span class="math inline">\((u,v) \not\in T\)</span>. We shall construct another MST <span class="math inline">\(T&#39;\)</span> such that <span class="math inline">\(A\cup\{(u,v)\} \subseteq T&#39;\)</span> by using a cut-and-paste technique, thereby showing that <span class="math inline">\((u,v)\)</span> is a safe edge for <span class="math inline">\(A\)</span>.</p>
+<p>The edge <span class="math inline">\((u,v)\)</span> forms a cycle with the edges on the simple path <span class="math inline">\(p\)</span> from <span class="math inline">\(u\)</span> to <span class="math inline">\(v\)</span> in <span class="math inline">\(T\)</span>. Since <span class="math inline">\(u\)</span> and <span class="math inline">\(v\)</span> are on opposite sides of the cut <span class="math inline">\((S,V-S)\)</span>, at least one edge in <span class="math inline">\(T\)</span> lies on the simple path <span class="math inline">\(p\)</span> and also crosses the cut. Let <span class="math inline">\((x,y)\)</span> be any such edge. The edge <span class="math inline">\((x,y)\)</span> is not in <span class="math inline">\(A\)</span>, because the cut respects <span class="math inline">\(A\)</span>. Remove <span class="math inline">\((x,y)\)</span> from <span class="math inline">\(T\)</span> breaks it into two parts, while adding <span class="math inline">\((u,v)\)</span> connects them again, forms <span class="math inline">\(T&#39; = T - \{(x,y)\} + \{(u,v)\}\)</span>. Since <span class="math inline">\((u,v)\)</span> is a light edge,</p>
+<span class="math display">\[\begin{align*}
+w(T&#39;) &amp;= w(T) - w(x,y) + w(u,v) \\
+      &amp;\leq w(T).
+\end{align*}\]</span>
+<p>But <span class="math inline">\(T\)</span> is a MST, so that <span class="math inline">\(w(T) \leq w(T&#39;)\)</span>. Thus, <span class="math inline">\(T&#39;\)</span> must be a MST also.</p>
+<p><strong>Corollary</strong>. Let <span class="math inline">\(C=(V_C,E_C)\)</span> be a connected component (tree) in the forest <span class="math inline">\(G_A=(V,A)\)</span>. If <span class="math inline">\((u,v)\)</span> is a light edge connecting <span class="math inline">\(C\)</span> to some other component in <span class="math inline">\(G_A\)</span>, then <span class="math inline">\((u,v)\)</span> is safe for <span class="math inline">\(A\)</span>.</p>
+<p><strong>Proof</strong>. The cut <span class="math inline">\((V_C,V-V_C)\)</span> respects <span class="math inline">\(A\)</span>, and <span class="math inline">\((u,v)\)</span> is a light edge for this cut. Therefore, <span class="math inline">\((u,v)\)</span> is safe for <span class="math inline">\(A\)</span>.</p>
+<h3 id="kruskals-algorithm">Kruskal's algorithm</h3>
+<p>Kruskal's algorithm ﬁnds a safe edge to add to the growing forest by ﬁnding, of all the edges that connect any two trees in the forest, an edge <span class="math inline">\((u,v)\)</span> of least weight.</p>
+<pre><code>MST-KRUSKAL(V,E,w)
+A &lt;- {}
+for each vertex v in V
+    MAKE-SET(v)
+sort the edges of E into nondecreasing order by weight w
+for each edge (u,v) in E, taking in nondecreasing order by weight
+    if FIND-SET(u) != FIND-SET(v)
+        A &lt;- A :: (u,v)
+        UNION(u,v)
+return A</code></pre>
+<h3 id="prims-algorithm">Prim's algorithm</h3>
+<p>Prim's algorithm operates much like Dijkstra's algorithm for finding shortest paths in a graph. Prim's algorithm has the property that the edges in the set <span class="math inline">\(A\)</span> always form a single tree. The tree starts form an arbitrary root vertex <span class="math inline">\(r\)</span> and grows until the tree spans all the vertices in <span class="math inline">\(V\)</span>. Each step adds to the tree <span class="math inline">\(A\)</span> a light edge that connects <span class="math inline">\(A\)</span> to an isolated vertex, one on which no edge of <span class="math inline">\(A\)</span> is incident.</p>
+<p>During execution of the algorithm, all vertices that are not in the tree reside in a min-heap <span class="math inline">\(Q\)</span> based on a <em>key</em> attribute. For each vertex <span class="math inline">\(v\)</span>, the attribute <span class="math inline">\(v\)</span>.<em>key</em> is the minimum weight of any edge connecting <span class="math inline">\(v\)</span> to a vertex in the tree. The attribute <span class="math inline">\(v.\pi\)</span> names the parent of <span class="math inline">\(v\)</span> in the tree.</p>
+<pre><code>MST-PRIM(V,E,w,r)
+V.foreach(u -&gt; { u.key &lt;- infty, u.pi &lt;- NIL })
+r.key &lt;- 0
+Q &lt;- V
+while Q is not empty
+    u &lt;- EXTRACT-MIN(Q)
+    for each v in G.adj[u]
+        if v in Q and w(u,v) &lt; v.key
+            v.pi &lt;- u
+            v.key &lt;- w(u,v)</code></pre>
+<p>The running time consists of three parts: (1) <span class="math inline">\(O(V)\)</span> to build the heap; (2) <span class="math inline">\(O(V \lg V)\)</span> to <code>EXTRACT-MIN</code>; and (3) <span class="math inline">\(O(E \lg V)\)</span> to update a vertex's adjacent neighbors. Therefore, the total running time is <span class="math inline">\(O(V \lg V + E \lg V) = O(E \lg V)\)</span>. If we use a Fibonacci heap, then it is <span class="math inline">\(O(E + V \lg V)\)</span>.</p>
+<h3 id="variants">Variants</h3>
+<ul>
+<li>Second-best minimum spanning tree</li>
+<li>Minimum spanning tree in sparse graphs</li>
+<li>Bottleneck spanning tree</li>
+<li>Alternative minimum-spanning-tree algorithms</li>
+</ul>
+<h2 id="single-source-shortest-paths">Single-source shortest paths</h2>
+<p>We are given a weihted, directed graph <span class="math inline">\(G=(V,E)\)</span>, with weight function <span class="math inline">\(w:E\rightarrow\mathbb{R}\)</span> mapping edges to real-valued weights. The <strong>weight</strong> <span class="math inline">\(w(p)\)</span> of path <span class="math inline">\(p=\langle v_0, v_1, ..., v_k \rangle\)</span> is the sum of the weights of its consistuent edges: <span class="math display">\[w(p) = \sum_{i=1}^k w(v_{i-1},v_i).\]</span> We define the <strong>shortest-path weight</strong> <span class="math inline">\(\delta(u,v)\)</span> from <span class="math inline">\(u\)</span> to <span class="math inline">\(v\)</span> by</p>
+<p><span class="math display">\[
+\delta(u,v) = \begin{cases}
+  \min\{w(p): u \stackrel{p}{\leadsto} v\}
+         &amp; \text{if there is a path from $u$ to $v$}, \\
+  \infty &amp; \text{otherwise}.
+\end{cases}
+\]</span></p>
+<p>The <strong>single-source shortest-paths problem</strong> finds a shortest path from a given <strong>source</strong> vertex <span class="math inline">\(s \in V\)</span> to each vertex <span class="math inline">\(v \in V\)</span>. This algorithm can solve many other problems including:</p>
+<ul>
+<li>Single-destination shortest-paths problem.</li>
+<li>Single-pair shortest-path problem.</li>
+<li>All-pairs shortest-paths problem.</li>
+</ul>
+<h3 id="optimal-substructure-of-a-shortest-path">Optimal substructure of a shortest path</h3>
+<p>Shortest-paths algorithms typically rely on the property that a shortest path between two vertices contains other shortest paths within it. Or more formally,</p>
+<p><strong>Lemma</strong>. (Subpaths of shortest paths are shortest paths) Given a weighted graph <span class="math inline">\(G\)</span> with weight function <span class="math inline">\(w\)</span>, let <span class="math inline">\(p=v_0\leadsto v_k\)</span> be a shortest path, and for any <span class="math inline">\(i\)</span> and <span class="math inline">\(j\)</span> such that <span class="math inline">\(0 \leq i \leq j \leq k\)</span>, let <span class="math inline">\(p_{ij}=v_i\leadsto v_j\)</span> be the subpath of <span class="math inline">\(p\)</span>. Then <span class="math inline">\(p_{ij}\)</span> is a shortest path from <span class="math inline">\(v_i\)</span> to <span class="math inline">\(v_j\)</span>.</p>
+<p>The proof is intitutive, just like the pummping lemma.</p>
+<h3 id="negative-weight-edges">Negative-weight edges</h3>
+<p>If the graph contains a negative-weight cycle reachable from <span class="math inline">\(s\)</span>, then this problem is not well defined. If there is a negative-weight cycle from <span class="math inline">\(s\)</span> to <span class="math inline">\(v\)</span>, we define <span class="math inline">\(\delta(s,v) = -\infty\)</span>.</p>
+<p>Dijkstra's algorithm assume that all edge weights in the input grpha are nonnegative. Otherwise use Bellman-Ford algorithm.</p>
+<h3 id="shortest-paths-tree">Shortest-paths tree</h3>
+<p>We maintain <span class="math inline">\(\forall v \in V\)</span> a <strong>predecessor</strong> <span class="math inline">\(v.\pi\)</span> that is either another vertex or nil. The <strong>predecessor subgraph</strong> <span class="math inline">\(G_\pi=(V_\pi,E_\pi)\)</span> is defined as</p>
+<span class="math display">\[\begin{align*}
+&amp; V_\pi = \{ v \in V: v.\pi \neq Nil \} \cup \{ s \}, \\
+&amp; E_\pi = \{ (v.\pi, v) \in E: v \in V_\pi - \{s\} \}.
+\end{align*}\]</span>
+<p>Informally, <span class="math inline">\(G_\pi\)</span> is a shortest-paths tree that is a rooted tree containing a shortest path from the source <span class="math inline">\(s\)</span> to every vertex that is reachable from <span class="math inline">\(s\)</span>. Formally, a <strong>shortest-paths tree</strong> rooted as <span class="math inline">\(s\)</span> is a directed subgraph <span class="math inline">\(G&#39;=(V&#39;,E&#39;)\)</span> where <span class="math inline">\(V&#39;\subseteq V\)</span> and <span class="math inline">\(E&#39; \subseteq E\)</span> such that</p>
+<ol style="list-style-type: decimal">
+<li><span class="math inline">\(V&#39;\)</span> is the set of vertices reachable from <span class="math inline">\(s\)</span> in <span class="math inline">\(G\)</span>,</li>
+<li><span class="math inline">\(G&#39;\)</span> forms a rooted tree with root <span class="math inline">\(s\)</span>, and</li>
+<li><span class="math inline">\(\forall v \in V&#39;\)</span>, the unique simple path from <span class="math inline">\(s\)</span> to <span class="math inline">\(v\)</span> in <span class="math inline">\(G&#39;\)</span> is a shortest path from <span class="math inline">\(s\)</span> to <span class="math inline">\(v\)</span> in <span class="math inline">\(G\)</span>.</li>
+</ol>
+<p>Note that shortest paths are not necessarily unique, and neither are shortest-paths trees.</p>
+<h3 id="relaxation">Relaxation</h3>
+<p><span class="math inline">\(\forall v \in V\)</span>, we maintain an attribute <span class="math inline">\(v.d\)</span> that is an upper bound on the weight of a shortest path from source <span class="math inline">\(s\)</span> to <span class="math inline">\(v\)</span>. We call <span class="math inline">\(v.d\)</span> a <strong>shortest-path estimate</strong>. We initialize the graph by the following</p>
+<pre><code>INITIALIZE-SINGLE-SOURCE(V, E, s)
+    for each v in V
+        v.d &lt;- infty
+        v.pi &lt;- NIL
+    s.d = 0</code></pre>
+<p>By <strong>relaxing</strong> an edge <span class="math inline">\((u,v)\)</span> we check if we can improve the shortest path to <span class="math inline">\(v\)</span> found so far by going through <span class="math inline">\(u\)</span>. If so, updating <span class="math inline">\(v.d\)</span> and <span class="math inline">\(v.\pi\)</span>.</p>
+<pre><code>RELAX(u, v)
+    if v.d &gt; u.d + w(u,v)
+        v.d &lt;- u.d + w(u,v)
+        v.pi &lt;- u</code></pre>
+<p>Relaxation is the only means by which shortest-path estimates and predecessors change. Dijkstra's algorithm and the shortest-paths algorithm for directed acyclic graphs relax each edge exactly once. The Bellman-Ford algorithm relaxes each edge <span class="math inline">\(|V|-1\)</span> times.</p>
+<h3 id="properties-of-shortest-paths-and-relaxation">Properties of shortest paths and relaxation</h3>
+<ul>
+<li><strong>Triangle inequality</strong>. <span class="math inline">\(\forall (u,v) \in E, \delta(s,v) \leq \delta(s,u) +  w(u,v)\)</span>.</li>
+<li><strong>Upper-bound property</strong>. <span class="math inline">\(\forall v \in V, v.d \geq \delta(s,v)\)</span>.</li>
+<li><strong>No-path property</strong>. If there is no path from <span class="math inline">\(s\)</span> to <span class="math inline">\(v\)</span>, then <span class="math inline">\(v.d =  \delta(s,v) = \infty\)</span>.</li>
+<li><strong>Convergence property</strong>. If <span class="math inline">\(s \leadsto u \rightarrow v\)</span> is a shortest path in <span class="math inline">\(G\)</span> for some <span class="math inline">\(u,v \in V\)</span>, and if <span class="math inline">\(u.d = \delta(s,u)\)</span> at any time prior to relaxing edge <span class="math inline">\((u,v)\)</span>, then <span class="math inline">\(v.d = \delta(s,v)\)</span> at all times afterward.</li>
+<li><strong>Path-relaxation property</strong>. If <span class="math inline">\(p = \langle v_0, v_1, ..., v_k \rangle\)</span> is a shortest path from <span class="math inline">\(s = v_0\)</span> to <span class="math inline">\(v_k\)</span>, and we relax the edges of <span class="math inline">\(p\)</span> in the order <span class="math inline">\((v_0, v_1), (v_1, v_2), ..., (v_{k-1}, v_k)\)</span>, then <span class="math inline">\(v_k.d =  \delta(s,v_k)\)</span>. This property holds regardless of any other relaxation steps that occur, even if they are intermixed with relaxations of the edges of <span class="math inline">\(p\)</span>.</li>
+<li><strong>Predecessor-subgraph property</strong>. Once <span class="math inline">\(\forall v \in V, v.d = \delta(s,v)\)</span>, the predecessor subgraph is a shortest-paths tree rooted at <span class="math inline">\(s\)</span>.</li>
+</ul>
+<h3 id="the-bellman-ford-algorithm">The Bellman-Ford algorithm</h3>
+<p>The algorithm relaxes edges, progressively decreasing an estimate <span class="math inline">\(v.d\)</span> on the weight of a shortest path from the source <span class="math inline">\(s\)</span> to each vertex <span class="math inline">\(v \in V\)</span> until it achieves the actual shortest-path weight <span class="math inline">\(\delta(s,v)\)</span>. The algorithm returns <code>TRUE</code> if and only if the graph contains no negative-weight cycles that are reachable from the source. It runs in <span class="math inline">\(O(VE)\)</span> time.</p>
+<pre><code>BELLMAN-FORD(V, E, w, s)
+    INITIALIZE-SINGLE-SOURCE(V, E, s)
+    for i &lt;- 1 to |V|-1
+        for each edge (u,v) in E
+            RELAX(u, v)
+    for each edge (u,v) in E
+        if v.d &gt; u.d + w(u,v)
+            return FALSE
+    return TRUE</code></pre>
+<p><strong>Lemma</strong>. Assume that <span class="math inline">\(G\)</span> conatains no negative-weight cycles that are reachable from <span class="math inline">\(s\)</span>. Then, after <span class="math inline">\(|V|-1\)</span> iterations, we have <span class="math inline">\(v.d = \delta(s, v)\)</span> for all vertices <span class="math inline">\(v\)</span> that are reachable from <span class="math inline">\(s\)</span>.</p>
+<p><strong>Proof</strong>. Consider any vertex <span class="math inline">\(v\)</span> that is reachable from <span class="math inline">\(s\)</span>. Because shortest paths are simple, they must have at most <span class="math inline">\(|V|-1\)</span> edges. Each of the <span class="math inline">\(|V|-1\)</span> iteration relaxes all <span class="math inline">\(|E|\)</span> edges. By the path-relaxation property, therefore, <span class="math inline">\(v.d = v_k.d = \delta(s,v_k) = \delta(s,v)\)</span>.</p>
+<p><strong>Corollary</strong>. <span class="math inline">\(\forall v \in V\)</span>, <span class="math inline">\(\exists s \stackrel{p}{\leadsto} v\)</span> iff Bellman-Ford algorithm terminates with <span class="math inline">\(v.d &lt; \infty\)</span> when it runs on <span class="math inline">\(G\)</span>.</p>
+<p><strong>Theorem</strong>. Bellman-Ford algorithm is correct.</p>
+<h3 id="single-source-shortest-paths-in-directed-acyclic-graphs">Single-source shortest paths in directed acyclic graphs</h3>
+<p>By relaxing the edges of a weighted dag <span class="math inline">\(G=(V,E)\)</span> according to a topological sort of its vertices, we can compute shortest paths from a single source in <span class="math inline">\(\Theta(V+E)\)</span> time. Shortest paths are always well defined in a dag, since even if there are negative-weight edges, no negative-weight cycles can exist.</p>
+<pre><code>DAT-SHORTEST-PATHS(V, E, w, s)
+    TOPOSORT(G)
+    INITIALIZE-SINGLE-SOURCE(V, E, s)
+    for each vertex u, taken in topo sorted order
+        for each v that is vertex u&#39;s neighbors
+            RELAX(u, v, w)</code></pre>
+<h3 id="dijkstras-algorithm">Dijkstra's algorithm</h3>
+<p>Dijkstra's algorithm solves the single-source shortest-paths problem on a weighted, directed graph <span class="math inline">\(G=(V,E)\)</span> for the case in which all edge weights are nonnegative.</p>
+<p>Dijkstra's algorithm maintains a set <span class="math inline">\(S\)</span> of vertices whose final shortest-path weights from the source <span class="math inline">\(s\)</span> have already been determined. The algorithm repeatedly selects the vertex <span class="math inline">\(u \in V-S\)</span> with the minimum shortest-path estimate, adds <span class="math inline">\(u\)</span> to <span class="math inline">\(S\)</span>, and relaxes all edges leaving <span class="math inline">\(u\)</span>.</p>
+<pre><code>DIJKSTRA(V, E, w, s)
+    INITIALIZE-SINGLE-SOURCE(V, E, s)
+    S = {}      ;; S is a set of vertices done
+    Q = V       ;; Q is a min-heap
+    while Q is not empty
+         u = EXTRACT-MIN(Q)
+         S = SET-UNION(S, {u})
+         for each vertex v adjacent to u
+            RELAX(u, v, w)</code></pre>
+<p>Dijkstra's algorithm is a greedy algorithm in a way that it always chooses the &quot;lightest&quot; or &quot;closest&quot; vertex in <span class="math inline">\(V-S\)</span> to add to set <span class="math inline">\(S\)</span>. The key reason it is correct is that each time it adds a vertex <span class="math inline">\(u\)</span> to <span class="math inline">\(S\)</span>, we have <span class="math inline">\(u.d=\delta(s,u)\)</span>.</p>
+<p>The complexity depends on how we implement the priority queue.</p>
+<h2 id="all-pairs-shortest-paths">All-pairs shortest paths</h2>
+<p>We can solve an all-pairs shortest-paths problem by running a single-source shortest-paths algorithm <span class="math inline">\(|V|\)</span> times, once for each vertex as the source. If all edge weights are nonnegative, we can use Dijkstra's algorithm. If the graph has negative-weight edges, we cannot use Dijkstra's algorithm. Instead, we must run the slower Bellman-Ford algorithm once from each vertex.</p>
+<p>For convenience, we assume that the vertices are numbered <span class="math inline">\(1, 2, ..., |V|\)</span>, so that the input is an <span class="math inline">\(n \times n\)</span> matrix <span class="math inline">\(W=(W_{ij})\)</span> representing the edge weights of an <span class="math inline">\(n\)</span>-vertex directed graph <span class="math inline">\(G=(V,E)\)</span>.</p>
+<p>The tabular output of the all-pairs shortest-paths algorithms is an also <span class="math inline">\(n \times n\)</span> matrix <span class="math inline">\(D=(d_{ij})\)</span>, where each entry <span class="math inline">\(d_{ij}\)</span> contains the weight of a shortest path from vertex <span class="math inline">\(i\)</span> to <span class="math inline">\(j\)</span>, i.e., <span class="math inline">\(\delta(i,j)\)</span>.</p>
+<p>To solve the all-pairs shortest-paths problem on an input adjacency matrix, we need to compute not only the shortest-path weights but also a <em>predecessor matrix</em> <span class="math inline">\(\Pi=(\pi_{ij})\)</span>. The subgraph induced by the <span class="math inline">\(i\)</span>-th row of the <span class="math inline">\(\Pi\)</span> matrix should be a shortest-paths tree with root <span class="math inline">\(i\)</span>.</p>
+<h3 id="shortest-paths-and-matrix-multiplication">Shortest paths and matrix multiplication</h3>
+<p>Each major loop of the dynamic program will invoke an operation that is very similar to matrix multiplication, so that the algorithm will look like repeated matrix multiplication.</p>
+<p>We have proven that all subpaths of a shortest path are shortest paths. Let <span class="math inline">\(\ell_{ij}^{(m)}\)</span> be the minimum weight of any path from vertex <span class="math inline">\(i\)</span> to <span class="math inline">\(j\)</span> that contains at most <span class="math inline">\(m\)</span> edges. When <span class="math inline">\(m=0\)</span>, there is a shortest path from <span class="math inline">\(i\)</span> to <span class="math inline">\(j\)</span> with no edges iff <span class="math inline">\(i=j\)</span>. Thus,</p>
+<p><span class="math display">\[
+    \ell_{ij}^{(0)} = \begin{cases}
+        0, &amp; i = j, \\
+        \infty, &amp; i \neq j.
+    \end{cases}
+\]</span></p>
+<p>For <span class="math inline">\(m \geq 1\)</span>, we compute <span class="math inline">\(\ell_{ij}^{(m)}\)</span> as the minimum of <span class="math inline">\(\ell_{ij}^{(m-1)}\)</span> (the weight of a shortest path from <span class="math inline">\(i\)</span> to <span class="math inline">\(j\)</span> consisting of at most <span class="math inline">\(m-1\)</span> edges) and the minimum weight of any path from <span class="math inline">\(i\)</span> to <span class="math inline">\(j\)</span> consisting of at most <span class="math inline">\(m\)</span> edges, obtained by looking at all possible precedessors <span class="math inline">\(k\)</span> of <span class="math inline">\(j\)</span>. Thus,</p>
+<p><span class="math display">\[
+    \ell_{ij}^{(m)}
+        = \min\left\{ \ell_{ij}^{(m-1)},
+                 \min_{1 \leq k \leq n}
+                 \left\{\ell_{ik}^{(m-1)} + w_{kj}\right\} \right\}
+        = \min_{1 \leq k \leq n}\left\{ \ell_{ik}^{(m-1)} + w_{kj} \right\}.
+\]</span></p>
+<p>The latter equality follows since <span class="math inline">\(\forall j, w_{jj} = 0\)</span>.</p>
+<p>We now compute a series of matrices <span class="math inline">\(L^{(1)}, L^{(2)}, ..., L^{(n-1)}\)</span>, where for <span class="math inline">\(m=1, 2, ..., n-1\)</span>, we have <span class="math inline">\(L^{(m)} = \left( \ell_{ij}^{(m)} \right)\)</span>. The final matrix <span class="math inline">\(L^{(n-1)}\)</span> contains the actual shortest-path weights. Note that <span class="math inline">\(L^{(1)} = W\)</span>. The heart of the algorithm is the following procedure, which, given matrices <span class="math inline">\(L^{(m-1)}\)</span> and <span class="math inline">\(W\)</span>, returns the matrix <span class="math inline">\(L^{(m)}\)</span>. That is, it extends the shortest paths computed so far by one more edge.</p>
+<pre><code>EXTEDN-SHORTEST-PATHS(L, W)
+    n = L.rows
+    L&#39; = new n-by-n matrix
+    for i = 1 to n do
+        for j = 1 to n do
+            L&#39;[i][j] = min(L[i][k] + W[k][j]) for all k in [1, n]
+    return L&#39;</code></pre>
+<h3 id="the-floyd-warshall-algorithm">The Floyd-Warshall algorithm</h3>
+<p>The Floyd-Warshall algorithm considers the intermediate vertices of a shortest path, where an <em>intermediate</em> vertex of a simple path <span class="math inline">\(p = \langle v_1, v_2, ..., v_l \rangle\)</span> is any vertex of <span class="math inline">\(p\)</span> other than <span class="math inline">\(v_1\)</span> or <span class="math inline">\(v_l\)</span>, that is, any vertex in the set <span class="math inline">\(\{v_2, ..., v_{l-1}\}\)</span>.</p>
+<p>The Floyd-Warshall algorithm relies on the following observation. Under the assumption that the vertices of <span class="math inline">\(G\)</span> are <span class="math inline">\(V=\{1, 2, ..., n\}\)</span>. Let's consider a subset <span class="math inline">\(\{1, 2, ..., k\}\)</span> of vertices for some <span class="math inline">\(k\)</span>. For any pair of vertices <span class="math inline">\(i, j \in V\)</span>, consider all paths from <span class="math inline">\(i\)</span> to <span class="math inline">\(j\)</span> whose intermediate vertices are all drawn from <span class="math inline">\(\{1, 2, ..., k\}\)</span>, and let <span class="math inline">\(p\)</span> be a minimum-weight path from among them. The Floyd-Warshall algorithm exploits a relationship between path <span class="math inline">\(p\)</span> and shortest paths from <span class="math inline">\(i\)</span> to <span class="math inline">\(j\)</span> with all intermediate vertices in the set <span class="math inline">\(\{1, 2, ..., k-1\}\)</span>. The relationship depends on whether or not <span class="math inline">\(k\)</span> is an intermediate vertex of path <span class="math inline">\(p\)</span>.</p>
+<ul>
+<li><p>If <span class="math inline">\(k\)</span> is not an intermediate vertex of path <span class="math inline">\(p\)</span>, then all intermediate vertices of path <span class="math inline">\(p\)</span> are in the set <span class="math inline">\(\{1, 2, ..., k-1\}\)</span>. Thus, a shortest path from vertex <span class="math inline">\(i\)</span> to <span class="math inline">\(j\)</span> with all intermediate vertices in the set <span class="math inline">\(\{1, 2,  ..., k-1\}\)</span> is also a shortest path from <span class="math inline">\(i\)</span> to <span class="math inline">\(j\)</span> with all intermediate vertices in the set <span class="math inline">\(\{1, 2, ..., k\}\)</span>.</p></li>
+<li><p>If <span class="math inline">\(k\)</span> is an intermediate vertex of path <span class="math inline">\(p\)</span>, then we decompose <span class="math inline">\(p\)</span> into <span class="math inline">\(i  \stackrel{p_1}{\leadsto} k \stackrel{p_2}{\leadsto} j\)</span>. It can be proven that <span class="math inline">\(p_1\)</span> is a shortest path from <span class="math inline">\(i\)</span> to <span class="math inline">\(k\)</span> with all intermediate vertices in the set <span class="math inline">\(\{1, 2, ..., k\}\)</span>. Since <span class="math inline">\(k\)</span> is not an intermediate vertex in <span class="math inline">\(p_1\)</span>, <span class="math inline">\(p_1\)</span> is a shortest path from <span class="math inline">\(i\)</span> to <span class="math inline">\(k\)</span> with all intermediate vertices in the set <span class="math inline">\(\{1, 2, ..., k-1\}\)</span>. Similarly, <span class="math inline">\(p_2\)</span> is a shortest path from vertex <span class="math inline">\(k\)</span> to <span class="math inline">\(j\)</span> with all intermediate vertices in the set <span class="math inline">\(\{1, 2, ..., k-1\}\)</span>.</p></li>
+</ul>
+<p>Based on the above observations, we define a recursive formulation of shortest-path estimates. Let <span class="math inline">\(d_{ij}^{(k)}\)</span> be the weight of a shortest path from vertex <span class="math inline">\(i\)</span> to vertex <span class="math inline">\(j\)</span> for which all intermediate vertices are in the set <span class="math inline">\(\{1, 2, ..., k\}\)</span>. When <span class="math inline">\(k=0\)</span>, a path from vertex <span class="math inline">\(i\)</span> to <span class="math inline">\(j\)</span> with no intermediate vertex numbered higher than 0 has no intermediate vertices at all. Such a path has at most one edge, and hence <span class="math inline">\(d_{ij}^{(0)} = w_{ij}\)</span>.</p>
+<p><span class="math display">\[
+    d_{ij}^{(k)} = \begin{cases}
+        w_{ij} &amp; k = 0, \\
+        \min\left\{ d_{ij}^{(k-1)}, d_{ik}^{(k-1)}+d_{kj}^{(k-1)} \right\}
+               &amp; k \geq 1.
+    \end{cases}
+\]</span></p>
+<p>Because for any path, all intermediate vertices are in the set <span class="math inline">\(\{1, 2, ..., n\}\)</span>, the matrix <span class="math inline">\(D^{(n)} = \left( d_{ij}^{(n)} \right)\)</span> gives the final answer for all vertex pairs.</p>
+<pre><code>FLOYD-WARSHALL(W)
+    n = W.rows
+    D^(0) = W
+    for k = 1 to n
+        for i = 1 to n
+            for j = 1 to n
+                D^(k)[i][j] = min(D^(k-1)[i][j], d^(k-1)[i][k] + d^(k-1)[k][j])
+    return D^n</code></pre>
+</body>
+</html>

@@ -1,0 +1,843 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+  <style type="text/css">
+div.sourceCode { overflow-x: auto; }
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+code > span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code > span.dt { color: #902000; } /* DataType */
+code > span.dv { color: #40a070; } /* DecVal */
+code > span.bn { color: #40a070; } /* BaseN */
+code > span.fl { color: #40a070; } /* Float */
+code > span.ch { color: #4070a0; } /* Char */
+code > span.st { color: #4070a0; } /* String */
+code > span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code > span.ot { color: #007020; } /* Other */
+code > span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code > span.fu { color: #06287e; } /* Function */
+code > span.er { color: #ff0000; font-weight: bold; } /* Error */
+code > span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+code > span.cn { color: #880000; } /* Constant */
+code > span.sc { color: #4070a0; } /* SpecialChar */
+code > span.vs { color: #4070a0; } /* VerbatimString */
+code > span.ss { color: #bb6688; } /* SpecialString */
+code > span.im { } /* Import */
+code > span.va { color: #19177c; } /* Variable */
+code > span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code > span.op { color: #666666; } /* Operator */
+code > span.bu { } /* BuiltIn */
+code > span.ex { } /* Extension */
+code > span.pp { color: #bc7a00; } /* Preprocessor */
+code > span.at { color: #7d9029; } /* Attribute */
+code > span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code > span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code > span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+  </style>
+  <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_CHTML-full" type="text/javascript"></script>
+</head>
+<body>
+<h2 id="problem-set">Problem Set</h2>
+<h3 id="exercise-1">Exercise 1</h3>
+<p><strong>Q1</strong> Which of the following services is considered as a common service provided by OS?</p>
+<ol style="list-style-type: decimal">
+<li>Compiler</li>
+<li>User graphical interface</li>
+<li><strong>Process and memory management</strong></li>
+</ol>
+<p><strong>Q2</strong> Which of the following instructions should be privileged and executed in a kernel mode?</p>
+<ol style="list-style-type: decimal">
+<li>Set value of application timer based on CPU clock value.</li>
+<li>Read the clock.</li>
+<li>Issue a trap signal instruction.</li>
+<li>Access I/O device.</li>
+</ol>
+<p><strong>Q3</strong> What is the purpose of system calls?</p>
+<ol style="list-style-type: decimal">
+<li>They are functions which can be executed in an OS.</li>
+<li>They allow user-level processes to request services of the operating system.</li>
+<li>They provide the multi-threading or processing capability.</li>
+</ol>
+<p><strong>Q4</strong> When a process creates a new process using the <code>fork()</code> operation, which of the following state is shared between the parent process and the child process?</p>
+<ol style="list-style-type: decimal">
+<li>Stack</li>
+<li>Heap</li>
+<li><strong>Shared memory segments</strong>. Only the shared memory segments are shared between the parent process and the newly forked child process. Copies of the stack and the heap are made for the newly created process.</li>
+</ol>
+<p><strong>Q5</strong> Which of the following statements is true on user-level threads and kernel-level threads?</p>
+<ol style="list-style-type: decimal">
+<li>User-level threads and kernel threads are both aware by the kernel.</li>
+<li><strong>User threads are scheduled by the thread library and the OS kernel schedules kernel threads.</strong></li>
+<li>Kernel or user threads are associated with only one process.</li>
+</ol>
+<p><strong>Q6</strong> Which of the following statements is true on context-switch among threads?</p>
+<ol style="list-style-type: decimal">
+<li><strong>Context switching between threads require saving the value of the CPU registers from the thread being switched out.</strong></li>
+<li>Context switching between kernel threads typically do not require saving the value of the CPU registers from the thread being switched out.</li>
+<li>Context switch restores the CPU registers of the new thread being scheduled if this new thread is a user thread.</li>
+</ol>
+<p><strong>Q7</strong> Trace this program without actually running in a machine.</p>
+<div class="sourceCode"><pre class="sourceCode c++"><code class="sourceCode cpp"><span class="dt">void</span> main() {
+    <span class="dt">char</span> *cmd[] = {“echo”, “hello”,<span class="dv">0</span>};
+    <span class="dt">int</span> pid, x = <span class="dv">10</span>, y;
+    pid = fork();
+    <span class="cf">if</span> (pid == <span class="dv">0</span>) {
+        y=<span class="dv">1</span>; x=x+y;
+        printf(<span class="st">&quot;x is </span><span class="sc">%d</span><span class="st">. y is </span><span class="sc">%d</span><span class="st"> </span><span class="sc">\n</span><span class="st">&quot;</span>, x,y);
+        execvp(cmd[<span class="dv">0</span>], cmd);
+        printf(<span class="st">&quot;x is </span><span class="sc">%d</span><span class="st">. y is </span><span class="sc">%d</span><span class="st"> </span><span class="sc">\n</span><span class="st">&quot;</span>, x,y);
+    } <span class="cf">else</span> {
+        y=<span class="dv">2</span>; x=x+y;
+        wait(NULL);
+        printf(<span class="st">&quot;x is </span><span class="sc">%d</span><span class="st">. y is </span><span class="sc">%d</span><span class="st"> </span><span class="sc">\n</span><span class="st">&quot;</span>, x,y);
+    }
+}</code></pre></div>
+<ul>
+<li>Output: <code>x = 11, y = 1; hello; x = 13, y = 2</code>.</li>
+<li>The child process's x value is not shared with parent. Thus the modification is not reflected in the parent process.</li>
+<li>Function excevp() loads a new program and thus wipes out the parent's code. But if for any reason, loading this program (shell) fails, the print statement (x=11,y=1) does appear.</li>
+<li>The order of printing is fixed because the parent process waits the child process.</li>
+</ul>
+<p><strong>Q8</strong> How many times does this program print &quot;hello&quot;? (6 times)</p>
+<div class="sourceCode"><pre class="sourceCode cpp"><code class="sourceCode cpp"><span class="dt">void</span> main() { fork(); printf(<span class="st">&quot;hello</span><span class="sc">\n</span><span class="st">&quot;</span>); fork(); printf(<span class="st">&quot;hello</span><span class="sc">\n</span><span class="st">&quot;</span>); }</code></pre></div>
+<p><strong>Q9</strong> Given this program started from empty file tmpfile1</p>
+<pre><code>int main() {
+    int pid, fd; char *s1;
+    pid = fork();
+    fd = open(&quot;tmpfile1&quot;, O_WRONLY|O_CREAT, 0666);
+    if (pid &gt; 0) {
+      s1 = &quot;Parent&quot;;
+    } else {
+      sleep(1);
+      s1 = &quot;Child&quot;;
+    }
+    write(fd, s1, strlen(s1));
+    close(fd);
+}</code></pre>
+<p>Output is <code>childt</code>. The child process writes the same file from position 0 after the parent writes from offset position 0 also.</p>
+<p><strong>Q10</strong> Given this program started from empty file tmpfile1</p>
+<div class="sourceCode"><pre class="sourceCode cpp"><code class="sourceCode cpp"><span class="dt">int</span> main() {
+    <span class="dt">int</span> pid, fd; <span class="dt">char</span> *s1;
+    fd = open(<span class="st">&quot;tmpfile1&quot;</span>, O_WRONLY| O_CREAT, <span class="bn">0666</span>);
+    pid = fork();
+    <span class="cf">if</span> (pid &gt; <span class="dv">0</span>) {
+        s1 = <span class="st">&quot;Parent&quot;</span>;
+    } <span class="cf">else</span> {
+        sleep(<span class="dv">1</span>);
+        s1 = <span class="st">&quot;Child&quot;</span>;
+    }
+    write(fd, s1, strlen(s1)); close(fd);
+}</code></pre></div>
+<p>Output is <code>ParentChild</code>. The child process shares the file descriptors of the parent and thus shares the file seek pointer (offset) also.</p>
+<h3 id="exercise-2">Exercise 2</h3>
+<p><strong>Q1</strong> Choose one which does not answer the question on &quot;what is a race condition&quot;?</p>
+<ol style="list-style-type: decimal">
+<li>When the behavior of a program relies on the interleaving of operations of different threads.</li>
+<li>Two or more processes (threads) are reading and writing on shared data and the final result depends on who runs precisely &amp; when.</li>
+<li><strong>Two or more processes (threads) are reading and writing on shared data and the final result depends on who runs precisely &amp; when.</strong></li>
+</ol>
+<p><strong>Q2</strong> A semaphore puts a thread to sleep</p>
+<ol style="list-style-type: decimal">
+<li>If it increments the semaphore's value above 0.</li>
+<li><strong>If it tries to decrement the semaphore's value below 0.</strong></li>
+<li>Until another thread issues a signal to notify this semaphore.</li>
+<li>Until the semaphore's value reaches a certain number.</li>
+</ol>
+<p><strong>Q3</strong> Given three statements</p>
+<ol style="list-style-type: decimal">
+<li><ol start="6" style="list-style-type: upper-alpha">
+<li>A semaphore can be implemented using conditional variables with locks.</li>
+</ol></li>
+<li><ol start="20" style="list-style-type: upper-alpha">
+<li>A condition variable can be implemented using semaphores.</li>
+</ol></li>
+<li><ol start="20" style="list-style-type: upper-alpha">
+<li>A lock can be implemented using a semaphore.</li>
+</ol></li>
+</ol>
+<p><strong>Q4</strong> Which statement is false about starvation and deadlock</p>
+<ol style="list-style-type: decimal">
+<li>Starvation implies that a thread cannot make progress because other threads are using resources it needs.</li>
+<li>Starvation can be recovered, for example when the other processes finish.</li>
+<li>Deadlock is a circular wait without preemption that can never be recovered from.</li>
+<li><strong>Starvation is a deadlock.</strong> (P.S. But deadlock is a starvation)</li>
+</ol>
+<p><strong>Q5</strong> Trace the following pthreads C program running on a time sharing OS in dynamic context switching is possible, select one answer on the possible output of x.</p>
+<div class="sourceCode"><pre class="sourceCode cpp"><code class="sourceCode cpp"><span class="dt">int</span> x=<span class="dv">0</span>;
+<span class="dt">pthread_mutex_t</span> Lock;
+<span class="dt">void</span> * tcode(<span class="dt">void</span> *arg) {
+    pthread_mutex_lock(&amp;Lock);
+    x++;
+    pthread_mutex_unlock(&amp;Lock);
+}
+
+<span class="dt">void</span> main() {
+    <span class="dt">pthread_t</span> t1,t2;
+    pthread_mutex_init(&amp;Lock,NULL);
+    pthread_create(&amp;t1, NULL, tcode, NULL);
+    pthread_create(&amp;t2, NULL, tcode, NULL);
+    x++;
+    pthread_join(t1, NULL);
+    pthread_join(t2, NULL);
+    printf(<span class="st">&quot;x: </span><span class="sc">%d</span><span class="st"> </span><span class="sc">\n</span><span class="st">&quot;</span>,x);
+}</code></pre></div>
+<ol style="list-style-type: decimal">
+<li>0, 1, 2, 3</li>
+<li><strong>1, 2, 3</strong></li>
+<li>2, 3</li>
+<li>3</li>
+</ol>
+<p>The two threads that perform x++ can make the x value increase from 0 to 2. The main program does x++ also, which is not synchronized and can create a race condition. The main thread can either get x as 0, 1, 2 to increase, which can make the final x value as 1,2, or 3.</p>
+<p><strong>Q6</strong> The following C code is a simplified version of lock implementation using a Pthread semaphore..</p>
+<div class="sourceCode"><pre class="sourceCode cpp"><code class="sourceCode cpp"><span class="kw">typedef</span> <span class="kw">struct</span> locks {
+    <span class="dt">sem_t</span> sem;
+    <span class="dt">pthread_t</span> thread;
+} <span class="dt">lock_t</span>;
+
+<span class="dt">int</span> mutex_init(<span class="dt">lock_t</span> *lockp) {
+    <span class="co">//return 0 when successful</span>
+    lockp-&gt;thread= pthread_self();
+    <span class="cf">return</span> sem_init(&amp;lockp-&gt;sem,<span class="dv">0</span>,<span class="dv">1</span>); <span class="co">// (1)</span>
+}
+
+<span class="dt">int</span> mutex_lock(<span class="dt">lock_t</span> *lockp) {
+    <span class="co">// return 0 when successful</span>
+    <span class="cf">if</span> (pthread_equal(lockp-&gt;thread, pthread_self()))
+        <span class="cf">return</span> sem_wait( &amp;lockp-&gt;sem); <span class="co">// (2)</span>
+    <span class="cf">return</span> <span class="dv">-1</span>;
+}
+
+<span class="dt">int</span> mutex_unlock(<span class="dt">lock_t</span> *lockp) {
+    <span class="co">// return 0 when successful</span>
+    <span class="cf">if</span> (pthread_equal(lockp-&gt;thread, pthread_self()))
+        <span class="cf">return</span> sem_post(&amp;lockp-&gt;sem); <span class="co">// (3)</span>
+    <span class="cf">return</span> <span class="dv">-1</span>;
+}</code></pre></div>
+<p><strong>Q7</strong> The following program manages a set of free memory blocks used by multiple threads. Each thread calls <code>allocate()</code> to get a free block to use and calls <code>free()</code> to release a specific block so others can use. The program maintains an array <code>available[NB]</code> whose elements are non-zero if the corresponding blocks are available (<code>NB</code> is a constant indicating the total memory blocks available initially).</p>
+<div class="sourceCode"><pre class="sourceCode cpp"><code class="sourceCode cpp"><span class="dt">int</span> available[NB];
+<span class="dt">int</span> allocate() { <span class="co">/* Returns index of available free blocks. */</span>
+    <span class="cf">while</span>(<span class="dv">1</span>)
+        <span class="cf">for</span> (<span class="dt">int</span> i=<span class="dv">0</span>; i &lt; NB; i++)
+            <span class="cf">if</span> (available [i] != <span class="dv">0</span>) { available[i] = <span class="dv">0</span>; <span class="cf">return</span> i; }
+}
+free (<span class="dt">int</span> i) { available[i] = <span class="dv">1</span>; }</code></pre></div>
+<p>Modify the above code using 1) locks and condition variables so that the multiple threads are well symphonized in accessing the critical section and busy waiting is minimized. 2) using semaphores only. You can express your solution using either Pthreads or Nachos synchronization primitives.</p>
+<p>Lock and condition variable solution</p>
+<div class="sourceCode"><pre class="sourceCode cpp"><code class="sourceCode cpp"><span class="co">// Next condition indicates there is no memory available and threads are waiting</span>
+Condition* noMemory = <span class="kw">new</span> Condition(<span class="st">&quot;noMemory&quot;</span>);
+<span class="co">// Next lock is used for mutual exclusion in checking the available array.</span>
+Lock *mutex = <span class="kw">new</span> Lock(<span class="st">&quot;mutex&quot;</span>);
+
+<span class="dt">int</span> allocate() {
+    mutex-&gt;Acquire();
+    <span class="cf">while</span>(<span class="dv">1</span>) {
+      <span class="cf">for</span> (<span class="dt">int</span> i = <span class="dv">0</span>; i &lt; NB; i++)
+          <span class="cf">if</span> (available [i] != <span class="dv">0</span>) { available[i] = <span class="dv">0</span>; mutex-&gt;Release(); <span class="cf">return</span> i; }
+      noMemory-&gt;Wait(mutex);
+    }
+}
+<span class="dt">int</span> free(<span class="dt">int</span> i) {
+    mutex-&gt;Acquire(); available[i] = <span class="dv">1</span>; noMemory-&gt;Signal(mutex); mutex-&gt;Release();
+}</code></pre></div>
+<p>Semaphore solution</p>
+<div class="sourceCode"><pre class="sourceCode cpp"><code class="sourceCode cpp"><span class="co">// next semaphore indicates if there are free memory blocks available.</span>
+<span class="co">// Initially there are NB blocks available</span>
+Semaphore *freeBlocks = <span class="kw">new</span> Semaphore(<span class="st">&quot;Free Blocks&quot;</span>, NB);
+<span class="co">// Next semaphore is used for mutex exclusion in accessing available array</span>
+Semaphore *mutex = <span class="kw">new</span> Semaphore(<span class="st">&quot;mutex&quot;</span>, <span class="dv">1</span>);
+
+<span class="dt">int</span> allocate() {
+    <span class="cf">while</span>(<span class="dv">1</span>) {
+        freeBlocks-&gt;P();
+        mutex-&gt;P();
+        <span class="cf">for</span> (<span class="dt">int</span> i = <span class="dv">0</span>; i &lt; NB; i++)
+            <span class="cf">if</span> (available [i] != <span class="dv">0</span>) { available[i] = <span class="dv">0</span>; mutex-&gt;V(); <span class="cf">return</span> i; }
+        mutex-&gt;V();
+    }
+}
+<span class="dt">void</span> free(<span class="dt">int</span> i) {
+    mutex-&gt;P(); available[i] = <span class="dv">1</span>; freeBlocks-&gt;V(); mutex-&gt;V();
+}</code></pre></div>
+<h3 id="exercise-3">Exercise 3</h3>
+<p><strong>Q2</strong> What is the possible output of running this nachos program <code>ThreadTest()</code>? Give an explanation without actually running this code on a machine.</p>
+<div class="sourceCode"><pre class="sourceCode cpp"><code class="sourceCode cpp"><span class="dt">int</span> x = <span class="dv">10</span>;
+<span class="dt">void</span> SimpleThread(<span class="dt">int</span> y) {
+    printf(<span class="st">&quot; Before yield, Thread </span><span class="sc">%d</span><span class="st">: x is </span><span class="sc">%d</span><span class="st">.</span><span class="sc">\n</span><span class="st">&quot;</span>, y, x);
+    currentThread-&gt;Yield();
+    x = x + y;
+    printf(<span class="st">&quot; After yield, Thread </span><span class="sc">%d</span><span class="st">: x is </span><span class="sc">%d</span><span class="st">. </span><span class="sc">\n</span><span class="st">&quot;</span>, y, x);
+}
+<span class="dt">void</span> ThreadTest() {
+    Thread *t = <span class="kw">new</span> Thread(<span class="st">&quot;forked thread&quot;</span>);
+    t-&gt;Fork(SimpleThread, <span class="dv">1</span>);
+    SimpleThread(<span class="dv">2</span>);
+}</code></pre></div>
+<ul>
+<li><strong>Before yield, Thread 2: x is 10. Before yield, Thread 1: x is 10. After yield, Thread 2: x is 12. After yield, Thread 1: x is 13.</strong></li>
+<li>Before yield, Thread 1: x is 10. Before yield, Thread 2: x is 10. After yield, Thread 1: x is 11. After yield, Thread 2: x is 13.</li>
+</ul>
+<p>The parent thread places the child thread in the ready queue, and executes <code>SimpleTread(2)</code> first and prints, then it yields. The child thread starts now and prints one sentence, then yields.</p>
+<p><strong>Q4</strong> Which of the following steps is not necessary to run a program.</p>
+<ol style="list-style-type: decimal">
+<li>Obtain CPU cycle and allocate memory.</li>
+<li>Load code/data into memory. Setup stack/heap.</li>
+<li><strong>Copy the allocated in-memory content to disk in case the program is being swapped out.</strong></li>
+<li>Load starting address and begin execution.</li>
+<li>Provide the service with address translation and system calls, and control the execution.</li>
+</ol>
+<p><strong>Q5</strong> Which statement is not true regarding difference between logical and physical addresses.</p>
+<ol style="list-style-type: decimal">
+<li>A logical address does not refer to an actual existing address; rather, it refers to an abstract address in an abstract address space.</li>
+<li><strong>A physical address refers to an address of a data item used by a program.</strong></li>
+<li>A logical address is generated by the CPU and is translated into a physical address by the memory management unit(MMU).</li>
+<li>Physical addresses are generated by the MMU.</li>
+</ol>
+<p><strong>Q6</strong> Consider a logical address space of 64 pages of 1KB each, mapped onto a physical memory of 32 pages. How many bits are there in the logical address? How many bits are there in the physical address?</p>
+<ol style="list-style-type: decimal">
+<li>Logical address: 64 bits. Physical address: 32 bits</li>
+<li><strong>Logical address: 16 bits. Physical address: 15 bits</strong></li>
+<li>Logical address: 16 bits. Physical address: 16 bits</li>
+<li>Logical address: 15 bits. Physical address: 15 bits</li>
+</ol>
+<p><strong>Q7</strong> Given a one-level paging scheme for memory address mapping, if TLB access takes 10 nanosecond and each physical memory access takes 100 nanoseconds, what will be the desired TLB hit ratio to have the effective memory access time within 120 nanoseconds to complete both logical address translation and physical memory data fetching?</p>
+<p>Solve <span class="math inline">\(10 + (1-x) * 100 + 100 = 120\)</span> for <span class="math inline">\(x = 0.9\)</span>.</p>
+<p><strong>Q8</strong> Given a one-level paging scheme where physical memory is divided into a set of pages with uniform size 8K bytes and each page table entry uses 4 bytes, what is the maximum size of a logical memory space for each process with this paging scheme? Explain your reason.</p>
+<p>The one-level page table has to fit into one page and thus at most 8K bytes. Since each entry uses 4 bytes, there are 8K/4 = 2K entries in a page table. Thus there are total of 2K pages, the maximum size of logical memory space is 2K*8KB = 16MB.</p>
+<p><strong>Q9</strong> Design a 2-level paging scheme for a 38-bit logical space and illustrate the address translation steps. Each physical page is of size 16K bytes and each page table entry uses 4 bytes. Each 38-bit logical address is translated into a 38-bit physical address.</p>
+<ul>
+<li>The scheme is 2-level paging and 38-bit will be split to 12, 12, 14.</li>
+<li>Physical page size is 16K bytes, and bits for a page use log(16K) = 14 bits.</li>
+<li>Each physical page can host 16K/4 =4K entries. Thus a page table using one physical page can map at most 4K x 16K=64MB physical space. A two-level table can map at most 64MB*4K=256GB space which is 2^38.</li>
+<li>The outer table has 4K entries, and log(4K)=12. That needs 12 bits to identify a particular entry. Thus the outer table part of the logical address needs 12 bits.</li>
+<li>Consequently, the inner table part of logical address needs 12 bits.</li>
+</ul>
+<p><strong>Q10</strong> Design a 3-level paging scheme for a 64-bit logical space. Each physical page is of size 4K bytes and each page table entry uses 4 bytes.</p>
+<p>(10, 10, 10, 12)</p>
+<p><strong>Q11</strong> What is the maximum size of logical and physical spaces that can be mapped by the 3-level paging scheme in Question 10?</p>
+<ul>
+<li>Logical: 4TB.</li>
+<li>Physical: 16TB = 2^32 x 2^12 = 2^34.</li>
+</ul>
+<p><strong>Q12</strong> The following C program access a C array with a million of integer elements, running on a Linux machine. How does increasing of the page size affect the TLB miss rate? Explain the reason.</p>
+<div class="sourceCode"><pre class="sourceCode cpp"><code class="sourceCode cpp"><span class="dt">int</span> i, sum = <span class="dv">0</span>;
+<span class="cf">for</span> (i = <span class="dv">0</span>; i &lt; <span class="dv">10000000</span>; i++)
+    sum += a[i];</code></pre></div>
+<ol style="list-style-type: decimal">
+<li><strong>The increasing of the page size can decrease TLB miss rate</strong></li>
+<li>The decreasing of the page size can decrease TLB miss rate</li>
+<li>The increasing of the page size does not affect TLB miss rate</li>
+<li>The decreasing of the page size does not affect TLB miss rate</li>
+</ol>
+<p>For example, the typical size of Linux OS page is 4KB and each integer in C takes 4 bytes. Thus each page can host 1K integers. This program accesses the array a[] in a consecutive way. Thus when TLB misses the first element of a page, it will hit the rest of integer numbers in this page. The TLB miss rate is 1 out of 1K. When increasing the page size to 8K, the TLB miss rate decreases to 1 out of 2K.</p>
+<h3 id="exercise-4">Exercise 4</h3>
+<p><strong>Question 1</strong> Given the following C code, assume x is allocated to a register. Initially the binary code (text) and stack segments of this program is in memory, but others segments are not in memory. All OS kernel pages are in memory.</p>
+<pre><code>int x=1; // Line 1
+x = open(&quot;tmpfile1&quot;, O_WRONLY, 0666); //Line 2
+close(x); // Line 3</code></pre>
+<p>The execution of the following lines in above code triggers a page fault:</p>
+<ol style="list-style-type: decimal">
+<li>Line 1, Line 2, Line 3</li>
+<li>Line 2, Line 3</li>
+<li><strong>Line 2</strong> accesses &quot;tmpfile1&quot; which sits in the initialized data segment which is not in memory.</li>
+<li>Line 3</li>
+</ol>
+<p><strong>Question 2</strong> Which statement is not true when a page fault occurs?</p>
+<ol style="list-style-type: decimal">
+<li>The process that causes this page fault may enter a sleep mode.</li>
+<li>A free frame is located and I/O is requested to read the needed page into the free frame.</li>
+<li>Upon completion of page fault handling, the page table of the process that triggers page fault is modified. The corresponding instruction is restarted again.</li>
+<li><strong>The process of the victim page will be locked until this page is available again in memory</strong>.</li>
+</ol>
+<p><strong>Question 3</strong> Which of the following data access patterns are often “good” for a demand-paged environment in terms of exploiting data locality for good time efficiency? Which are often bad?</p>
+<ol style="list-style-type: decimal">
+<li>Stack-based assignments (Good: Stack with push and pop calls. Access of a consecutive part of a stack exhibits a good spatial locality.)</li>
+<li>Sequential search (Good: Scan a list of elements sequentially and one can use an array to implement. Thus it tends to have a good spatial locality.)</li>
+<li>Binary search (Bad: Binary search using a tree accesses a set of data objects scattered in memory and there is no access locality. Binary search of a big sorted array jumps from one memory address to another, which has no locality.)</li>
+<li>Object traversal with many pointer indirections (e.g., linked list or graph traversal) (Bad: Jumping around objects does not exhibit spatial or temporal locality normally.)</li>
+</ol>
+<p>Explanation: Physical memory is a cache for virtual pages. If a program accesses data has some temporal or spatial locality, such a program has a better performance (content of a virtual page loaded to memory can be used again and again).</p>
+<p><strong>Question 4</strong> Consider a demand-paging system that costs about 10,000 microseconds to deal with a page fault. Addresses are translated through a TLB and a one-level page table in the main memory. The cost for accessing TLB is considered as 0 and cost of each memory access is 0.1 microsecond. Assume that 99 percent of the accesses is in the TLB and virtual pages translated by TLB are always in memory. For the remaining 1% of the accesses, address translation is completed through the page table, but virtual pages may not reside in memory. What is the effective memory access time when the page fault rate is 0.01%.</p>
+<ol style="list-style-type: decimal">
+<li>1 ms</li>
+<li><strong>1.101 ms</strong></li>
+<li>1.2 ms</li>
+</ol>
+<p>If there is no page fault, average memory access time in microseconds is <span class="math inline">\(0.99 (0 + 0.1) + 0.01 (0.1 + 0.1) = 0.101\)</span>. Effective memory access when possibility of pages fault is considered: <span class="math inline">\(0.99 (0.101) + 0.01 (0.101 + 10000) = 1.101\)</span>.</p>
+<p><strong>Question 5</strong> Consider the following page-replacement algorithms. Rank these algorithms from the best to the worst according to their page-fault rate: LRU replacement, FIFO replacement, Optimal (MIN) replacement, Second-chance replacement.</p>
+<ol style="list-style-type: decimal">
+<li><strong>MIN, LRU, Second-chance, FIFO</strong></li>
+<li>MIN, Second-chance, LRU, FIFO</li>
+<li>MIN, FIFO, LRU, Second-chance</li>
+<li>MIN, LRU, FIFO, Second-chance</li>
+</ol>
+<p><strong>Question 6</strong> Given 3 empty physical pages as the total memory available, an application access memory in the following page reference sequence (x,y,z,w,y,u,y). Each letter represents a distinct virtual memory page. What is the number of page faults with the LRU, second-chance, and FIFO replacement algorithms respectively?</p>
+<ol style="list-style-type: decimal">
+<li><strong>5, 5, 6</strong></li>
+<li>5, 6, 6</li>
+<li>5, 5, 7</li>
+<li>6, 6, 6</li>
+</ol>
+<ul>
+<li>LRU: xF, yF, zF, wF (replace x), y, uF (replace z), y</li>
+<li>SC: xF, yF, zF, wF, y, uF, y</li>
+<li>FIFO: xF, yF, zF, wF (replace x), y, uF (replace y), yF (replace z)</li>
+</ul>
+<p><strong>Question 7</strong> Given the following C program which access a 2D integer array <code>a[1024][1024]</code>. A demand-paging memory is divided into a set of uniform 1K byte pages. Each integer uses 4 bytes. Assume that the binary instructions for the following program are always in separate memory space. The LRU page replacement algorithm is used to manage a 512KB memory that stores the array. Initially data array <code>a[][]</code> is not in memory.</p>
+<pre><code>for (i = 0; i &lt; 1024; i++) for (j = 0; j &lt; 1024; j++) a[j][i] = 100;</code></pre>
+<p>What is the number of page faults in running this program?</p>
+<ol style="list-style-type: decimal">
+<li>1024</li>
+<li><strong>1024 * 1024</strong></li>
+<li>0</li>
+</ol>
+<p>The C program stores this array in a row-wise format. Each row needs 1024*4/1K = 4 memory pages. 512KB memory can hold 512 pages. The code accesses column 1, requiring the loading of 1K pages with 1K page faults. For column 2, old data loaded is swapped out, and thus it takes another 1K page faults. In summary, 1024x1024 page faults occur.</p>
+<p><strong>Question 8</strong> For 7, if the memory increases to 1MB, what is the number of page faults in running this program?</p>
+<ol style="list-style-type: decimal">
+<li>1024</li>
+<li>1024 * 1024</li>
+<li><strong>4096</strong></li>
+<li>0</li>
+</ol>
+<p>If memory is 1MB, then memory can hold 1K pages. Each row of the matrix requires 4 pages as it has size 4KB. After column 1 access, data in memory can still be used for column 2, column 3, ..., up to column 256. Then the miss starts again. Thus we ca reason that accessing each row generates 4 page faults. The total number of page faults will be 1024*4= 4K.</p>
+<p><strong>Question 9</strong> Which statement is false on OS scheduling?</p>
+<ol style="list-style-type: decimal">
+<li>Preemptive scheduling allows a process to be interrupted in the midst of its execution, taking the CPU away and allocating it to another process.</li>
+<li>Nonpreemptive scheduling ensures that a process relinquishes control of the CPU only when it finishes with its current CPU burst.</li>
+<li><strong>Round robin scheduling improves job response time, and average turn-around time.</strong></li>
+<li>Different time-quantum sizes are used at different queues at a multilevel feedback queuing system.</li>
+</ol>
+<p><strong>Question 10</strong> Suppose that the following processes arrive for execution at the times indicated. Each process will run for the amount of time listed in the burst time column. .Assume the context switch cost = 0.</p>
+<ul>
+<li>P1: Arrival time = 0, Burst time = 8</li>
+<li>P2: Arrival time = 1, Burst time = 4</li>
+<li>P3: Arrival time = 2, Burst time = 1</li>
+</ul>
+<p>What is the average turnaround time for these processes with the FIFO non-preemptive, SJF non-preemptive, RR preemptive scheduling algorithm with quantum 1?</p>
+<ol style="list-style-type: decimal">
+<li><strong>10, 9, 7.33</strong></li>
+<li>11, 10, 7</li>
+<li>10, 6, 6</li>
+</ol>
+<ul>
+<li>FIFO: <span class="math inline">\((8-0 + 12-1 + 13-2) / 3\)</span></li>
+<li>SJF: <span class="math inline">\((8-0 + 9-2 + 13-1) / 3\)</span></li>
+<li>RR: <span class="math inline">\((13-0 + 9-1 + 3-2) / 3\)</span></li>
+</ul>
+<p>Remember that turnaround time is finishing time minus arrival time, so you have to subtract the arrival times to compute the turnaround times. FIFO's turnaround time is 11 if you forget to subtract arrival time. Another mistake is that SJF schedules all tasks following the job length without considering their arrival time. SJF (P3, P2, P1). Turnaround time would become <span class="math inline">\((3-2 + 5-1 + 13-0)/3 = 6\)</span> which is wrong.</p>
+<h3 id="exercise-5">Exercise 5</h3>
+<p><strong>Q1</strong> Select a statement which is not true</p>
+<ol style="list-style-type: decimal">
+<li>The <code>open()</code> operation informs the system that the named file is about to become active.</li>
+<li>The <code>close()</code> operation informs the system that the named file is no longer in active use by the user who issued the close operation.</li>
+<li><strong>The OS always have file descriptors available for new files to be opened even other programs do not close files.</strong></li>
+<li>The files may not be saved properly if a program does not close all files written while exiting abnormally as OS often buffers writing before writing data out to disk.</li>
+</ol>
+<p><strong>Q2</strong> Given two applications: 1) Print the entire content of a file; 2) Access a record in a file given its index. The position of this record in this file is indexed. They should be accessed:</p>
+<ol style="list-style-type: decimal">
+<li><strong>sequentially, randomly</strong></li>
+<li>randomly, sequentially</li>
+<li>both sequentially</li>
+<li>both randomly</li>
+</ol>
+<p><strong>Q3</strong> Consider a system that supports 5,000 users. Suppose that you want to allow 4,990 of these users to be able to access one file. How would you specify this protection scheme in UNIX/Linux?</p>
+<ol style="list-style-type: decimal">
+<li>Specify 10 users as non-accessible.</li>
+<li><strong>Put these 4990 users in one group and set the group access accordingly.</strong></li>
+<li>Give a soft link of this file to these 4990 users so they are able to access while other 10 users cannot access as they do not know the file name.</li>
+<li>Not possible.</li>
+</ol>
+<p><strong>Q4</strong> We use indexed allocation to store a file on a disk and we assume that each disk file block is of size 16KB. Each data pointer entry in an i-node takes 4 bytes. Answer the following questions with an explanation.</p>
+<p>What is the maximum size of a file with one-level direct mapping (one index block containing a set of direct pointers to data blocks) can map?</p>
+<ol style="list-style-type: decimal">
+<li>16 KB</li>
+<li><strong>64 MB</strong></li>
+<li>256 MB</li>
+</ol>
+<p><strong>Q5</strong> For Q4, What is the minimum levels of index indirection required to map a file of 16 gigabytes?</p>
+<ol style="list-style-type: decimal">
+<li>One-level direct mapping</li>
+<li><strong>Two-level single indirection</strong></li>
+<li>Three-level double indirection</li>
+</ol>
+<p><span class="math inline">\(16K/4B=4K\)</span> entries per index block. The maximum size of a file with single indirect block = <span class="math inline">\(4K*16KB= 64MB\)</span>. Maximum size for two levels: <span class="math inline">\(4K*4K*16K = 256GB\)</span>. 16GB would require 2 levels.</p>
+<p><strong>Q6</strong> Given an i-node design as UNIX file control block structure, what is the least number of the set of disk blocks that must be read into memory in order to access a UNIX file &quot;/cs170/final.txt&quot;?</p>
+<ol style="list-style-type: decimal">
+<li>1</li>
+<li>2</li>
+<li>4</li>
+<li><strong>6</strong></li>
+</ol>
+<ul>
+<li>Read in file header for root / (fixed spot on disk).</li>
+<li>Read in first data block for root / as its directory content and search cs170.</li>
+<li>Read in file header for directory &quot;cs170&quot;</li>
+<li>Read in first data block for directory &quot;cs170&quot;; search for &quot;final.txt&quot;</li>
+<li>Read in the file header i-node for &quot;final.txt&quot;</li>
+<li>Read in first data block for &quot;final.txt&quot;</li>
+</ul>
+<p><strong>Q7</strong> Suppose this disk drive spins at 12000 RPM, and has a sector size of 512 bytes, and holds 50 sectors per track. What is the maximum transfer rate of this driver accomplishable without seek overhead.</p>
+<ol style="list-style-type: decimal">
+<li><strong>5 MB/s</strong></li>
+<li>6 MB/s</li>
+<li>12 MB/s</li>
+</ol>
+<p><strong>Q8</strong> For Q7, Assume average seek time for the above drive is 7.3 milliseconds, what is the effective transfer rate for random-access of two consecutive sectors on a disk track? (Namely find the position first, then transfer two sectors together).</p>
+<ol style="list-style-type: decimal">
+<li><strong>0.1 MB/s</strong></li>
+<li>0.133 MB/s</li>
+<li>5 MB/s</li>
+<li>6 MB/s</li>
+</ol>
+<ul>
+<li>Average rotational cost is time to travel half track: 1/200 * 0.5 = 2.5ms.</li>
+<li>Transfer time = 7.3ms to seek + 0.2ms to read = 10 ms.</li>
+<li>Effective transferring rate: 1KB/0.01s = 0.1MB/s.</li>
+</ul>
+<p><strong>Q9</strong> Suppose that a disk drive has 200 cylinders, numbered from 0 to 199. The drive is currently serving a request at cylinder 120, and the previous request was at cylinder 100. The queue of pending requests, in FIFO order is: 80, 190, 40, 110. Illustrate the disk arm movement using the FCFS and SCAN algorithms. Compute the total movement in cylinders for each algorithm.</p>
+<ol style="list-style-type: decimal">
+<li>220, 370</li>
+<li><strong>370, 220</strong></li>
+<li>388, 189</li>
+<li>189, 388</li>
+</ol>
+<ul>
+<li>FCFS: 120, 80, 190, 40, 110</li>
+<li>SCAN: 120, 190, 110, 80, 40</li>
+</ul>
+<p><strong>Q10</strong> Assume the annual failure rate of a disk drive is 2% and each server machine has 5 disk drives installed. Given 1000 servers installed in a computer cluster, how often does one of their disk drives fail?</p>
+<ol style="list-style-type: decimal">
+<li>Once a day</li>
+<li>Once a week</li>
+<li>Once a month</li>
+<li><strong>Twice a week</strong></li>
+</ol>
+<p><strong>Q11</strong> Which statement is false?</p>
+<ol style="list-style-type: decimal">
+<li>RAID 0 improves access bandwidth (parallel read or write), but there is no extra redundancy added to deal with a disk failure.</li>
+<li>RAID 1 improves reliability and can tolerate one disk fail, and it doubles read throughput. But 50% of disk space is wasted.</li>
+<li><strong>RAID 5 improves access bandwidth while it can tolerate up to 5 disk failures.</strong></li>
+<li>RAID 1+0 improves access bandwidth while it can tolerate one disk failure.</li>
+</ol>
+<p><strong>Q12</strong> Given one data block contains content in binary value 0011, and another block 1011. What is the binary value of the parity block for these two blocks? If the parity block of two blocks A and B is 0011 and block A is 1011, B is lost during a failure. What is B in the binary value that can be recover from the parity block and block A?</p>
+<ol style="list-style-type: decimal">
+<li>0111, 0111</li>
+<li><strong>1000, 1000</strong></li>
+<li>0111, 1000</li>
+<li>1000, 01111</li>
+</ol>
+<p><strong>Q13</strong> Considering A and B with initial value 1. Transaction T is: A=3; B=4; commit. Select one of following transaction processing that violates ACID properties.</p>
+<ol style="list-style-type: decimal">
+<li><strong>T crashes after A=3. The final state after recovery is A=3, B=1.</strong></li>
+<li>T crashes after A=3. The final state after recovery is A=1, B=1.</li>
+<li>T execution is successful. The final state is A=3, B=4.</li>
+</ol>
+<p><strong>Q14</strong> Answer true or false for each of the following statements</p>
+<ul>
+<li><strong>T</strong>. For a key-vale store with multiple replicas, using quorum consensus a writer can return before the data has been written to all replicas.</li>
+<li><strong>T</strong>. The directory server as master can be a bottleneck point for a key-value store.</li>
+</ul>
+<p><strong>Q15</strong> Answer true or false for each of the following statements</p>
+<ul>
+<li><strong>F</strong>. Hadoop distributed file system allocates 3 replicas by default and accesses a replica for reading randomly.</li>
+<li><strong>T</strong>. Hadoop distributed file system is optimized for handling large files with large file blocks and heavy sequential read workload.</li>
+</ul>
+<h3 id="f12-midterm">F12 midterm</h3>
+<p><strong>Q1.1</strong> What are the key OS actions taken during context switching between two processes? What are their process states before and after switching?</p>
+<ul>
+<li>Suspend the current process.</li>
+<li>Save current process control information in a process control block (PCB).</li>
+<li>Restore the process control information for the new process from its PCB.</li>
+<li>Setup memory mapping (e.g. page table) and activate the execution of the new process.</li>
+<li>The PCB information contains registers (including stack pointer, program counter), page table, and other process-oriented OS information.</li>
+<li>The state change: Run-&gt;Ready for the old process and Ready-&gt;Run for the new process.</li>
+</ul>
+<p><strong>Q1.2</strong> Given the following c program that uses Linux <code>fork()/wait()</code> system calls</p>
+<pre><code>int main() {
+    int pid, x=10, y;
+    pid = fork(); 
+    if (pid == 0) {
+        y = 1;
+        x = x + y;
+        printf(&quot;x is %d. y is %d \n&quot;, x,y); 
+    } else {
+        y = 2;
+        x = x + y;
+        wait(NULL);
+        printf(&quot;x is %d. y is %d \n&quot;, x,y);
+    }
+}</code></pre>
+<pre><code>x is 11, y is 1
+x is 12, y is 2</code></pre>
+<p><strong>Q2.1</strong> What is the main diﬀerence between a process and a thread?</p>
+<p>Threads allocate separate stack space within the same process resource, share memory for code/data segments. Processes don't share memory normally. Separate resource (address space) is allocated from the system for each process. Each process is recognized by OS during resource allocation and scheduling while a thread created within a process may or may not be recognized by the OS during scheduling.</p>
+<p><strong>Q2.2</strong> Explain what Nachos OS does in the following four statements during Nachos thread forking.</p>
+<pre><code>Thread::Fork(VoidFunctionPtr func, int arg) { 
+    StackAllocate(func, arg); 
+    IntStatus oldLevel = interrupt-&gt;SetLevel(IntOff); 
+    scheduler-&gt;ReadyToRun(this); 
+    (void) interrupt-&gt;SetLevel(oldLevel); 
+}</code></pre>
+<ul>
+<li>Allocate stack space and setup thread control block properly used for thread context switch (e.g. setup stack pointer, the thread starting address, and argument location).</li>
+<li>Disable interruption.</li>
+<li>Put this thread into a queue with a ready state Enable interruption.</li>
+<li>Enable interruption.</li>
+</ul>
+<p><strong>Q3.1</strong> What is a race condition?</p>
+<p>Multiple threads or processes may operate on the same shared data at the same time; the result depends on their data access time and execution order.</p>
+<p><strong>Q3.2</strong> For Project 1, if we change <code>ThreadTest()</code> in file <code>threadtest.cc</code> as follows:</p>
+<div class="sourceCode"><pre class="sourceCode cpp"><code class="sourceCode cpp"><span class="dt">int</span> x = <span class="dv">10</span>; 
+<span class="dt">void</span> SimpleThread(<span class="dt">int</span> y) { 
+    currentThread-&gt;Yield();
+    x = x + y; 
+    printf(<span class="st">&quot;x is </span><span class="sc">%d</span><span class="st">. y is </span><span class="sc">%d</span><span class="st"> </span><span class="sc">\n</span><span class="st">&quot;</span>, x, y); 
+}
+<span class="dt">void</span> ThreadTest() { 
+    Thread *t = <span class="kw">new</span> Thread(<span class="st">&quot;forked thread&quot;</span>); 
+    t-&gt;Fork(SimpleThread, <span class="dv">1</span>); 
+    SimpleThread(<span class="dv">2</span>); 
+}</code></pre></div>
+<p>In this case, Nachos threads only yield to each other when executing <code>Yield()</code>. List and explain the values of &quot;x&quot; and &quot;y&quot; printed in executing <code>ThreadTest()</code>.</p>
+<pre><code>x = 12, y = 2
+x = 13, y = 1</code></pre>
+<p>The parent thread executes <code>SimpleTread(2)</code> first, but yields. The child thread starts <code>SimpleTread(1)</code>, but yields. Then parent thread continues and prints. After its completion, the child thread resumes and prints.</p>
+<p><strong>Q4.1</strong> What is the beneﬁt of TLB for a paging scheme?</p>
+<p>Speed up looking up of address translation using a fast hardware cache.</p>
+<p><strong>Q4.2</strong> Given a one-level paging scheme for memory address mapping, if TLB access takes 10 nanosecond and each physical memory access takes 100 nanoseconds, what will be the desired TLB hit ratio to have the eﬀective memory access time within 120 nanoseconds to complete both logical address translation and physical memory data fetching?</p>
+<p>Solve <span class="math inline">\(10 + (1-x)*100 + 100 = 120\)</span> for <span class="math inline">\(x = 0.9\)</span>.</p>
+<p><strong>Q5.1</strong> Given a one-level paging scheme where physical memory is divided into a set of pages with uniform size 8K bytes and each page table entry uses 4 bytes, what is the maximum size of a logical memory space for each process with this paging scheme? Explain your reason.</p>
+<p>The page table is also 8K bytes, each entry uses 4 bytes, thus 8K/4 = 2K entries in a page table; thus there are total of 2K pages, the maximum size of memory space is 2K*8KB = 16MB.</p>
+<p><strong>Q5.2</strong> Design a 2-level paging scheme for a 38-bit logical space and illustrate the address translation steps. Each physical page is of size 16K bytes and each page table entry uses 4 bytes.</p>
+<p>(12, 12, 14)</p>
+<ul>
+<li>Physical page size is 16K bytes, and offset for a page use log(16K) = 14 bits.</li>
+<li>Each physical page can host 16K/4 = 4K entries. Thus a page table using one physical page can map at most 4Kx16K=64MB physical space. A two-level table can map at most 64MB*4K=256GB space which is 2^38.</li>
+<li>The level-1 outer table has 4K entries, and log(4K)=12. That needs 12 bits to identify a particular entry. Thus the outer table part of the logical address needs 12 bits.</li>
+<li>Consequently the level-2 inner table part of logical address needs 12 bits. The scheme is 2-level paging and 38 bits will be split as 12, 12, and 14.</li>
+</ul>
+<p><strong>Q6</strong> The following pseudo code for a producer-consumer problem needs a synchronization.</p>
+<div class="sourceCode"><pre class="sourceCode cpp"><code class="sourceCode cpp"><span class="co">// Consumer thread</span>
+<span class="cf">while</span> (<span class="dv">1</span>) { <span class="co">/* consume next data item */</span> }
+<span class="co">// Producer thread</span>
+<span class="cf">while</span> (<span class="dv">1</span>) { <span class="co">/* produce next data item */</span> }</code></pre></div>
+<p>Extend the above code and use condition variables and a lock to synchronize the critical section and avoid busy waiting so that a producer waits if there is no buﬀer space to store data and a consumer waits if there is no data to consume.</p>
+<div class="sourceCode"><pre class="sourceCode cpp"><code class="sourceCode cpp"><span class="co">// Consumer thread</span>
+<span class="cf">while</span>(<span class="dv">1</span>){
+    lock-&gt;acquire(); 
+    <span class="cf">while</span> (queue is empty) {
+        condData-&gt;wait(lock)
+    }
+    Consume next data item;
+    condSpace-&gt;signal(lock);
+    lock-&gt;release();
+}
+<span class="co">// Producer thread</span>
+<span class="cf">while</span> (<span class="dv">1</span>) {
+    lock-&gt;acquire();
+    <span class="cf">while</span> (queue is full) {
+        condSpace-&gt;wait(lock)
+    }
+    Produce next data item;
+    condData-&gt;signal(lock);
+    lock-&gt;release();
+}</code></pre></div>
+<h3 id="f12-final">F12 final</h3>
+<p><strong>Q1.1</strong> What is the benefit of incorporating the copy-on-write feature in process forking?</p>
+<p>Delay page duplication when creating a child process until this page is modified by the child process. If no pages are modiﬁed in the child process, and then cost of duplication can be eliminated.</p>
+<p><strong>Q1.2</strong> Given the following C program that uses Linux <code>fork()/wait()</code> system calls, Assume <code>printf()</code> is an atomic operation. Show all possible results printed when running a multiprogramming Linux system.</p>
+<div class="sourceCode"><pre class="sourceCode cpp"><code class="sourceCode cpp"><span class="dt">int</span> main() {
+    <span class="dt">int</span> pid, x = <span class="dv">100</span>, y = <span class="dv">1</span>;
+    pid = fork();
+    <span class="cf">if</span> (pid == <span class="dv">0</span>) {
+        x = x + <span class="dv">1</span>;
+        y = y + x;
+        printf(<span class="st">&quot;x is </span><span class="sc">%d</span><span class="st">. y is </span><span class="sc">%d</span><span class="st"> </span><span class="sc">\n</span><span class="st">&quot;</span>, x,y);
+    } <span class="cf">else</span> {
+        x = x + <span class="dv">2</span>;
+        y = y + x;
+        printf(<span class="st">&quot;x is </span><span class="sc">%d</span><span class="st">. y is </span><span class="sc">%d</span><span class="st"> </span><span class="sc">\n</span><span class="st">&quot;</span>, x,y);
+    }
+}</code></pre></div>
+<pre><code>x is 101. y is 102
+x is 102. y is 103
+
+x is 102. y is 103
+x is 101. y is 102</code></pre>
+<p><strong>Q2.1</strong> Explain the advantages and disadvantages of Shortest-Job-First (SJF) scheduling. Explain why the Multi-Level-Feedback-Queue can be considered as an approximation to SJF while addressing the weakness of SJF?</p>
+<ul>
+<li>Advantage of SJF: reduce aveage job waiting time.</li>
+<li>Disadvantage of SJF: there could a starvation for some long jobs.</li>
+<li>In multi-queue scheduling, short jobs can be assigned in one queue with more resource. Long jobs can be assigned to another queue. Allocating resource proportionaly among queues avoids starvation.</li>
+</ul>
+<p><strong>Q2.2</strong> Consider the following set of processes, with the length of the CPU-burst time given in milliseconds. The processes are assumed to have arrived in the order P1,P2,P3,P4,P5, all at time 0. Draw 3 charts illustrating the execution of these processes using FCFS (First-come-ﬁrst-serve), SJF (shortest-job-ﬁrst), and RR (round-robing with quantum=1) scheduling. What is the waiting time and turnaround time of process P1 for each of the scheduling algorithms?</p>
+<ul>
+<li>P1, arrival time = 0, burst time = 10</li>
+<li>P2, arrival time = 0, burst time = 1</li>
+<li>P3, arrival time = 0, burst time = 2</li>
+<li>P4, arrival time = 0, burst time = 1</li>
+<li>P5, arrival time = 0, burst time = 5</li>
+<li>FCFS: P1 P2 P3 P4 P5, turnaround = 10, waiting = 0</li>
+<li>SJF: P2 P4 P3 P5 P1, turnaround = 19, waiting = 9</li>
+<li>RR: P1 P2 P3 P4 P5 P1 P3 P5 P1 P5 P1 P5 P1 P5 P1, turnaround = 19, waiting = 9</li>
+</ul>
+<p><strong>Q3.1</strong> What is the role of dirty-bits in Nachos virtual memory implementation in Project 3? How does this help in improving execution performance.</p>
+<p>Dirty bits indicate if a memory page has been modiﬁed. It can be used to check if a page should be written back the swapping store or not when a page is evicted from memory. It can save disk I/O and avoid unncessary writes.</p>
+<p><strong>Q3.2</strong> A demand-paging memory system translates an address using a TLB and a one-level page table in the main memory. The TLB hit ratio is 99% and it takes 0 nanosecond for TLB access. Each physical memory access takes 100 nanoseconds. If this virtual page is not in memory, then page fault handling takes 10,000 microseconds. What will be the maximum page fault rate that makes the overall average effective memory access time to be less than 1 microsecond?</p>
+<p>If there is no page fault, average memory access time in ms is <span class="math inline">\(0.99*(0+0.1) + 0.01*(0.1+0.1) = 0.101\)</span>. Then solve <span class="math inline">\((1-f)*0.101 + f(0.101+10000) = 1\)</span> for <span class="math inline">\(f = 0.008999%\)</span>.</p>
+<p><strong>Q3.3</strong> Given 3 empty physical pages, draw ﬁgures to illustrate how a page replacement scheme deals with the following reference string (1, 2, 3, 4, 2, 5, 2) using the LRU strategy. Compute the number of page faults.</p>
+<p>Five faults: 1F, 2F, 3F, 4F(replace 1), 2, 5F(replace 3), 2.</p>
+<p><strong>Q3.4</strong> Given the following C program which access a 2D integer array <code>a[1024][1024]</code>. A demand-paging memory is divided into a set of uniform 1K byte pages. Each integer uses 4 bytes. Assume that the binary instructions for the following program are always in separate memory space. The LRU page replacement algorithm is used to manage a 512KB memory that stores the array. Initially data array <code>a[][]</code> is not in memory. Derive and explain the number of page faults in running this program. If the memory increases to 1MB, what is the number of page faults in running this program?</p>
+<div class="sourceCode"><pre class="sourceCode cpp"><code class="sourceCode cpp"><span class="cf">for</span> (i = <span class="dv">0</span>; i &lt; <span class="dv">1024</span>; i++) <span class="cf">for</span> (j = <span class="dv">0</span>; j &lt; <span class="dv">1024</span>; j++) a[j][i] = <span class="dv">100</span>;</code></pre></div>
+<p>The C program stores this array in a row-wise format. Each row needs 1024*4/1K = 4 memory pages. 512KB memory means 512 pages. The code accesses column 1, requiring the loading of 1K pages with 1K page faults. For column 2, old data loaded is swapped out, and thus it takes another 1K page faults.</p>
+<p>In summary, 1024x1024 page faults occur.</p>
+<p>If memory is 1MB, then memory can hold 1K pages. After column 1 access, data in memory can be used for column 2 access. Thus total faults will be 1024*4 = 4K.</p>
+<p><strong>Q4.1</strong> What are advantages and disadvantages of RAID 0 and RAID 1?</p>
+<p>RAID 0 improves access bandwidth (paralell read or write), but there is no extra redudancy added to deal with a disk failure. RAID 1 improves reliability and can torelate one disk fail, and it doubles read throughput. But 50% of disk space is wasted.</p>
+<p><strong>Q4.2</strong> The original Nachos file system implementation (before Project 3 extension) uses a single-level indexed allocation. Given a file currently consisting of 1 disk block, how many disk block read or write operations are required to add a block to the end of this file?</p>
+<p>Total 2 operations. 1 IO operation to load the file header. Then the kernel modifies the file header to add one block. Then it does 1 IO operation to store the added data block. (If they answer 3, then the third has to be writing the index header to the disk. Then it is ﬁne).</p>
+<p><strong>Q4.3</strong> We use indexed allocation to store a file on a disk and we assume that each disk block is of size 16K bytes. Each entry in an index block takes 4 bytes. What is the maximum size of a file that can be mapped by a single-level indexed allocation? Illustrate with a ﬁgure to show the levels of index indirection required to map a file of size 16 gigabytes?</p>
+<ul>
+<li>16K/4=4K entries per index block.</li>
+<li>The maximum size of a ﬁle with single indirect block = 4K x 16K bytes = 64MB.</li>
+<li>Maximum size for two levels: 4K x 4K x 16K = 256GB.</li>
+<li>16GB would require 2 levels.</li>
+</ul>
+<p><strong>Q6.1</strong> Suppose that a disk drive has 200 cylinders, numbered from 0 to 199. The drive is currently serving a request at cylinder 120, and the previous request was at cylinder 100. The queue of pending requests, in FIFO order is: 80, 190, 40, 110. Illustrate the disk arm movement using the FCFS and SCAN algorithms. Compute the total movement in cylinders for each algorithm.</p>
+<ul>
+<li>FCFS: 120, 80, 190, 40, 110. In total 370.</li>
+<li>SCAN: 120, 190, 110, 80, 40. In total 220.</li>
+</ul>
+<p><strong>Q6.2</strong> Suppose this disk drive spins at 12000 RPM, and has a sector size of 512 bytes, and holds 50 sectors per track. What is sustained transfer rate of this drive in megabytes per second? Assume average seek time for the above drive is 7.3 milliseconds, what is the eﬀective transfer rate for random-access of two consecutive sectors on a disk track? (Namely ﬁnd the position ﬁrst, then transfer two sectors together)</p>
+<ul>
+<li>Each second spins 12000/60 = 200 times.</li>
+<li>Each spin transfers a track of 25 KB (50 sectors x 0.5 KB).</li>
+<li>Sustained average transfer rate is 200 x 25 KB = 5 MB/s.</li>
+<li>Average rotational cost is time to travel track: 1/100 x 0.5 = 2.5 ms.</li>
+<li>Transfer time is 7.3 ms to seek + 2.5 ms rotational latency + 0.2 ms (reading two sectors takes 0.001 MB / 5 MB) = 10 ms.</li>
+<li>Effective transferring rate: 1KB / 0.01s = 0.1 MB/s.</li>
+</ul>
+<p><strong>Q7</strong> The following pseudo code is executed by each thread and the code uses <code>Swap()</code> atomic instruction to implement a critical section solution to synchronize threads.</p>
+<div class="sourceCode"><pre class="sourceCode cpp"><code class="sourceCode cpp">ThreadFunction() {
+    <span class="dt">int</span> key = TRUE;
+    <span class="dt">int</span> lock = TRUE; 
+    <span class="cf">while</span> (key == TRUE)
+        Swap (&amp;lock, &amp;key);
+    <span class="co">// Perform critical section code</span>
+    lock = FALSE;
+}</code></pre></div>
+<p><strong>Q7.1</strong> Should variables <code>lock</code> and <code>key</code> be shared among threads? Correct the above code and initialize variables properly.</p>
+<p>lock is shared, key is not.</p>
+<div class="sourceCode"><pre class="sourceCode cpp"><code class="sourceCode cpp"><span class="dt">int</span> lock = FALSE; 
+ThreadFunction() {
+    <span class="dt">int</span> key = TRUE; 
+    <span class="cf">while</span> (key == TRUE) 
+        Swap (&amp;lock, &amp;key);
+    <span class="co">// Perform critical section code</span>
+    lock = FALSE;
+}</code></pre></div>
+<p><strong>Q7.2</strong> Does the above corrected solution satisfy each of the following three properties: mutual exclusion, progress, bounded waiting?</p>
+<p>Mutual exclusion: yes. Progress: yes. Bounded waiting: no.</p>
+<p><strong>Q7.3</strong> Chapter 5 of the text book discussed a solution for the readers-writers problem. In this problem, a data set is shared among a number of threads. A synchronization solution is required so that multiple readers can read at the same time. But when one writer is accessing a shared data item, other writers or readers cannot access this shared item.</p>
+<div class="sourceCode"><pre class="sourceCode cpp"><code class="sourceCode cpp">Lock *w = <span class="kw">new</span> Lock(<span class="st">&quot;Write-Lock&quot;</span>);
+
+<span class="co">// Writer thread:</span>
+<span class="cf">while</span>(<span class="dv">1</span>) {
+  w-&gt;Acquire();
+  <span class="co">// Writing is performed</span>
+  w-&gt;Release();
+}
+
+<span class="co">// Reader thread:</span>
+<span class="cf">while</span>(<span class="dv">1</span>) {
+  w-&gt;Acquire();
+  <span class="co">// Reading is performed</span>
+  w-&gt;Release();
+}</code></pre></div>
+<p>Explain if the following solution meets the requirement? If not, explain and provide a solution with pseudo code.</p>
+<div class="sourceCode"><pre class="sourceCode cpp"><code class="sourceCode cpp">Semaphore mutex initialized to <span class="dv">1</span> (they may use a lock)
+Semaphore wrt initialized to <span class="dv">1</span> (it is wrong to use a lock <span class="cf">for</span> wrt)
+Integer readcount initialized to <span class="dv">0</span>
+
+<span class="co">// Writer thread</span>
+<span class="cf">while</span>(<span class="dv">1</span>) {
+  wrt-&gt;P();
+  <span class="co">// Writing is performed</span>
+  wrt-&gt;V();
+}
+
+<span class="co">// Reader thread</span>
+<span class="cf">while</span>(<span class="dv">1</span>) {
+  mutex.P();
+  readcount++;
+  <span class="cf">if</span> (readcount == <span class="dv">1</span>) wrt.P();
+  mutex.V()
+  <span class="co">// reading is performed</span>
+  mutex.P();
+  readcount--;
+  <span class="cf">if</span> (readcount == <span class="dv">0</span>) wrt.V();
+  mutex.V();
+}</code></pre></div>
+<p>Extend this solution and allow at most 10 readers that can read at the same time.</p>
+<div class="sourceCode"><pre class="sourceCode cpp"><code class="sourceCode cpp">Semaphore mutex initialized to <span class="dv">1</span>
+Semaphore wrt initialized to <span class="dv">1</span>
+Semaphore rd initialized to <span class="dv">10</span>
+Integer readcount initialized to <span class="dv">0</span>
+
+<span class="co">// Writer thread</span>
+<span class="cf">while</span>(<span class="dv">1</span>) {
+    wrt-&gt;P();
+    <span class="co">// Writing is performed</span>
+    wrt-&gt;V();
+}
+
+<span class="co">// Reader thread</span>
+<span class="cf">while</span>(<span class="dv">1</span>) {
+    rd.P();
+    mutex.P();
+    readcount++;
+    <span class="cf">if</span> (readcount == <span class="dv">1</span>) wrt.P();
+    mutex.V()
+    <span class="co">// reading is performed</span>
+    mutex.P();
+    readcount--;
+    <span class="cf">if</span> (readcount == <span class="dv">0</span>) wrt.V();
+    mutex.V();
+    rd.V();
+}</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode cpp"><code class="sourceCode cpp">Lock mutex
+Semaphore wrt initialized to <span class="dv">1</span>
+Integer readcount initialized to <span class="dv">0</span>
+Cond as condition variable
+
+<span class="co">// Writer thread</span>
+<span class="cf">while</span>(<span class="dv">1</span>) {
+    wrt-&gt;P();
+    <span class="co">// Writing is performed</span>
+    wrt-&gt;V();
+}
+
+<span class="co">// Reader thread</span>
+<span class="cf">while</span>(<span class="dv">1</span>) {
+    mutex.Acquire();
+    <span class="cf">while</span> (readcount &gt;= <span class="dv">10</span>) Cond-&gt;Wait(mutex);
+    readcount++;
+    <span class="cf">if</span> (readcount == <span class="dv">1</span>) wrt.P();
+    mutex.Relase();
+    <span class="co">// reading is performed</span>
+    mutex.Acquire();
+    readcount--;
+    Cond-&gt;Signal(mutex);
+    <span class="cf">if</span> (readcount == <span class="dv">0</span>) wrt.V();
+    mutex.Relase();
+}</code></pre></div>
+</body>
+</html>

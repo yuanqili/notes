@@ -1,0 +1,1811 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+  <style type="text/css">
+div.sourceCode { overflow-x: auto; }
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+code > span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code > span.dt { color: #902000; } /* DataType */
+code > span.dv { color: #40a070; } /* DecVal */
+code > span.bn { color: #40a070; } /* BaseN */
+code > span.fl { color: #40a070; } /* Float */
+code > span.ch { color: #4070a0; } /* Char */
+code > span.st { color: #4070a0; } /* String */
+code > span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code > span.ot { color: #007020; } /* Other */
+code > span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code > span.fu { color: #06287e; } /* Function */
+code > span.er { color: #ff0000; font-weight: bold; } /* Error */
+code > span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+code > span.cn { color: #880000; } /* Constant */
+code > span.sc { color: #4070a0; } /* SpecialChar */
+code > span.vs { color: #4070a0; } /* VerbatimString */
+code > span.ss { color: #bb6688; } /* SpecialString */
+code > span.im { } /* Import */
+code > span.va { color: #19177c; } /* Variable */
+code > span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code > span.op { color: #666666; } /* Operator */
+code > span.bu { } /* BuiltIn */
+code > span.ex { } /* Extension */
+code > span.pp { color: #bc7a00; } /* Preprocessor */
+code > span.at { color: #7d9029; } /* Attribute */
+code > span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code > span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code > span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+  </style>
+  <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_CHTML-full" type="text/javascript"></script>
+</head>
+<body>
+<h1 id="cs170-review">CS170 Review</h1>
+<h2 id="kernels-and-processes">Kernels and processes</h2>
+<h3 id="four-fundamental-os-concepts">Four fundamental OS concepts</h3>
+<ul>
+<li><strong>Thread</strong>: single unique execution context; program counter, registers, execution flags, stack</li>
+<li><strong>Address space with translation</strong>: programs execute in an address space that is distinct from the memory space of the physical machine</li>
+<li><strong>Process</strong>: an instance of an executing program is a process consisting of an address space and one or more threads of control; a process in memory includes a program counter, stack and heap, and data/instruction section (PCB)</li>
+<li><strong>Dual mode operation</strong>: onely the system has the ability to access certain resouces; the OS and the hardware are protected from user programs and user programs are isolated from one another by controlling the translation from the program virtual addresses to machine physical addresses
+<ul>
+<li>User to kernel: sets system mode and saves the user PC; OS code carefully puts aside user state then performs the necessary operations</li>
+<li>Kernel to user: user transition clears system mode and restores appropriate user PC; user program returns from interrupt</li>
+</ul></li>
+</ul>
+<p>To run a program, the OS loads code and data segments of executable file into memory, creates stack and heap, trnasfers control to it and provides ervices to it. As a process executes, it changes <strong>state</strong>:</p>
+<ul>
+<li><strong>New</strong>: the process is being created</li>
+<li><strong>Running</strong>: instructions are being executed</li>
+<li><strong>Waiting</strong>: the process is waiting for some event to occur</li>
+<li><strong>Ready</strong>: the process is waiting to be assigned to a processor</li>
+<li><strong>Terminated</strong>: the process has finished execution</li>
+</ul>
+<p><strong>Process control block</strong> (PCB) stores information associated with each process: process state, program counter, copy of CPU registers, memory-management information (page table), accounting information, IO status information, etc.</p>
+<p>When CPU switches to another process with a new address space, the system must save the state of the old process and load the saved state for the new process via a <strong>context switch</strong>. The context of a process represented in the PCB.</p>
+<h3 id="process-creation">Process creation</h3>
+<ul>
+<li>Parent process create child processes, identified via a process id (pid)</li>
+<li>Options in resource sharing: parent and children share all resources; children share subset of parent's resources; parent and children share no resources</li>
+<li>Parent and children execute concurrently; parent watis until children terminate (by join)</li>
+<li>Options in address space: child duplicate of parent, or has another program being loaded</li>
+<li>In UNIX: <code>fork</code> creates new process with duplicated address space with a copy of some code and data; <code>exec</code> used after a <code>fork</code> to replace the process' memory space with a new program</li>
+<li>Summary of <code>fork</code>
+<ul>
+<li>creates a child PCB with new pid</li>
+<li>allocates memory for the child and duplicate everything from parent, including text/heap/stack, but notice child space is a copy of parent space; all fds that are open in hte parent are duplicated in the child (file <code>read()/write()</code> set offsets are shared); many environmental setings and ahred segments are inherited by child (parent and child can communicate through shared segments)</li>
+<li>add the child process to ready queue</li>
+</ul></li>
+</ul>
+<div class="sourceCode"><pre class="sourceCode cpp"><code class="sourceCode cpp"><span class="dt">int</span> main() {
+    <span class="dt">int</span> pid = fork();
+    <span class="cf">if</span> (pid &lt; <span class="dv">0</span>) { exit(<span class="dv">-1</span>); } <span class="co">// error occured</span>
+    <span class="cf">else</span> <span class="cf">if</span> (pid == <span class="dv">0</span>) { execlp(<span class="st">&quot;/bin/ls&quot;</span>, <span class="st">&quot;ls&quot;</span>, NULL); } <span class="co">// child process</span>
+    <span class="cf">else</span> { wait(NULL); exit(<span class="dv">0</span>); } <span class="co">// parent process</span>
+}</code></pre></div>
+<h3 id="process-termination">Process termination</h3>
+<ul>
+<li>Process executes last statement and asks the OS to delete it (exit)</li>
+<li>Output data from child to parent (via wait), process resources are deallocated</li>
+<li>Parent may terminate children processes: task assigned to child is no longer required of if parent exits</li>
+</ul>
+<h3 id="unix-signals">UNIX signals</h3>
+<ul>
+<li>A event similar to hardware interrupt without priorities</li>
+<li>Used to informa a user process of an event, e.g., user pressed delete key</li>
+<li>Each signal is represented by a numeric value: e.g., SIGINT(2), SIGKILL(9), etc.</li>
+<li>A UNIX signal is raised by a process using a system call <code>kill(signal, pid)</code> or a shell command <code>kill -s signal pid</code></li>
+<li>Each signal is maintained as a single bit in the process table entry of the receving process: the bit is set when the corresponding signal arrives (no waiting queues)</li>
+<li>A signal is processed as soon as the process enters in user mode</li>
+<li>3 ways to handle a signal
+<ul>
+<li>ignore it: <code>signal(signum, SIG_IGN)</code></li>
+<li>run the default handler: <code>signal(signum, SIG_DFL)</code></li>
+<li>run a user-defined handler: <code>signal(signum, handler)</code></li>
+</ul></li>
+</ul>
+<div class="sourceCode"><pre class="sourceCode cpp"><code class="sourceCode cpp"><span class="pp">#include </span><span class="im">&lt;signal.h&gt;</span>
+<span class="dt">void</span> cnt(<span class="dt">int</span> sig) {
+    <span class="at">static</span> <span class="dt">int</span> count = <span class="dv">0</span>;
+    <span class="cf">if</span> (count == <span class="dv">1</span>) signal(SIGINT, SIG_DFL);
+}
+<span class="dt">int</span> main() {
+    signal(SIGINT, cnt);
+    <span class="cf">while</span>(<span class="dv">1</span>);
+}</code></pre></div>
+<h3 id="unix-pipes-for-ipc">UNIX pipes for IPC</h3>
+<ul>
+<li>The pipe interface is intended to look a file interface</li>
+<li><code>pipe(fd)</code> creates the pipe and kernel allocates a buffer with two pointers <code>fd[0]</code> to read and <code>fd[1]</code> to write</li>
+<li>pipe handles are copied on <code>fork</code> (just like a usual fd)</li>
+<li><code>ls|wc</code>
+<ul>
+<li>process1 <code>dup2(fd[1], 1); close(fd[0]); execvp(&quot;ls, ...&quot;)</code></li>
+<li>process2 <code>dup2(fd[0], 0); close(fd[1]); execvp(&quot;wc&quot;, ...)</code></li>
+</ul></li>
+</ul>
+<div class="sourceCode"><pre class="sourceCode cpp"><code class="sourceCode cpp"><span class="dt">int</span> fd[<span class="dv">2</span>]; pipe(fd); <span class="co">// fd[0] is read end, fd[1] is write end</span>
+<span class="cf">if</span> (fork() == <span class="dv">0</span>) { read(fd[<span class="dv">0</span>], buffer, size); } <span class="co">// child process</span>
+<span class="cf">else</span> { write(fd[<span class="dv">1</span>], <span class="st">&quot;hello&quot;</span>, size); } <span class="co">// parent process</span></code></pre></div>
+<h2 id="concurrency-and-threads">Concurrency and threads</h2>
+<p>A thread is a fundamental unit of CPU utilization that forms the basis of multithreaded computer systems</p>
+<ul>
+<li>Shared state: heap, global variables, code</li>
+<li>Per-thread state: thread control block (TCB), stack information, saved registers, thread metadata</li>
+<li>Benefits: responsiveness, resource sharing, economy, scalability</li>
+<li>Thread abstraction: infinite number of processors, threads execute with variable speed</li>
+<li>Programs must be designed to work with any schedule</li>
+<li>Two threads run concurrently if their logical flows overlap in time; otherwise, they are sequential</li>
+<li>Same as process: each has its own logical control flow, each can run concurrently, each is context switched</li>
+<li>Different from process: threads share code and data while proceses (typicall) do not, threads are somewhat cheaper than processes with less overhead</li>
+</ul>
+<h3 id="posix-threads-pthreads-interface">POSIX threads (pthreads) interface</h3>
+<ul>
+<li>Creating and join threads: <code>pthread_create</code>, <code>pthread_join</code></li>
+<li>Determining your tid: <code>pthread_self</code></li>
+<li>Terminating threaads: <code>pthread_cancel</code>, <code>pthread_exit</code>
+<ul>
+<li><code>exit</code> terminates all threads; <code>return</code> terminates current thread</li>
+</ul></li>
+</ul>
+<div class="sourceCode"><pre class="sourceCode cpp"><code class="sourceCode cpp"><span class="pp">#include </span><span class="im">&lt;pthread&gt;</span>
+<span class="dt">void</span> *PrintHello(<span class="dt">void</span> *id) { printf(<span class="st">&quot;...&quot;</span>); }
+<span class="dt">int</span> main() {
+    <span class="dt">pthread_t</span> thread0, thread1;
+    pthread_create(&amp;thread0, NULL, PrintHell, (<span class="dt">void</span>*) <span class="dv">0</span>);
+    pthread_create(&amp;thread1, NULL, PrintHell, (<span class="dt">void</span>*) <span class="dv">1</span>);
+    pthread_join(thread0, NULL);
+    pthread_join(thread1, NULL);
+}</code></pre></div>
+<h3 id="nachos-threads">Nachos threads</h3>
+<ul>
+<li><code>Thread(char *name)</code>: create a thread</li>
+<li><code>Fork(VoidFunctionPtr func, int arg)</code>: place this thread in a ready queue for executing a function
+<ul>
+<li>Allocate thread control block (TCB)</li>
+<li>Allocate and setup stack: build stack frame for base of stack; put func and args on stack</li>
+<li>Put thread on ready list, and it will run sometime later</li>
+<li><code>stub(func, args) { (*func)(args); thread_exit(); }</code></li>
+</ul></li>
+<li><code>Yield()</code>: suspend the calling thread and the system selects a new ready one for execution</li>
+<li><code>Sleep()</code>: suspend the current thread, change its sate to BLOCKED, and remove it from the ready list</li>
+<li><code>Finish()</code>, <code>~Thread()</code></li>
+</ul>
+<h3 id="kernel-threads-vs-user-level-threads">Kernel threads vs user-level threads</h3>
+<ul>
+<li>Kernel threads are recognized and supported by the OS kernel; OS explicitly performs scheduling and context switching of kernel threads</li>
+<li>User-level thread management done by user-level threads library
+<ul>
+<li>OS kernel does not know/recognize there are multiple threads running in a user program</li>
+<li>The user program (library) is responsible for scheduling and context switching of its threads</li>
+</ul></li>
+</ul>
+<h2 id="processthread-synchronization">Process/thread synchronization</h2>
+<h3 id="synchronization-problem">Synchronization problem</h3>
+<ul>
+<li>Race condition: two or more processes (threads) are reading and writing on shared data and the final result depends on who runs precisely and when</li>
+<li>Critical section: the part of the program where shared variables are accessed</li>
+<li>Deadlock: two or more threads (or processes) are waiting indefinitely for an event that can be only caused by one of these waiting processes</li>
+<li>Starvation: indefinite blocking. Deadlock is starvation but not vice versa</li>
+</ul>
+<h3 id="property-of-cirtical-section-solution">Property of cirtical-section solution</h3>
+<ul>
+<li>Mutual exclusion: only one can enter the critical section, providing safety</li>
+<li>Progress: if some processes wish to enter their critical section and nobody is in the critical section, then one of them will enter in a limited time, providing liveness</li>
+<li>Bounded waiting: if one process starts to wait for entering an critical section, there is a limit on the number of times other processes entering the section before this process enters, providing liveness</li>
+<li>Locks, semaphore, condition variables</li>
+</ul>
+<h3 id="lock-prevents-someone-from-doing-something"><strong>Lock</strong> prevents someone from doing something</h3>
+<ul>
+<li><code>void Acquire()</code> atomically waits until the lock is unlocked, and then sets the lock to be locked.</li>
+<li><code>void Release()</code> atomically changes the state to be unlocked. Only the thread who owns the lock can release.</li>
+<li>Thread waits if there is a lock.</li>
+<li>It enters the critical after acquiring a lock.</li>
+<li>Only the thread who locks can unlock.</li>
+<li>Lock can be in one of two states: locked or unlocked</li>
+<li>Typically associate a lock with a piece of shared data for mutual exclusion. When a thread needs to access, it first acquires the lock, and then accesses data. Once access completes, it releases the lock</li>
+</ul>
+<h3 id="lock-implementation">Lock implementation</h3>
+<ul>
+<li>Atomic load/store are complex and error prone</li>
+<li>Alternatively, interrupt disabling/enabling and hardware primitives; avoid context-switching by
+<ul>
+<li>preventing external events by disabling interrupts</li>
+<li>Avoid internal events</li>
+</ul></li>
+<li>But interrupt disabling/enabling doesn't work/scale well on multiprocessor</li>
+<li>ALternatively, atomic instruction sequences
+<ul>
+<li>These instructions read a value from memory and write a new value atomically</li>
+<li>Hardware is responsible for implementing this correctly</li>
+<li>Unlike disabling interrupts, can be used on both uniprocessors and multiprocessors</li>
+</ul></li>
+<li>Examples of atomic instructions
+<ul>
+<li><code>TestAndSet(&amp;address)</code> fetch old value, set it to 1</li>
+<li><code>Swap(&amp;address, register)</code> swap value in the address and register</li>
+<li><code>CompareAndSwap(&amp;address, reg1, reg2)</code> sets address to reg2 if it equals reg1</li>
+</ul></li>
+<li>Spin lock using <code>TestAndSet</code>: mutual exclusion but not bounded waiting, busy waiting
+<ul>
+<li>shared boolean variable as lock: true means it is acquired by others; initialized to false</li>
+<li>acquire: <code>while(TestAndSet(&amp;lock))</code></li>
+<li>release: <code>lock = false</code></li>
+<li>Bette with sleep: minimizes busy waiting, only busy-waiting to atomically check lock value</li>
+<li>pro: machine can receive interrupts; work on a multiprocessor</li>
+<li>con: inefficient spin lock; no guarantee on bounded waiting</li>
+</ul></li>
+</ul>
+<div class="sourceCode"><pre class="sourceCode cpp"><code class="sourceCode cpp"><span class="dt">int</span> guard = <span class="kw">false</span>; <span class="dt">int</span> value = free;
+Acquire() {
+    <span class="cf">while</span>(test&amp;set(guard));
+    <span class="cf">if</span> (value == busy) {
+        put thread on waiting queue
+        sleep <span class="kw">and</span> set guard to <span class="kw">false</span>
+    } <span class="cf">else</span> {
+        value = busy
+        guard = <span class="kw">false</span>
+    }
+}
+Release() {
+    <span class="cf">while</span>(test&amp;set(guard));
+    <span class="cf">if</span> anyone on waiting queue {
+        take thread off waiting queue
+        place it on ready queue
+    } <span class="cf">else</span> {
+        value = free
+    }
+    guard = <span class="kw">false</span>
+}</code></pre></div>
+<h3 id="semaphore">Semaphore</h3>
+<ul>
+<li><code>void P()</code> atomically waits until the counter is greater than 0 and then decreases the counter</li>
+<li><code>void V()</code> atomically decreases the counter</li>
+<li>It uses a nonnegative integer variable, can only be accessed/modified via two individual (atomic) operations
+<ul>
+<li><code>wait(S) { while S &lt;= 0: wiating in a queue; S--; }</code></li>
+<li><code>signal(S) { wakeup some waiting thread; S++; }</code></li>
+</ul></li>
+<li>Counting semaphore: initial value representing how many threads can be in the critical section</li>
+<li>Binary semaphore (aka mutex lock): integer value ranged between 0 and 1</li>
+<li>Producer thread: <code>space-&gt;P(), data-&gt;V()</code></li>
+<li>Consumer thread: <code>data-&gt;P(), space-&gt;V()</code></li>
+</ul>
+<h3 id="condition-variable">Condition variable</h3>
+<ul>
+<li><code>void Wait(Lock *myLock)</code> atomically releases the lock and waits. When it is returned, the lock is reacquired again.</li>
+<li><code>void Signal(Lock *myLock)</code> wake up one waiting thread to run. The lock is not released.</li>
+<li><code>void Broadcast(Lock *myLock)</code> wake up all threads waiting on the condition. The lock is not released.</li>
+<li>Hoare-style scheduling
+<ul>
+<li>Signaler gives lock, CPU to waiter; waiter runs immediately</li>
+<li>Waiter gives up lock, processor back to signaler when it exits critical section or if it waits again</li>
+</ul></li>
+<li>Mesa-style shceduling
+<ul>
+<li>Signaler keeps lock and continues to process</li>
+<li>Waiter placed on ready queue with no special priority</li>
+<li>Practically, need to check condition again after wait</li>
+</ul></li>
+</ul>
+<h3 id="design-advices-for-synchronization">Design advices for synchronization</h3>
+<ul>
+<li>Allocate one lock for each shared variable or a group of shared variables</li>
+<li>Add condition variables (waking up a thread is triggered by some condition)</li>
+<li>Fine-grain: More performance flexibility and scalability but possibly more design complexity and synchronization overhead</li>
+<li>Coarse-grain: Easy to ensure correctness but possibly difficult to scale</li>
+</ul>
+<h3 id="read-writer-lock">Read-writer lock</h3>
+<ul>
+<li><code>pthread_rwlock_rdlock()</code>: multiple readers can acquire the lock if no writer holds the lock.</li>
+<li><code>pthread_rwlock_wrlock()</code>: the calling thread acquires the write lock if no other thread (reader or writer) holds the read-write lock rwlock. Otherwise, the thread blocks until it can acquire the lock. Writers are favored over readers of the same priority to avoid writer starvation.</li>
+<li>Reader: wait until no writers; access database; checkout (wake up a waiting writer)</li>
+<li>Writer: wait until no active readers or writers; access database; checkout (wakeup waiting readers or writer)</li>
+</ul>
+<h2 id="main-memory-and-address-translation">Main memory and address translation</h2>
+<h3 id="how-to-translate-address">How to translate address</h3>
+<ul>
+<li>Contiguous memory allocation</li>
+<li>Segmentation</li>
+<li>Address tarnslation with paging</li>
+<li>TLB support and performance impact</li>
+</ul>
+<h3 id="objective-of-memory-management-run-programs">Objective of memory management: run programs</h3>
+<ul>
+<li>Get CPU cycle and allocate memory</li>
+<li>Load instruction and data segments of executable file into memory</li>
+<li>Create stack and heap</li>
+<li>Set the starting address and execute</li>
+<li>Provide services to it</li>
+</ul>
+<h3 id="role-of-memory-management">Role of memory management</h3>
+<ul>
+<li>Manage data/instructions in memory in order to execute</li>
+<li>Keep track of which parts of memory are currently being used by whom</li>
+<li>Decide which processes (or parts thereof) and data to move into and out of memory</li>
+<li>Allocate and deallocate memory space as needed</li>
+</ul>
+<h3 id="logical-vs.-physical-address-space">Logical vs. physical address space</h3>
+<ul>
+<li>Logical (virtual) address: generated by the CPU</li>
+<li>Physical address: address seen by the memory unit</li>
+<li>Same in compile-time and load-time address-binding schemes</li>
+<li>Differ in execution-time address-binding scheme</li>
+</ul>
+<h3 id="binding-of-instructions-and-data-to-memory">Binding of instructions and data to memory</h3>
+<ul>
+<li>Compile time (gcc): If memory location known a priori, absolute code can be generated</li>
+<li>Load time (ld): Must generate relocatable code if memory location is not known at compile time</li>
+<li>Execution time (dll): Binding delayed until run time if the process can be moved during its execution from one memory segment to another.</li>
+</ul>
+<h3 id="address-space-translation">Address space translation</h3>
+<ul>
+<li>Address space
+<ul>
+<li>All the addresses and state a process can touch</li>
+<li>Each process and kernel has different address space</li>
+</ul></li>
+<li>Program operates in an address space that is distinct from the physical memory space of the machine</li>
+<li>CPU issues virtual address to MMU which translates to physical memory to memory</li>
+<li>Translation provides protection and process address space isolation. With translation, every program can be linked/loaded into same region of user address space</li>
+</ul>
+<h3 id="allocation-method-contiguous-allocation">Allocation method: Contiguous allocation</h3>
+<ul>
+<li>Main memory has two partitions: Resident OS usually held in low memory; user processes then held in high momery</li>
+<li>Hardware support and protection
+<ul>
+<li>Base register contains value of smallest physical address</li>
+<li>Limit register contains range of logical addresses (each logical address must be less than the limit register)</li>
+<li>MMU maps logical address dynamically</li>
+</ul></li>
+<li>During switch, kernel loads new base/limit from PCB</li>
+<li>Issues with simple R&amp;B method
+<ul>
+<li><strong>External fragment</strong> problem (free gaps between used slots): Not every process is the same size; over time, memory space becomes fragmented</li>
+<li>Missing support for sparse address space: Would like to have multiple chunks/program, e.g., code, data, stack</li>
+<li>Hard to do inter-process share</li>
+</ul></li>
+</ul>
+<h3 id="allocation-method-segmentation">Allocation method: Segmentation</h3>
+<ul>
+<li>Memory-management scheme that supports user semantic view of memory</li>
+<li>A program is a collection of segments</li>
+<li>A segment is a logical unit such as code, data, stack (can be shared)</li>
+<li>Each segment is given region of contiguous memory: base and limit, can reside anywhere in physical memory</li>
+<li>CPU issues a virtual address <code>(seg, offset)</code>, if <code>offset &lt; ST[seg].limit</code>, then the physical address is <code>ST[seg].base + offset</code>; otherwise raises an exception</li>
+<li>Issues with segmentation
+<ul>
+<li>High overhead of managing a large number of variable size and dynamically growing memory: Memory is divided into many used/unused regions over time; not easy to find space to fit for a new segment</li>
+<li>External fragmentation: Free gaps between allocated chunks</li>
+<li>Internal fragmentation: Don't need all memory within allocated chunks</li>
+</ul></li>
+</ul>
+<h3 id="allocation-method-paging">Allocation method: Paging</h3>
+<ul>
+<li>Divide physical memory into fixed-sized blocks called frames or pages</li>
+<li>Divide logical memory into blocks of same size called pages or logical pages</li>
+<li>Translation conducted by page table which is kept in main memory
+<ul>
+<li>Page-table base register (PTBR) points to the page table</li>
+<li>Page-table length register (PRLR) indicates size of the page table</li>
+</ul></li>
+<li>Useful constants: 2^10 = 1K, 2^20 = 1M, 2^30 = 1G, 2^40 = 1T</li>
+<li>A page table per process is needed to translate logical to physical addresses</li>
+<li>We can use a vector of bits to represent availability of each page</li>
+<li>Address generated by CPU is divided into a page number (p) and a page offset</li>
+</ul>
+<ol start="4" style="list-style-type: lower-alpha">
+<li><ul>
+<li>Offset from virtual address copied to physical address</li>
+<li>Virtual page number is all remaining bit, the translated physical page number is copied from page table into physical address</li>
+<li>Physical address = <code>PageTable[LogicalPageNumber] + PageOffset</code></li>
+</ul></li>
+</ol>
+<ul>
+<li>Each page is associated with permission bits (e.g., valid, read, write, etc.)</li>
+<li>Page table size is determined by the number of pages in virtual space</li>
+</ul>
+<h3 id="tlb-for-faster-address-translation"><strong>TLB</strong> for faster address translation</h3>
+<ul>
+<li>Every data/instruction access requires two memory access. Speed can be improved by using a special fast-lookup hardware cache called associative memory or translation look-aside buffers (TLBs)</li>
+<li>The TLB stores the recent translations (i.e., entries) of virtual memory to physical memory and can be called an address-translation cache.</li>
+<li>Address translation for logical page p
+<ul>
+<li>If p is in associative register, get physical page number out</li>
+<li>Otherwise get frame number from page table in memory</li>
+</ul></li>
+<li>Typical TLB: 8~4096 entries; 0.5~1 clock cycle to access; 10~100 cycles miss penalty; 0.01~10% miss rate</li>
+<li>Effective (average) address translation cost: cost(TLB lookup) + cost(full translation) * TLB miss rate</li>
+<li>Total memory access cost: cost(avg address translation) + cost(memory access)</li>
+<li>Memory control infomation are stored infomation in
+<ul>
+<li>Thread control block (TCB): stack info, registers and machine state</li>
+<li>Process control block (PCB): process id data, state data, control data (memory space management, pointer to a page table)</li>
+</ul></li>
+</ul>
+<h3 id="shared-pages-through-paging">Shared pages through paging</h3>
+<ul>
+<li>Shared code
+<ul>
+<li>One copy of read-only code shared among processes</li>
+<li>Shared code must appear in same location in the logical address space of all processes</li>
+</ul></li>
+<li>Private code and data
+<ul>
+<li>Each process keeps a separate copy of the code and data</li>
+<li>The pages for the private code and data can appear anywhere in the logical address space</li>
+</ul></li>
+<li>Copy-on-write (COW): Lazy copy during process creation
+<ul>
+<li>Optimization of Unix system call <code>fork</code>: A child process copies address space of parent. Most of time it is wasted as the child performs <code>exec</code>.</li>
+<li>COW allows both parent and child processes to initially share the same pages in memory. A shared page is duplicated only when modified. It allows more efficient process creation as only modified pages are copied.</li>
+</ul></li>
+</ul>
+<h3 id="page-table-entry-pte">Page table entry (PTE)</h3>
+<ul>
+<li>Used to memorize a page is shared, detect need for duplication</li>
+<li>Invalid PTE can imply different things: region of address space is actually invalid or the page/directory is just somewhere else than memory</li>
+<li>Validaty checked first: OS can use other bits for location info</li>
+<li>COW uses PTE which contains bit indicating a page is shared with a parent</li>
+<li>Demand paging keeps only active pages in memory, place others on disk and mark their PTEs invalid</li>
+<li>x86 PTE
+<ul>
+<li>Address format: (10, 10, 12-bit offset)</li>
+<li>Intermediate page tables called directories: (20-bit page frame number, 12-bit flags)</li>
+</ul></li>
+<li>Zero fill on demand
+<ul>
+<li>Security and performance advantages: New pages carry no information</li>
+<li>Give new pages to a process initially with PTEs marked as invalid</li>
+<li>During access time, page fault causes physical frames to be allocated and filled with zeros</li>
+<li>Often, OS creates zeroed pages in background</li>
+</ul></li>
+</ul>
+<h3 id="one-level-page-table">One-level page table</h3>
+<ul>
+<li>Maximum size of logical space = # entry * page size</li>
+<li>Each page table needs to fit into a physical memory page because a page table needs consecutive space. Memory allocated to a process is a sparse set of nonconsecutive pages.</li>
+<li>One-level page table cannot handle large space, for example
+<ul>
+<li>32-bit address space with 4KB per page</li>
+<li>Page table would contain 2<sup>32/2</sup>12 = 1 million entries</li>
+<li>4B per entry: Need a 4MB page table with contiguous space (impossible)</li>
+<li>Only 4KB / 4B = 1K entries, hence 1K * 4KB = 4MB logical space</li>
+</ul></li>
+<li>Pro: Simple memory allocation, easy to share</li>
+<li>Con: Cannot handle a large (sparse) virtual address space, e.g., on Unix, code starts at 0, stack starts at 2^32-1</li>
+<li>Con: Not all pages are used all the time. It would be nice to have working set of page table in memory</li>
+</ul>
+<h3 id="two-level-page-table">Two-level page table</h3>
+<ul>
+<li>Address translation scheme: Logical address is of the form (p1, p2, d), where p1 is an index into the outer level-1 page table, p2 is the displacement within the page of the level-2 inner page table</li>
+<li>Tables are of fixed size (1K entries, 4K per entry, 4KB in total)</li>
+<li>Valid bits on PTE: Not every level-2 table is needed. Even when exist, level-2 tables can reside on disk if not in use</li>
+<li>Design consideration on paging
+<ul>
+<li>Bits of d = log (page size)</li>
+<li>Bits of p1 &gt;= log (# entries in level-1 table)</li>
+<li>Bits of p2 = log (# entries in level-2 table)</li>
+<li># physical pages &lt;= 2^(PTE size of level-2 table)</li>
+<li>Physical space size = # physical pages * page size</li>
+<li>Logical space size = # entry in level-1 table * # entry in level-2 table * page size</li>
+</ul></li>
+<li>Example: A logical address (32-bit machine with 4KB page size) is divded into
+<ul>
+<li>A page number area with 20 bits, a page offset consisting of 12 bits</li>
+<li>Each PTE uses 4B: Hence it is divided into 10-10-12-bit</li>
+<li>Maximum logical space size: 1K * 1K * 4KB = 4GB</li>
+<li>What if we use 2B for each PTE?
+<ul>
+<li>Logical space size remains the same (0.5K * 2K * 4KB)</li>
+<li>Physical space decreases (2^16 * 4K)</li>
+</ul></li>
+</ul></li>
+</ul>
+<h3 id="three-level-page-table">Three-level page table</h3>
+<ul>
+<li>Design consideration on paging
+<ul>
+<li>Bits of d = log (page size)</li>
+<li>Bits of p1 &gt;= log (# entries in level-1 table)</li>
+<li>Bits of p2 = log (# entries in level-2 table)</li>
+<li>Bits of p3 = log (# entries in level-3 table)</li>
+<li># physical pages &lt;= 2^(entry size of level-3 table)</li>
+<li>Physical space size = # physical pages * page size</li>
+<li>Logical space size = # entry in level-1 table * # entry in level-2 table <em> # entry in level-3 table </em> page size</li>
+</ul></li>
+</ul>
+<h3 id="hashed-page-table">Hashed page table</h3>
+<ul>
+<li>Common in address spaces &gt; 32bits</li>
+<li>Size of page table grows proportionally as large as amount of virtual memory allocated to processes</li>
+<li>Use hash table to limit the cost of search
+<ul>
+<li>To one, or at most a few, page-table entries</li>
+<li>One hash table per process</li>
+<li>This page table contains a chain of elements hasing to the same location</li>
+</ul></li>
+<li>Use this hash table to find the physical page of each logical page: If a match is found, the corresponding physical frame is extracted</li>
+</ul>
+<h3 id="inverted-page-table">Inverted page table</h3>
+<ul>
+<li>One hash table for all processes</li>
+<li>One entry for each real page of memory
+<ul>
+<li>Entry consists of the virtual address of the page stored in that real memory location, with information about the process that owns that page</li>
+</ul></li>
+<li>Decreases memory needed to store each page table, but increases time needed to search the table when a page reference occurs</li>
+</ul>
+<h3 id="summary">Summary</h3>
+<table style="width:43%;">
+<colgroup>
+<col width="8%" />
+<col width="15%" />
+<col width="19%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th></th>
+<th>Advantages</th>
+<th>Disadvantages</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Segmentation</td>
+<td>Fast context switching: Segment mapping maintained by CPU</td>
+<td>External fragmentation</td>
+</tr>
+<tr class="even">
+<td>Paging (single level)</td>
+<td>No external fragmentation, fast easy allocation</td>
+<td>Large table size ~ virtual memory, internal fragmentation</td>
+</tr>
+<tr class="odd">
+<td>Paged segmentation, two-level paging</td>
+<td>Table size ~ # of pages in virtual memory, fast easy allocation</td>
+<td>Multiple memory references per page access</td>
+</tr>
+<tr class="even">
+<td>Inverted table</td>
+<td>Table ~ # of pages in physical memory</td>
+<td>Hash function more complex</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>Page tables
+<ul>
+<li>Memory divided into fixed-size chunks of memory</li>
+<li>Virtual page number from virutal address mapped through page table to physical page number</li>
+<li>Offset of virtual address is same as physical address</li>
+<li>Large page tables can be placed into virtual memory</li>
+</ul></li>
+<li>Useage of PTE: page sharing, copy on write, page on demand, zero fill on demand</li>
+<li>Multiple page tables
+<ul>
+<li>Virtual address mapped to series of tables</li>
+<li>Permit sparse population of address space</li>
+</ul></li>
+<li>Inverted page table: Size of page table related to physical memory size</li>
+</ul>
+<h2 id="nachos">Nachos</h2>
+<h3 id="nachos-thread-operations">Nachos thread operations</h3>
+<ul>
+<li><code>Thread()</code> creates a thread</li>
+<li><code>Fork(VFP func, int arg)</code> lets a thread execute a function</li>
+<li><code>Yield()</code> suspends the calling thread and select a new one for execution</li>
+<li><code>Sleep()</code> suspends the current thread, changes its state to BLOCKED, and removes it from the ready list</li>
+<li><code>Finish()</code></li>
+</ul>
+<h3 id="code-execution-in-nachos">Code execution in Nachos</h3>
+<ul>
+<li>User mode executes instructions which only access the user space.</li>
+<li>Kernel mode executes when Nachos first starts up or when an instruction causes a trap, e.g., illegal instruction, page fault, or system call, etc.</li>
+<li>Load instructions into the machine's memory</li>
+<li>Initializes registers (PC, etc.)</li>
+<li>Tell the machine to start executing instructions.</li>
+<li>The machine fetches the instruction, decodes it, and executes it.</li>
+<li>Repeats until all instructions are executed.</li>
+<li>Handle interrupt/page fault if necessary.</li>
+</ul>
+<h3 id="scheduler-object">Scheduler object</h3>
+<ul>
+<li>Decide which thread to run next.</li>
+<li>Invoked when the current thread gives up CPU.</li>
+<li>The current Nachos shceduling polycy is round-robin: slecting the front of ready queue list, appending new threads to the end</li>
+</ul>
+<h3 id="machine-object-implements-a-mips-machine">Machine object: implements a MIPS machine</h3>
+<ul>
+<li>An instance created when Nachos starts up.</li>
+<li>Supported public variables: 40 registers, 4KB memory (32 pages), single linear page table virtual memory.</li>
+</ul>
+<h3 id="interrupt-object-maintains-an-event-queue-with-simulated-clock">Interrupt object: maintains an event queue with simulated clock</h3>
+<ul>
+<li><code>SetLevel(IntStatus level)</code> is used to temporarily disable and re-enable interrupts.</li>
+<li><code>OneTick()</code> advances 1 clock tick.</li>
+<li><code>CheckIfDue(bool advanceClock)</code> examines if some event should be serviced.</li>
+<li><code>Idle()</code> advances the clock to the time of the next scheduled event.</li>
+</ul>
+<h3 id="timer-object">Timer object</h3>
+<ul>
+<li>Generates interrupts at regular or random intervals, then Nachos invokes the predefined clock event handling procedure.</li>
+</ul>
+<h3 id="noff-binary-code-format">Noff: binary code format</h3>
+<ul>
+<li>A Noff-format file contains
+<ul>
+<li>The Noff header, describing the contents of the rest of the file</li>
+<li>TEXT: Executable code segment.</li>
+<li>DATA: Initialized data segment.</li>
+<li>BSS: Uninitialized data segment: stagically-allocated variables</li>
+</ul></li>
+<li>Each segment has the following information
+<ul>
+<li>virtualAddr: virtual address that segment begins at</li>
+<li>inFileAddr: pointer within the Noff file where that scetion actually begins</li>
+<li>size (in bytes) of that segment</li>
+</ul></li>
+</ul>
+<h3 id="nachos-thread-user-process-for-executing-a-program">Nachos thread: user process for executing a program</h3>
+<ul>
+<li>A Nachos thread is extended as a process</li>
+<li>Each process has its own address space containing executable code (TEXT), initialized data (DATA), uninitialized data (BSS), and stack space for fucntion call/local variables</li>
+<li>Each addrspace is as big as <code>code.size + data.size + bss.size + userStackSize</code></li>
+<li>A process owns some other objects, such as open file descriptors</li>
+<li>Steps in user process creation
+<ul>
+<li>Create an address space</li>
+<li>Zero out all of physical memory</li>
+<li>Read the binary into physical memory and initialize data segment</li>
+<li>Initialize the translation tables to do a one-to-one mapping between virtual and physical address</li>
+<li>Zero all registers, setting PCReg, NextPCReg to 0 and 4 respectively</li>
+<li>Set the stackpointer to the largest virtual address of the process</li>
+</ul></li>
+<li>Actions of <code>nachos -x halt</code>
+<ul>
+<li>The main thread starts by running function <code>StartProcess()</code> in <code>progtest.cc</code>. This thread is used to run halt binary.</li>
+<li><code>StartProcess()</code> allocates a new address space and loads the halt binary. It also initializes registers and sets up the page table.</li>
+<li><code>Machine::Run()</code> executes the halt binary using the MIPS emulator: The halt binary invokes the system call <code>Halt()</code>, which causes a trap back to the Nachos kernel via functions <code>RaiseException()</code> and <code>ExceptionHandler()</code>.</li>
+<li>The execution handler determines that a <code>Halt()</code> system call was requested from user mode, and it halts Nachos.</li>
+</ul></li>
+</ul>
+<h3 id="thread-execution-flow-when-running-nachos-under-thread-directory">Thread execution flow when running Nachos under thread directory</h3>
+<p>When the <em>threads</em> version of NACHOS is started, <code>main()</code> in file <code>main.cc</code> under threads directory performs the following key operations.</p>
+<ol style="list-style-type: decimal">
+<li>Call <code>Initialize()</code> in file <code>system.cc</code> under threads directory to initialize Nachos global data structure. For example, set random yield or not based on parameters, and create an interrupt object and a scheduler object etc.</li>
+<li>Call <code>ThreadTest()</code> in the file <code>threadtest.cc</code> under threads directory. This creates two Nachos threads to execute. This calls two function methods <code>Thread::Fork()</code> and <code>Thread::Yield()</code>.</li>
+<li>Call <code>currentThread-&gt;Finish()</code> in file <code>thread.cc</code> which calls <code>Thread:Sleep()</code>, similar to <code>Thread:Yield()</code>. If the procedure &quot;main&quot; returns, then the program &quot;nachos&quot; will exit (as any other normal program would). But there may be other threads on the ready list. We switch to those threads by saying that the &quot;main&quot; thread is finished, preventing it from returning.</li>
+</ol>
+<div class="sourceCode"><pre class="sourceCode cpp"><code class="sourceCode cpp">DebugInit(debugArgs);                       <span class="co">// initialize DEBUG messages</span>
+stats = <span class="kw">new</span> Statistics();                   <span class="co">// collect statistics</span>
+interrupt = <span class="kw">new</span> Interrupt;                  <span class="co">// start up interrupt handling</span>
+scheduler = <span class="kw">new</span> Scheduler();                <span class="co">// initialize the ready queue</span>
+
+currentThread = <span class="kw">new</span> Thread(<span class="st">&quot;main&quot;</span>);
+currentThread-&gt;setStatus(RUNNING);
+
+interrupt-&gt;Enable();
+CallOnUserAbort(Cleanup);                   <span class="co">// if user hits ctl-C</span></code></pre></div>
+<p><code>Thread::Fork()</code> is defined in <code>thread.cc</code> under threads directory. It calls <code>StackAllocate(func, arg)</code> defined in <code>thread.cc</code> under threads directory. This function allocates stack space and initialize the thread control block and the register state information. Notice that &quot;func&quot; address is assigned to <code>InitialPCState</code> slot of the thread control block. This address will be used as the entrance point when this thread starts to execute, which will be discussed in two assembly functions <code>SWITCH()</code> and <code>ThreadRoot()</code> below.</p>
+<div class="sourceCode"><pre class="sourceCode cpp"><code class="sourceCode cpp"><span class="co">//StackSize is 4K defined in thread.h</span>
+stack = (<span class="dt">int</span> *) AllocBoundedArray(StackSize * <span class="kw">sizeof</span>(<span class="dt">int</span>));
+stackTop = stack + StackSize - <span class="dv">4</span>;   <span class="co">// -4 to be on the safe side!</span>
+machineState[PCState] = (<span class="dt">int</span>) ThreadRoot;
+machineState[StartupPCState] = (<span class="dt">int</span>) InterruptEnable;
+machineState[InitialPCState] = (<span class="dt">int</span>) func;
+machineState[InitialArgState] = arg;
+machineState[WhenDonePCState] = (<span class="dt">int</span>) ThreadFinish;</code></pre></div>
+<p><code>ThreadTest()</code> in the file <code>threadtest.cc</code> calls <code>currentThread-&gt;Yield()</code> to yield CPU to another ready thread and Nachos schedules another thread for execution. <code>Thread::Yield()</code> is defined in <code>thread.cc</code> under threads directory.</p>
+<div class="sourceCode"><pre class="sourceCode cpp"><code class="sourceCode cpp">nextThread = scheduler-&gt;FindNextToRun();
+<span class="cf">if</span> (nextThread) { scheduler-&gt;ReadyToRun(<span class="kw">this</span>); scheduler-&gt;Run(nextThread); }</code></pre></div>
+<ol style="list-style-type: decimal">
+<li><code>FindNextToRun()</code> method defined in <code>scheduler.cc</code> under threads directory finds next thread in the ready queue to run. That essentially removes the first one in the ready queue.</li>
+<li><code>ReadyToRun()</code> in <code>scheduler.cc</code> under threads directory marks the selected thread to be ready and append it to the end of ready list.</li>
+<li><code>Run()</code> in <code>scheduler.cc</code> under threads directory executes the selected thread. It does context switch from old thread to new thread by calling assembly code <code>SWITCH(oldThread, nextThread)</code> in <code>switch.s</code> under threads directory. <code>SWITCH()</code> shifts execution from the old thread to new thread. It saves register state for the old thread and loads the new data from the new thread's control block. For example, if the host hardware is MIPS (actually not as we run on the Intel chip. I use MIPS because its instructions are easy to read.)</li>
+</ol>
+<div class="sourceCode"><pre class="sourceCode mips"><code class="sourceCode mips">    <span class="co"># a0 -- pointer to old Thread</span>
+    <span class="co"># a1 -- pointer to new Thread</span>
+
+<span class="ot">SWITCH:</span>
+    <span class="kw">sw</span>  sp, SP(a0)      <span class="co"># save new stack pointer</span>
+    <span class="kw">sw</span>  s0, S0(a0)      <span class="co"># save all the callee-save registers</span>
+    <span class="kw">sw</span>  s1, S1(a0)
+    <span class="kw">sw</span>  s2, S2(a0)
+    <span class="kw">sw</span>  s3, S3(a0)
+    <span class="kw">sw</span>  s4, S4(a0)
+    <span class="kw">sw</span>  s5, S5(a0)
+    <span class="kw">sw</span>  s6, S6(a0)
+    <span class="kw">sw</span>  s7, S7(a0)
+    <span class="kw">sw</span>  fp, FP(a0)      <span class="co"># save frame pointer</span>
+    <span class="kw">sw</span>  ra, PC(a0)      <span class="co"># save return address</span>
+
+    <span class="kw">lw</span>  sp, SP(a1)      <span class="co"># load the new stack pointer</span>
+    <span class="kw">lw</span>  s0, S0(a1)      <span class="co"># load the callee-save registers</span>
+    <span class="kw">lw</span>  s1, S1(a1)
+    <span class="kw">lw</span>  s2, S2(a1)
+    <span class="kw">lw</span>  s3, S3(a1)
+    <span class="kw">lw</span>  s4, S4(a1)
+    <span class="kw">lw</span>  s5, S5(a1)
+    <span class="kw">lw</span>  s6, S6(a1)
+    <span class="kw">lw</span>  s7, S7(a1)
+    <span class="kw">lw</span>  fp, FP(a1)
+    <span class="kw">lw</span>  ra, PC(a1)      <span class="co"># load the return address</span>
+
+    <span class="kw">j</span>   ra
+    .end SWITCH
+
+<span class="ot">ThreadRoot:</span>
+    <span class="kw">jal</span> StartupPC       <span class="co"># call startup procedure</span>
+    <span class="fu">move</span> a0, InitialArg
+    <span class="kw">jal</span> InitialPC       <span class="co"># call main procedure</span>
+    <span class="kw">jal</span> WhenDonePC      <span class="co"># when were done, call clean up procedure</span></code></pre></div>
+<p>Constants <code>SP</code>, <code>S0</code>, ..., <code>PC</code> etc are defined in <code>switch.h</code> under threads directory. For example, <code>SP=0</code> for MIPS host. Notice that <code>0</code> means the first position <code>stackTop</code> in the thread control block which is defined in <code>thread.h</code> What does <code>SWITCH()</code> finally call after saving and loading context? Namely what does the return address &quot;ra&quot; point to before executing &quot;j ra&quot;? Notice that <code>StackAllocate(func, arg)</code> has assigned</p>
+<div class="sourceCode"><pre class="sourceCode cpp"><code class="sourceCode cpp">machineState[PCState] = (<span class="dt">int</span>) ThreadRoot;   <span class="er">#</span> in MIPS, PCState = PC/<span class="dv">4-1</span> = <span class="dv">9</span>
+machineState[InitialPCState] = (<span class="dt">int</span>) func;  <span class="er">#</span> in MIPS, InitialPCState = S0/<span class="dv">4-1</span> = <span class="dv">0</span></code></pre></div>
+<p>Thus <code>SWITCH()</code> calls <code>j ra</code> which is <code>ThreadRoot</code>. Then <code>ThreadRoot()</code> will call &quot;func&quot; saved and loaded from <code>InitialPCState</code>.</p>
+<h3 id="scheduler">Scheduler</h3>
+<ul>
+<li><code>ReadyToRun</code>. Mark a thread as ready, but not running. Put it on the ready list, for later scheduling onto the CPU.</li>
+<li><code>FindNextToRun</code>. Return the next thread to be scheduled onto the CPU. If there are no ready threads, return NULL. Thread is removed from the ready list.</li>
+<li><code>Run</code>. Dispatch the CPU to nextThread. Save the state of the old thread, and load the state of the new thread, by calling the machine dependent context switch routine, <code>SWITCH</code>. Note: we assume the state of the previously running thread has already been changed from running to blocked or ready (depending). The global variable currentThread becomes nextThread.</li>
+</ul>
+<h3 id="thread">Thread</h3>
+<p>Data structures for managing threads. A thread represents sequential execution of code within a program. So the state of a thread includes the program counter, the processor registers, and the execution stack. Stack size is fixed.</p>
+<ul>
+<li><code>Thread</code>. Initialize a thread control block, so that we can then call <code>Fork</code>.</li>
+<li><code>~Thread</code>. De-allocate a thread. NOTE: the current thread <em>cannot</em> delete itself directly, since it is still running on the stack that we need to delete. NOTE: if this is the main thread, we can't delete the stack because we didn't allocate it -- we got it automatically as part of starting up Nachos.</li>
+<li><code>Fork</code>. Invoke <code>(*func)(arg)</code>, allowing caller and callee to execute concurrently. NOTE: although our definition allows only a single integer argument to be passed to the procedure, it is possible to pass multiple arguments by making them fields of a structure, and passing a pointer to the structure as &quot;arg&quot;. Implemented as the following steps: (1) Allocate a stack,</li>
+</ul>
+<ol start="2" style="list-style-type: decimal">
+<li>Initialize the stack so that a call to <code>SWITCH</code> will cause it to run the procedure, (3) Put the thread on the ready queue.</li>
+</ol>
+<ul>
+<li><code>Finish</code>. Called by <code>ThreadRoot</code> when a thread is done executing the forked procedure. NOTE: we don't immediately de-allocate the thread data structure or the execution stack, because we're still running in the thread and we're still on the stack! Instead, we set <code>threadToBeDestroyed</code>, so that <code>Scheduler::Run()</code> will call the destructor, once we're running in the context of a different thread. NOTE: we disable interrupts, so that we don't get a time slice between setting threadToBeDestroyed, and going to sleep.</li>
+<li><code>Yield</code>. Relinquish the CPU if any other thread is ready to run. If so, put the thread on the end of the ready list, so that it will eventually be re-scheduled. NOTE: returns immediately if no other thread on the ready queue. Otherwise returns when the thread eventually works its way to the front of the ready list and gets re-scheduled. NOTE: we disable interrupts, so that looking at the thread on the front of the ready list, and switching to it, can be done atomically. On return, we re-set the interrupt level to its original state, in case we are called with interrupts disabled. Similar to <code>Thread::Sleep()</code>, but a little different.</li>
+<li><code>Sleep</code>. Relinquish the CPU, because the current thread is blocked waiting on a synchronization variable (Semaphore, Lock, or Condition). Eventually, some thread will wake this thread up, and put it back on the ready queue, so that it can be re-scheduled. NOTE: if there are no threads on the ready queue, that means we have no thread to run. <code>Interrupt::Idle</code> is called to signify that we should idle the CPU until the next I/O interrupt occurs (the only thing that could cause a thread to become ready to run). NOTE: we assume interrupts are already disabled, because it is called from the synchronization routines which must disable interrupts for atomicity. We need interrupts off so that there can't be a time slice between pulling the first thread off the ready list, and switching to it.</li>
+<li><code>StackAllocate</code>. Allocate and initialize an execution stack. The stack is initialized with an initial stack frame for <code>ThreadRoot</code>, which: (1) enables interrupts, (2) calls <code>(*func)(arg)</code> and (3) calls <code>Thread::Finish</code>.</li>
+<li><code>SaveUserState</code>. Save the CPU state of a user program on a context switch.</li>
+<li><code>RestoreUserState</code>. Restore the CPU state of a user program on a context switch.</li>
+</ul>
+<h2 id="mips">MIPS</h2>
+<h3 id="calling-convention">Calling convention</h3>
+<ul>
+<li><code>$0</code>. Zero register.</li>
+<li><code>$1</code> - <code>$at</code>. The <em>Assembler Temporary</em> used by the assembler in expanding pseudo-ops.</li>
+<li><code>$2-$3</code> - <code>$v0-$v1</code>. Used for return values of a subroutine.</li>
+<li><code>$4-$7</code> - <code>$a0-$a3</code>. Used for arguments of a subroutine.</li>
+<li><code>$8-$15, $24, $25</code> - <code>$t0-t9</code>. Temporary registers.</li>
+<li><code>$16-$23</code> - <code>$s0-$s7</code>. Saved registers.</li>
+<li><code>$26-27</code> - <code>$k0-$k1</code>. Kernel reserved registers. Do not use.</li>
+<li><code>$28</code> - <code>$gp</code>. Globals pointer used for addressing static global variables.</li>
+<li><code>$29</code> - <code>$sp</code>. Stack pointer.</li>
+<li><code>$30</code> - <code>$fp ($s8)</code>. Frame pointer.</li>
+<li><code>$31</code> - <code>$ra</code>. Return address in a subroutine call.</li>
+</ul>
+<p>Caller and callee save</p>
+<ul>
+<li>Callee saves
+<ul>
+<li>a procedure clears out some registers for its own use</li>
+<li>register values are preserved across procedure calls</li>
+<li>MIPS calls these saved registers, and designates <code>$s0-$s8</code> for this useage</li>
+<li>the called procedure saves register values in its AR, uses the registers for local variables, restores register values before it returns.</li>
+</ul></li>
+<li>Caller saves
+<ul>
+<li>the calling program saves the registers that it does not want a called procedure to overwrite</li>
+<li>register values are NOT preserved across procedure calls</li>
+<li>MIPS calls these temporary registers, and designates <code>$t0-$t9</code> for this useage</li>
+<li>procedures use these registers for local variables, because the values do not need to be preserved outside the scope of the procedure.</li>
+</ul></li>
+</ul>
+<h2 id="virtual-memory">Virtual memory</h2>
+<h3 id="demand-paging">Demand paging</h3>
+<ul>
+<li>Virtual memory can be much larger than physical memory.
+<ul>
+<li>Combined memory of running processes much larger than physical memory.</li>
+<li>More programs fit into memory, allowing more concurrency.</li>
+</ul></li>
+<li>Supports flexible placement of physical data. Data could be on disk or somewhere across network.</li>
+<li>Variable location of data transparent to user program. Performance issue, not correctness issue.</li>
+<li>Bring a page into memory only when it is needed.
+<ul>
+<li>Less I/O. Less memory. Faster response. More users supported.</li>
+</ul></li>
+<li>Valid bits in a PTE.
+<ul>
+<li>Valid means in-memory. Invalid means not-in-memory.</li>
+<li>Initially valid bit is set to invalid to on all PTEs.</li>
+<li>Not in memory causes page fault.</li>
+</ul></li>
+<li>Dirty bit means this page has been modified. It needs to be written back to disk.</li>
+<li>Steps in handling a page fault.
+<ul>
+<li>Reference a page.</li>
+<li>Page fault exception.</li>
+<li>Page is on backing store.</li>
+<li>Bring in missing page.</li>
+<li>Reset page table.</li>
+<li>Restart instruction.</li>
+</ul></li>
+<li>What does the OS do on a page fault?
+<ul>
+<li>Choose an old page to replace. If old page is modified (dirty is set), write contents back to disk. Chagne its PTE and any cached TLB to be invalid.</li>
+<li>Get an empty physical page. Load new page into memory from disk. Update PTE, invalidate TLB for new entry.</li>
+<li>Continue thread from original faulting location. Restart the instruction that caused the page fault.</li>
+</ul></li>
+<li>Performance of demand paging.
+<ul>
+<li>Page fault rate = <span class="math inline">\(p\)</span>. If <span class="math inline">\(p=0\)</span>, no page fault. If <span class="math inline">\(p=1\)</span>, every reference is a fault.</li>
+<li>Effective access time (EAT) = (1-p) * memory access + p * page fault cost.</li>
+<li>Page fault service cost is the sum of
+<ul>
+<li>Page fault overhead.</li>
+<li>Swap page out.</li>
+<li>Swap page in.</li>
+<li>Restart overhead.</li>
+</ul></li>
+</ul></li>
+<li>Example: demand paging performance.
+<ul>
+<li>Memory access time = 200 ns.</li>
+<li>Average page fault service time = 8 ms.</li>
+<li>EAT = (1-p) * 200 ns + p * 8 ms.</li>
+<li>If one access out of 1000 causes a page fault, then EAT = 8.2 ms.</li>
+<li>What if we want slowdown by less than 10%? p = 1/400,000.</li>
+</ul></li>
+<li>Factors lead to misses.
+<ul>
+<li>Compulsory misses: Pages that have never paged into memory before.
+<ul>
+<li>Prefetching: Loading them into memory before needed.</li>
+<li>Need to predict future somehow.</li>
+</ul></li>
+<li>Capacity misses: Not enough memory. Must somehow increase size.
+<ul>
+<li>One option: Increase amount of DRAM.</li>
+<li>Another option: If multiple processes in memory, adjust percentage of memory allocated to each one.</li>
+</ul></li>
+<li>Polycy misses: Caused when pages were in memory, but kicked out prematurely because of the replacement policy.
+<ul>
+<li>So we need a better replacement policy.</li>
+</ul></li>
+</ul></li>
+</ul>
+<h3 id="page-replacement-policy">Page replacement policy</h3>
+<ul>
+<li>Find some page in memory, but not really in use, swap it out.
+<ul>
+<li>Performance: We want an algorithm which will result in minimum number of page faults.</li>
+<li>Same page may be brought into memory several times.</li>
+</ul></li>
+<li>Basic page replaement.
+<ul>
+<li>Find the location of the desired page on disk.</li>
+<li>Find a free frame: If there is a free frame, use it. If there is no free frame, use a page replacement.
+<ul>
+<li>It's algorithm to find a victim frame.</li>
+</ul></li>
+<li>Swap out: Use modify (dirty) bit to reduce overhead of page transfers. Only modified pages are written to disk.</li>
+<li>Bring the desired page into the free frame. Update the page and frame tables.</li>
+<li>The more physical frames you have, the less page faults there will be.
+<ul>
+<li>Not necessarily true for FIFO (Belady's anomaly). After adding memory. With FIFO, contents can be completely different. In contrast, with LRU or MIN, contents of memory with X pages are a subset of contents with X+1 pagse.</li>
+</ul></li>
+</ul></li>
+<li>Page replacement policies
+<ul>
+<li>FIFO. Throws out oldest page.
+<ul>
+<li>Fair. Let every page live in memory for same amount of time.</li>
+<li>Bad. Throws out heavily used pages instead of infrequently used pages.</li>
+</ul></li>
+<li>MIN (minimum) or OPT (optimum). Replace page that won't be used for the longest time.
+<ul>
+<li>Great but cannot really know future.</li>
+<li>Makes good comparison case, however.</li>
+</ul></li>
+<li>Random. Pick random page for every replacement.
+<ul>
+<li>Typical solution for TLB's. Simple hardware.</li>
+<li>Pretty unpredictable. Makes it hard to make realtime guarantees.</li>
+</ul></li>
+</ul></li>
+<li>LRU (least recently used)
+<ul>
+<li>Replace page that hasn't been used for the longest time.</li>
+<li>Programs have locality, so if something not used for a while, unlikely to be used in the near future.</li>
+<li>Seems like LRU should be a good approximation to MIN.</li>
+<li>Use a list to implement LRU. On each use, remove page from list and place at head. LRU page is at tail.</li>
+<li>Need to know immediately when each page used so that can change position in list.</li>
+<li>Many instructions for each hardware access.</li>
+<li>To implement LRU, use a key-value map or bitmap and double linked list. But it is too expensive to implement in reality for many reasons (6 pointer updates when accessing a page).</li>
+<li>In practice, people approximate LRU.</li>
+</ul></li>
+<li>LRU approximation.
+<ul>
+<li>Clock algorithm: Arrange physical pages in circle with single clock hand. Replace an old page, may not the oldest page.
+<ul>
+<li>Advances only on page fault. Check for pages not used recently. Mark pages as not used recently.</li>
+<li>What if hand moving slowly: Not many page faults and/or find page quickly.</li>
+<li>What if hand is moving quickly: Lots of page sfaults and/or lots of reference bits set.</li>
+<li>One way to view clock algorithm: Crude partitioning of pages into two groups: young and old. Why not partition into more than 2 groups?</li>
+</ul></li>
+<li>N-th chance version of clock algorithm.
+<ul>
+<li>Large N better approx to LRU.</li>
+<li>Small N is more efficient.</li>
+<li>Takes extra overhead to replace a dirty page, so give dirty pages an extra chance before replacing.</li>
+</ul></li>
+<li>Hardware 'use' bit per physical page: Hardware sets use bit on each reference. If use bit isn't set, means not referenced in a long time. Nachos hardware sets use bit in the TLB. You have to copy this back to page table when TLB entry gets replaced.</li>
+<li>On page fault. Advance clocl hand. Check use bit. If 1 means used recently, clear and leave along. If 0 then select candidate for replacement.</li>
+<li>Will always find a page or loop forever? Even if all use bits set, will eventually loop around (FIFO).</li>
+</ul></li>
+</ul>
+<h3 id="swap-storage">SWAP storage</h3>
+<ul>
+<li>Swap-space: Virtual memory uses disk space as an extension of main memory.</li>
+<li>Swap-space can carved out of the normal file system, or, more commonly, it can be in a separate disk partition.</li>
+<li>Allocate swap space when process starts; holds text segment (the program) and data segment. Kernel uses swap maps to track swap-space use.</li>
+<li>Issues
+<ul>
+<li>Initial allocation. Each process needs minimum number of pages.
+<ul>
+<li>Fixed allocation vs. priority allocation.</li>
+</ul></li>
+<li>Where to find frames.</li>
+<li>Global replacement: Find a frame from all processes.</li>
+<li>Local replacement: Find only from its own allocated frames.</li>
+</ul></li>
+<li>Fixed allocation
+<ul>
+<li>0 allocation.</li>
+<li>Equal allocation: For example, if there are 100 frames and 5 processes, give each process 20 frames.</li>
+<li>Proportional allocation: Allocate according to the size of process.
+<ul>
+<li>m=64, s1=10, s2=127, a1=10/137x64, a2=127/137x64</li>
+</ul></li>
+</ul></li>
+<li>Priority allocation
+<ul>
+<li>Use a proportional allocation scheme using priorities rather than size.</li>
+<li>If process Pi generates a page fault
+<ul>
+<li>select for replacement one of its frames;</li>
+<li>select for replacement a frame from a process with lower priority number.</li>
+</ul></li>
+</ul></li>
+<li>Thrashing: If a process doesn't not have enough pages, the page-fault is very high. This leads to: Low CPU utilization, OS thinks that it needs to increase the degree of multiprogramming, another process added to the system.
+<ul>
+<li>Thrashing means a process is busy swapping pages in and out.</li>
+</ul></li>
+<li>Working set.
+<ul>
+<li>The set of memory locations that a program has referenced in the recent past.</li>
+<li>Represents data access pattern of program in a time period (locality).</li>
+<li>As a program executes, it transitions through a sequence of working sets consisting of varying sized subsets of the address space.</li>
+<li>Great performance if working-sets of all active processes fits into memory.</li>
+<li>Why does demand paging work? Process migrates from one locality to another. Localities may overlap. Need sufficient memory so that working set fits in memory.</li>
+<li>When working sets size is larger than total memory size, thrashing occurs.</li>
+</ul></li>
+<li>Tradeoffs of page size on performance. Impact of page size selection.
+<ul>
+<li>TLB hit rate: increase.</li>
+<li>Internal fragmentation: decrease.</li>
+<li>Total page table size: decrease.</li>
+<li>I/O overhead (useless I/O). Depend on data access pattern of a program.</li>
+</ul></li>
+</ul>
+<h3 id="other-related-techniques">Other related techniques</h3>
+<div class="sourceCode"><pre class="sourceCode cpp"><code class="sourceCode cpp"><span class="pp">#define num_ints 1000</span>
+<span class="pp">#define filesize num_ints * sizeof(int)</span>
+
+fd = open(filepath, O_RDWR | O_CREAT | O_TRUNC, <span class="bn">0600</span>);
+result = lseek(fd, filesize - <span class="dv">1</span>, SEEK_SET);
+result = write(fd, <span class="st">&quot;&quot;</span>, <span class="dv">1</span>);
+map = mmap(<span class="dv">0</span>, filesize, PROT_READ | PROT_WRITE | MAP_SHARED, fd, <span class="dv">0</span>);
+<span class="cf">for</span> (<span class="dt">int</span> i = <span class="dv">1</span>; i &lt;= numints; i++)
+    map[i] = <span class="dv">2</span> * i;
+munmap(map, filesize);
+close(fd);</code></pre></div>
+<ul>
+<li>Memory mapped files
+<ul>
+<li>Allow file I/O to be treated as routine memory access by mapping a disk block to a page in memory.</li>
+<li>Simplifies file access through direct memory access rather than <code>read()</code> and <code>write()</code> system calls.</li>
+<li>File access is managed with demand paging.</li>
+<li>Several processes may map the same file into memory as shared data.</li>
+</ul></li>
+<li>Review of caching concept
+<ul>
+<li>Cache: A repository for copies that can be accessed more quickly than the original. Make frequent case fast and infrequent case less dominant.</li>
+<li>Caching underlies many of the techniques that are used today to make computers fast. Can cache: memory locations, address translations, pages, file blocks, file names, network routes, etc.</li>
+<li>Only good if: Frequent case frequent enough and infrequent case not too expensive.</li>
+<li>Average access time = (hit rate) x (hit time) + (miss rate) x (miss time).</li>
+<li>Temporal locality: keep recently accessed data items closer to processor.</li>
+<li>Spatial locality: data access is contiguous following its layout.</li>
+</ul></li>
+<li>Zipf distribution
+<ul>
+<li>Caching behavior of many systems are not well characterized by the working set model.</li>
+<li>An alternative is the Zipf distribution: Popularity ~ 1/k^c , for k-th most popular item.</li>
+<li>Caching popular items can yield a very high cache hit ratio. LRU is a good replacement policy that assumes recent accessed items may be accessed again.</li>
+<li>Cache frequently accessed data in OS.
+<ul>
+<li>TLB cache. VM. File cache for disk sectors.</li>
+</ul></li>
+<li>Cache popular web pages in web servers or in ISP:
+<ul>
+<li>Popular URLs are accessed again and again.</li>
+<li>Akamai.com caches popular content in all ISP sites.</li>
+</ul></li>
+<li>Cache popular queries in Google.com.
+<ul>
+<li>Popular queries are entered by many users.</li>
+<li>Caching results greatly improve search response time.</li>
+</ul></li>
+<li>Cache popular nodes in a big social graph.
+<ul>
+<li>Number of followers in Twitter.</li>
+</ul></li>
+<li>Cache information of popular items sold on Amazon.com.
+<ul>
+<li>Popular items have more chances to be browsed/purchased.</li>
+</ul></li>
+</ul></li>
+</ul>
+<h2 id="cpu-scheduling">CPU Scheduling</h2>
+<ul>
+<li>Life cycle (states) of a process or thread. Active processes/threads transit from Ready queue to Running to various waiting queues.</li>
+<li>Question: How is the OS to select from each queue. Obvious queue to worry about is ready queue. Others can be scheduled as well, however.</li>
+<li>Scheduling: Deciding whihc processes/threads are given access to resources.
+<ul>
+<li>Job scheduling, resource scheduling, request scheduling.</li>
+<li>For example, web server scheduling to handle high traffic.</li>
+</ul></li>
+<li>Process execution consists of a cycle of CPU execution and I/O wait. Scheduling happens among CPU/IO bursts.</li>
+<li>Process state change vs. CPU scheduling.
+<ul>
+<li>CPU scheduling decisions may take place when a process:
+<ul>
+<li>Switches from running to waiting (blocked) state.</li>
+<li>Switches from running to ready state.</li>
+<li>Switches from waiting/blocked to ready.</li>
+<li>Terminates.</li>
+</ul></li>
+<li>Preemptive scheduling takes the processor away from one process (job) and give it to another. State change from running to ready.</li>
+<li>Non-preemptive scheduling. A process runs continuously until it is blocked or terminates.</li>
+</ul></li>
+<li>Terminalogy
+<ul>
+<li>Task/Job. Process, thread. User request. E.g., mouse click, web request, shell command, etc.</li>
+<li>CPU utilization. Keep the CPU as busy as possible.</li>
+<li><strong>Throughput</strong>. Number of processes that complete their execution per time unit.</li>
+<li><strong>Waiting time</strong>. Amount of time a process has been waiting in the ready queue.</li>
+<li><strong>Turnaround time</strong>. Amount of time to execute a particular process.
+<ul>
+<li>Completeion time - arrival time = waiting time + job size + overhead.</li>
+</ul></li>
+<li><strong>Response time</strong>. Amount of time it takes from when a request was submitted until the first response is produced, not output (for time-sharing environment).</li>
+</ul></li>
+</ul>
+<h3 id="scheduling-algorithm">Scheduling algorithm</h3>
+<ul>
+<li>Scheduling algorithm optimization criteria.
+<ul>
+<li>Max CPU utilization. Max throughput. Min turnaround time. Min waiting time. Min response time.</li>
+<li>Four preemptive or non-preemptive algorithms are considered: FIFO, SJF, priority scheduling, round robin.</li>
+</ul></li>
+<li><strong>FIFO</strong>: First-in-first-out, aka first-come-first-served (FCFS)</li>
+<li><strong>SJF</strong>: Always do the task that has the shortest remaining amount of work to do. Often called shortest remaining time first (SRTF).
+<ul>
+<li>SJF is optimal. Gives minimum average waiting time for a given set of processes. The difficulty is knowing the length of the next CPU request.</li>
+<li>Weakness: Starvation. Low priority processes may never execute.</li>
+</ul></li>
+<li>Predicting length of next CPU burst.
+<ul>
+<li>Why? SJF scheduling requires size information predict by using the length of previous CPU bursts. Using expontial averaging. New prediction is weighted average of previous prediction and actual time.</li>
+<li><span class="math inline">\(t_{n+1} = \alpha t_n + (1-\alpha) t_n\)</span>, where
+<ul>
+<li><span class="math inline">\(t_n\)</span> is the acutal length of n-th CPU burst.</li>
+<li><span class="math inline">\(t_{n+1}\)</span> is the predicted value for the next CPU burst.</li>
+<li><span class="math inline">\(0 \leq \alpha \leq 1\)</span>.</li>
+</ul></li>
+</ul></li>
+<li><strong>Priority scheduling</strong>.
+<ul>
+<li>A priority number (integer) is associated with each process.</li>
+<li>The CPU is allocated to the process with the highest priority (smaller ingeger means higher priority).</li>
+<li>SJF is a priority scheduling where priority is the predicted next CPU burst time.</li>
+<li>Problem is starvation. Low priority processes many never execute.</li>
+<li>Solution: Aging (as time progresses, decreasing the priority of the long-running process). Round robin.</li>
+</ul></li>
+<li><strong>Round robin (RR) scheduling</strong>
+<ul>
+<li>Each process gets a small unit of CPU time (time quantum), usually 10-100 milliseconds.</li>
+<li>After this time has elapsed, the process is preempted and added to the end of the ready queue.</li>
+<li>Performance. Large quantum = FIFO. Small quantum = context switch overhead is too high.</li>
+<li>Typically, higher average turnaround time than SJF, but better response. Also, no starvation.</li>
+<li>Compared FIFO: Everybody finishes very late with overhead. Longer turnaround. But faster response. Relatively fair.</li>
+</ul></li>
+<li><strong>Overhead during job switches</strong>
+<ul>
+<li>Process context switch: CPU switch from one process to another process.</li>
+<li>Code executed in kernel above is overhead. Overhead sets minimum practical switching time. Less overhead with SMT/hyperthreading, but contention for resources instead.</li>
+<li>Context switchin in Linux: 3-4 µs (Intel i7, E5).</li>
+<li>Thread switching only slightly faster than process switching (100 ns).</li>
+<li>But switching across cores about 2x more expensive than within-core switching.</li>
+<li>Context switching time increases sharply with the size of the working set, and can increase 100x or more.</li>
+<li>The working set is the subset of memory used by the process in a time window.</li>
+<li>Moral: Context switching depends mostly on cache limits and process or thread's hunger for memory.</li>
+</ul></li>
+<li><strong>Multi-level feedback queue (MFQ)</strong>
+<ul>
+<li>Goals: Responsiveness, especially for interactive/high priority jobs. Less overhead. Fairness (among equal priority tasks). No starvation.</li>
+<li>Not perfect at any of them: FIFO, SJF, RR. MFQ addresses this: used in Linux and Windows.</li>
+<li>Maintain multiple job queues. Each queue receives a fixed percentage of system resource. A process can move between the various queues, representing priority aging so that high priority jobs will gradually lose their priority.</li>
+</ul></li>
+<li>MFQ Example
+<ul>
+<li>Ready queue is partitioned into separate queues: foreground (interactivge) and background (batch).</li>
+<li>Each queue has its own scheduling algorithm: foreground (RR) and backgorund (FIFO).</li>
+<li>Each queue gets a certain amount of CPU time which it can schedule amongst its processes, i.e., 80% to foreground in RR, 20% to background in FIFO.</li>
+<li>Q0: RR with time quantum 8 milliseconds, Q1: RR time quantum 16 milliseconds, Q2: FIFO.</li>
+<li>Scheduling. A new job enters Q0 which is served FCFS. When it gains CPU, job receives 8 ms. If it does not finish in 8 ms, job is moved to Q1. At Q1 job is again served FCFS and receives 16 ms. If it still doesn't complete, it is preempted and moved to Q2.</li>
+</ul></li>
+</ul>
+<h3 id="scheduling-examples">Scheduling examples</h3>
+<ul>
+<li>Windows scheduling
+<ul>
+<li>Real time priority class: static priorities (priorities do not change). Priority values from 16 to 32.</li>
+<li>Variable class: variable priorities (e.g., 1-16). If a process has used up its quantum, lower its priority. If a process waits for an I/O event, raise its priority.</li>
+<li>Priority-driven scheduler. For real-time class, do RR within each priority. For variable class, do MFQ.</li>
+</ul></li>
+<li>Linux scheduling
+<ul>
+<li>Time-sharing scheduling: Each process has a priority and # of credits.
+<ul>
+<li>Every clock tick the running process lost a credit. Long running jobs lose credits.</li>
+<li>When it reached 0, another process with most credit won was chosen.</li>
+<li>The crediting rule: Credits = credits / 2 + priority.</li>
+<li>I/O event will raise the priority: fast response time when ready.</li>
+</ul></li>
+<li>Real-time scheduling. Soft real-time. Kernel cannot be preempted by user code.</li>
+</ul></li>
+<li>Thread scheduling
+<ul>
+<li>Scheduling user-level threads within a process. Known as process-contention scope (PCS).</li>
+<li>Kernel thread scheduled onto available CPU is system-contention scope (SCS) – competition among all threads in system</li>
+</ul></li>
+<li>Pthread scheduling
+<ul>
+<li>API allows specifying either PCS or SCS during thread creation.</li>
+<li><code>PTHREAD_SCOPE_PROCESS</code> schedules threads using PCS scheduling.</li>
+<li><code>PTHREAD_SCOPE_SYSTEM</code> schedules threads using SCS scheduling.</li>
+</ul></li>
+<li>Multiple-processor scheduling
+<ul>
+<li>CPU scheduling more complex when multiple CPUs are available.
+<ul>
+<li>Each processor is self-scheduling. Each has its own private queue of ready processes.</li>
+<li>Or all processes in common ready queue.</li>
+</ul></li>
+<li>Process has affinity for processor on which it is currently running.</li>
+</ul></li>
+</ul>
+<h3 id="summary-1">Summary</h3>
+<ul>
+<li><strong>Scheduling</strong>. Selecting a process from the ready queue and allocating the CPU to it.</li>
+<li><strong>FIFO (FCFS)</strong>
+<ul>
+<li>Pros: Simple.</li>
+<li>Cons: Short jobs get stuck behind long ones.</li>
+</ul></li>
+<li><strong>RR</strong>
+<ul>
+<li>Pros: Better for short jobs. Relatively fair.</li>
+<li>Cons: Weak when jobs are smae legnth. No prioritization. Longer average turnaround. More context switch overhead.</li>
+</ul></li>
+<li><strong>SJF</strong>
+<ul>
+<li>Pros: Optimal (averagfe response time).</li>
+<li>Cons: Hard to predict future, unfair.</li>
+</ul></li>
+<li><strong>MFQ</strong>
+<ul>
+<li>Fairness while having different priorities. Everybody makes progress.</li>
+<li>Automatic promotion/demotion of process priority in order to approximate SJF/SRTF.</li>
+<li>Responsiveness, especially for interactive/high priority jobs.</li>
+<li>Less context switch overhead with different quantum.</li>
+</ul></li>
+</ul>
+<h2 id="file-systems">File Systems</h2>
+<h3 id="files">Files</h3>
+<ul>
+<li><strong>Files</strong>: Contiguous logical address space in a persistent storage (e.g., disk).</li>
+<li><strong>File structure</strong>: The OS and program decides the structure.
+<ul>
+<li>None: sequence of words and bytes.</li>
+<li>Simple record structure: lines, fixed length, variable length.</li>
+<li>Complex structure: formatted document.</li>
+</ul></li>
+<li><strong>Attributes</strong>: Name, identifier, type, location ,size, protection, time, date, user identification, etc.</li>
+<li><strong>Operations</strong>: Create, open, close, write, read, reposition within file, delete, truncate.</li>
+<li><strong>Access methods</strong>: Sequential access, direct access.</li>
+<li><strong>File system abstraction</strong>
+<ul>
+<li><strong>Directory</strong>: group of named files or subdirectories. Mapping from file name to file metadata location.</li>
+<li><strong>Path</strong>: String that uniquely identifies file or directory.</li>
+<li><strong>Links</strong>: Hard links from name to metadata location; soft links from name to alternative name.</li>
+<li><strong>Mount</strong>: Mapping from name in one file system to root of another.</li>
+</ul></li>
+</ul>
+<h3 id="unix-file-system-interface">UNIX file system interface</h3>
+<ul>
+<li><strong>UNIX file system API</strong>
+<ul>
+<li>create, link, unlink, createdir, rmdir.</li>
+<li>open, close, read, write, seek.</li>
+<li>fsync: File modifications can be cached, fsync forces modifications to disk (like a memory barrier).</li>
+</ul></li>
+<li><strong>Protection</strong>: File owner/creator should be able to control what can be done by whom.</li>
+<li><strong>Access lists and groups in Linux</strong>
+<ul>
+<li><strong>Mode of access</strong>: Read, write execute.</li>
+<li><strong>Three classes of uses</strong>: Owner, group, public.
+<ul>
+<li>Ask manager to create a group (unique name), say <code>G</code>, and add some users to the group. For a particular file (say game) or subdirectory, define an appropriate access.</li>
+</ul></li>
+</ul></li>
+<li><strong>Directory structure</strong>: A collection of nodes containing information about all files. Operations performed include search, create, delete, list, rename, traverse.
+<ul>
+<li><strong>Name resolution</strong>: The process of converting a logical name into a physical resource (like a file): (1) Traverse succession of directories until reach target file and (2)Global file system may be spread across the network.</li>
+</ul></li>
+</ul>
+<div class="sourceCode"><pre class="sourceCode c++"><code class="sourceCode cpp"><span class="co">// file content: This is a test file</span>
+<span class="dt">int</span> main() {
+    <span class="dt">int</span> file = <span class="dv">0</span>; <span class="dt">char</span> buffer[<span class="dv">15</span>];
+    <span class="cf">if</span> ((file = open(<span class="st">&quot;testfile.txt&quot;</span>, O_RDONLY)) &lt; <span class="dv">-1</span>) <span class="cf">return</span> <span class="dv">1</span>;
+    <span class="cf">if</span> (read(file, buffer, <span class="dv">14</span>) != <span class="dv">14</span>) <span class="cf">return</span> <span class="dv">1</span>;
+    printf(<span class="st">&quot;</span><span class="sc">%s\n</span><span class="st">&quot;</span>, buffer); <span class="co">// This is a test</span>
+    <span class="cf">if</span> (lseek(file, <span class="dv">5</span>, SEEK_SET) &lt; <span class="dv">0</span>) <span class="cf">return</span> <span class="dv">1</span>;
+    <span class="cf">if</span> (read(file, buffer, <span class="dv">19</span>) != <span class="dv">14</span>) <span class="cf">return</span> <span class="dv">1</span>;
+    printf(<span class="st">&quot;</span><span class="sc">%s\n</span><span class="st">&quot;</span>, buffer); <span class="co">// is a test file</span>
+}</code></pre></div>
+<h3 id="file-system-structure">File system structure</h3>
+<ul>
+<li><strong>File system</strong> is a layer of OS that transforms block interface of disks (or other block devices) into files, directories, etc.</li>
+<li><strong>File system components</strong>
+<ul>
+<li><strong>Disk management</strong>. Collectign disk blocks into files.</li>
+<li><strong>Naming</strong>. Interface to find files by name, not by blocks.</li>
+<li><strong>Protection</strong>. Layers to keep data secure.</li>
+<li><strong>Reliability/Durability</strong>. Keeping of files durable despite crashes, media failure, attacks, and etc.</li>
+</ul></li>
+<li><strong>User vs. system POV</strong>
+<ul>
+<li>User's view: Durable data structures.</li>
+<li>System call interface: Collection of bytes (UNIX).</li>
+<li>System's view (inside OS): Collection of blocks.
+<ul>
+<li>A block is a logical transfer unit, while a sector is the physical transfer unit on disk).</li>
+<li>Block size &gt;= sector size; in UNIX, block size is 4KB.</li>
+</ul></li>
+</ul></li>
+<li><strong>Translating from user to system view</strong>
+<ul>
+<li>What happens if users says: Give me bytes 2 to 12? (1) Fetch block corresponding to those bytes. (2) Return just the correct portion of the block.</li>
+<li>What about: Write bytes 2 to 12? (1) Fetch block. (2) Modify portion. (3) Write out block.</li>
+<li>Everything inside file system is in whole size blocks. E.g., <code>getc()</code> and <code>putc()</code> buffer something like 4KB, even if interface is one byte at a time.</li>
+<li>From now on, a file is a collection of blocks.</li>
+</ul></li>
+</ul>
+<h3 id="file-system-design">File system design</h3>
+<ul>
+<li><strong>Data structures</strong>
+<ul>
+<li>Directores: File name to file metadata. Store dirs as files.</li>
+<li>File metadata: How to find file data blocks.</li>
+<li>Free map: List of free disk blocks.</li>
+</ul></li>
+<li>How do we organize these data structures? Device has non-uniform performance.</li>
+<li>Design challenges: Index structure, index granularity, free space, locality, reliability.</li>
+<li><strong>File system workload</strong>. Studying workload characteristics can help feature prioritization or optimization of design. What should be considered? <strong>File sizes</strong>, and <strong>file access patterns</strong>.
+<ul>
+<li><strong>Sequential access</strong>: Bytes read in order. Mose of file accesses are of this flavor.</li>
+<li><strong>Random access</strong>: Read/write element out of middle of array. Less frequent, but still important. Want this to be fast.</li>
+<li><strong>Content-based access</strong>: Many systems don't provide this. Instead, build DBs on top of disk access to index content (requires efficient random access).</li>
+</ul></li>
+</ul>
+<h3 id="file-system-implmentation">File system implmentation</h3>
+<ul>
+<li><strong>Directories and index structure</strong>. Special root block at a specific location contains the root directory. DIrector structure organizes the files:
+<ul>
+<li>Given file name, find a file number.</li>
+<li>Given a file number which contains the file structure info, locate blocks of this file.</li>
+</ul></li>
+<li>Per-file <strong>file control block (FCB)</strong> contains many details about the file, called <strong>inode</strong> on *nix.
+<ul>
+<li>A typical FCB include file permissions, dates, owner, group, ACL, size, data blocks of pointers to file data blocks.</li>
+</ul></li>
+<li><strong>Layered file system</strong>: APplication programs, logical file system, file-organization module, basic file system, I/O control, and devices.
+<ul>
+<li>Virtual file systems (VFS) provide an OO way of implementing file systems.</li>
+<li>VFS allows the same system call interface (the API) to be used for different types of file systems.</li>
+<li>The API is to the VFS interface, rather than any specific type of file system.</li>
+</ul></li>
+</ul>
+<h3 id="directory-implementation">Directory implementation</h3>
+<ul>
+<li>Naive approaches: Linear list, hash table, search tree.</li>
+<li><strong>All information about a file contained in its file header</strong>. inodes are global resources identified by index (inumber). Once you load the header structure, all blocks of file are locatable.
+<ul>
+<li>The maximum number of inodes is fixed at file system creation, limiting the maximum number of files the file system can hold.</li>
+<li>A typical allocation of heuristic for inodes in a file system is one percent of total size.</li>
+<li>The inode number indexes a table of inodes in a known location on the device.</li>
+</ul></li>
+<li><strong>Directory layout</strong>. Directory are stored as a file. Linear search to find filename (for small directories). B-trees are used for large directores.</li>
+<li><strong>Example: resolve /my/book/count</strong>
+<ul>
+<li>Read in file header for root <code>/</code> (fixed spot on disk).</li>
+<li>Read in first data block for root <code>/</code>; search for <code>my</code>.
+<ul>
+<li>Table of filename/index pairs. Search is done in linear. OK since directories typicall very small.</li>
+</ul></li>
+<li>Read in file header for <code>my</code>.</li>
+<li>Read in first data block for <code>my</code>; search for <code>book</code>.</li>
+<li>Read in file header for <code>book</code>.</li>
+<li>Read in first data block for <code>book</code>; search for <code>count</code>.</li>
+<li>Read in file header for <code>count</code>.</li>
+</ul></li>
+<li><strong>Current working directory (CWD)</strong>. Per-address-space pointer to a directory (inode) used for resolving file names. Allows user to specify relative filename instead of absolute path (say <code>CWD=/my/book/</code> can resolve <code>count</code>).</li>
+<li><strong>Open system call</strong>
+<ul>
+<li>Resolve file name, finds FCB (inode).</li>
+<li>Makes entries in per-process and system-wide tables.</li>
+<li>Return index (called file descriptor or file handle) in open-file table.</li>
+</ul></li>
+<li>Several pieces of data are needed to manage open files.
+<ul>
+<li>File pointer: Pointer to last read/write location, per process that has the file open.</li>
+<li>File-open count: Counter of number of times a file is open, allowing removal of data from open-file table when last processes closes it.</li>
+<li>Disk location of the file: Cache of data access information.</li>
+<li>Access permissions: Per-process access mode information.</li>
+<li>Open file locking is proceded by some systems to mediates access to a file.</li>
+</ul></li>
+<li><strong>Read/write system calls</strong>
+<ul>
+<li>Use file handle (descriptor) to locate inode.</li>
+<li>Perform appropriate reads or writes.</li>
+</ul></li>
+</ul>
+<h3 id="allocation-of-disk-blocks">Allocation of disk blocks</h3>
+<ul>
+<li>An allocation method refers to how disk are allocated for files:
+<ul>
+<li>Contiguous allocation.</li>
+<li>Linked allocation.</li>
+<li>Indexed allocation.</li>
+</ul></li>
+<li><strong>Contiguous allocation</strong>. Each file occupies a set of contiguous blocks on the disk.
+<ul>
+<li>Pros: Simple (only starting location (block#) and length (number of blocks) are required). Fast random access.</li>
+<li>Cons: Not easy to grow files. Waste in space (e.g., external fragmentation).</li>
+</ul></li>
+<li><strong>Linked allocation</strong>. Each file is a linked list of disk blocks. Blocks may scattered anywhere on the disk.</li>
+<li><strong>Microsoft file allocation table (FAT)</strong>
+<ul>
+<li>Linked list index structure: Simple, easy to implement. Still widely used.</li>
+<li>File table: Linear map of all blocks on disk. Each file is a linked list of blocks.</li>
+<li>Pros: Easy to find free block, to append to a file, to delete a file.</li>
+<li>Cons: Small file access is slow. Random access is very slow. Fragmentation (File blocks for a given file may be scattered. Files in the same directory may be scattered. Problems becomes worse as disk fills).</li>
+</ul></li>
+<li><strong>One-level indexed allocation</strong>. Place all direct data pointers together into the index block. E.g., Nachos file control block has 32 data block pointers, 128 bytes per block.
+<ul>
+<li>Pros: Support random access. No external fragmentation.</li>
+<li>Cons: Space overhead (need 1 block for index table).</li>
+</ul></li>
+<li><strong>Two-level indexed allocation: single indirection</strong>. Max size is 1k * 1k * 4KB = 4GB.</li>
+<li><strong>Hybrid multi-level scheme (Unix file system)</strong>. Efficient for small files, but still allow big files. File header contains 13-15 pointers. File header (inode) format: 10-12 direct data pointer (4KB each), 1 indirect block (4MB each), 1 doubly indirect block (4GB each), 1 triple indirect block (4TB each).</li>
+<li><strong>Free space management</strong>. Block number calculation = number of bits per word * number of 0-value words + offset of first 1 bit.</li>
+<li><strong>Performation optimization</strong>
+<ul>
+<li>Disk cache: Separate section of main memory for frequently used blocks.</li>
+<li>Read-ahead (prefectching): Techniques to optimize sequential access.</li>
+<li>Improve PC performance by dedicating section of memory as virtual disk, or RAM disk.</li>
+</ul></li>
+</ul>
+<h2 id="mass-storage-systems">Mass-Storage Systems</h2>
+<ul>
+<li><strong>Magnetic tape</strong>
+<ul>
+<li>Relatively permanent and holds large quantities of data.</li>
+<li>Random access ~1000 times slower than disk.</li>
+<li>Mainly used for backup, storage of infrequently-used data, transfer medium between systems.</li>
+<li>Typical storage 1.5-20 TB.</li>
+<li>Common technologies are 4mm, 8mm, 19mm, LTO-2 and SDLT.</li>
+</ul></li>
+<li><strong>Disk attachment</strong>
+<ul>
+<li>Drive attached to computer via I/O bus. USB, SATA (replacing ATA, PATA, EIDE).</li>
+<li>SCSI: Itself is a bus, up to 16 devices on one cable, SCSI initiator requests operation and SCSI targets perform tasks.</li>
+<li>FC (fiber channel) is high-speed serial architecture. Can be switched fabric with 24-bit address space. The basis of storage area networs (SANs) in which many hosts attach to many sotarge units. Can be arbitarted loop (FC-AL) of 126 devices.</li>
+</ul></li>
+<li><strong>Network-attached storage</strong>
+<ul>
+<li>Network-attached storage (NAS) is storage made available over a network rather than over a local connection (such as a bus).</li>
+<li>NFS and CIFS are common protocols.</li>
+<li>Implemented via remote procedure calls (RPCs).</li>
+<li>New iSCSI protocol uses IP network to carry the SCSI protocol.</li>
+</ul></li>
+<li><strong>Storage area network</strong>
+<ul>
+<li>Special/dedicated network for accessing block level data storage.</li>
+<li>Multiple hosts attached to multiple storage arrays (flexible).</li>
+</ul></li>
+</ul>
+<h3 id="disk">Disk</h3>
+<ul>
+<li>Drives rotate at 60 to 200 times per second.</li>
+<li>Positioning time is time to move disk arm to desired cylinder (seek time), plus time for desired sector to rotate under the disk head (rotational latency).</li>
+<li>Effective bandwidth: Average data transfer rate during a transfer, that is, the number of bytes divided by transfer time. Data rate incldues positioning overhead.</li>
+<li>Disk latency = seek time + rotation time + transfer time.
+<ul>
+<li>Seek time: Time to move disk arm over track (1-20ms). Fine-grained position adjustment necessary for head to &quot;settle&quot; head switch time ~ track switch time (on modern disks).</li>
+<li>Rotation time: Time to wait for disk to rotate under disk head (4-15ms). On average, only need to wait half a rotation.</li>
+<li>Transfer time: Time to transfer data onto/off of disk. Disk head transfer rate: 50-100MB/s (5-10 usec/sector). Host traansfer rate dependent on I/O connector (USB, SATA, ...).</li>
+</ul></li>
+<li>Example: 7200 RPM, 54 MB/s, seek time 10.5 ms. How long to complete 500 random disk reads in FIFO order? Each reads one sector (512 bytes).
+<ul>
+<li>Seek average 10.5 ms.</li>
+<li>Rotation time = 1/120 (time per rotation) * 0.5 (average rotation) = 4.15 ms.</li>
+<li>Transfer time: 54 MB/s to transfer 512 bytes per sector = 0.005 ms.</li>
+<li>In total: 500 * (105 + 4.15 + 0.005) / 1000 = 7.3 seconds.</li>
+<li>Effective bandwidth: 500 sectors * 512 bytes / 7.3 seconds = 0.034 MB/s. Copying 1 GB of data takes 8.37 hours.</li>
+</ul></li>
+<li>Same question. How long to complete 500 sequential disk reads?
+<ul>
+<li>Seek time: 10.5 ms (to reach the right track).</li>
+<li>Rotation time: 4.15 ms (to reach first sector).</li>
+<li>Transfer time for all 500 sectors = 500 * 512 / 128 = 2 ms.</li>
+<li>Total: 10.5 + 4.15 + 2 = 16.7 ms.</li>
+<li>Effective bandwidth: 500 * 512 / 16.7 = 14.97 MB/s. This is 11.7% of the maximum transfer rate with 250 KB data transferring.</li>
+</ul></li>
+</ul>
+<h3 id="disk-scheduling">Disk scheduling</h3>
+<ul>
+<li><strong>Objective</strong>: Given a set of I/O requests. Coordinate disk access of multiple I/O requests for faster performance and reduced seek time.
+<ul>
+<li>Seek time ~ seek distance.</li>
+<li>Measured by total head movement in terms of cylinders from one request to another.</li>
+</ul></li>
+<li><strong>FCFS scheduling</strong> (first come first serve).</li>
+<li><strong>SSTF scheduling</strong> (shortest seek time first). Selects the request with the minimum seek time from the current head position.</li>
+<li><strong>SCAN: elevator algorithm</strong>. Move disk arm in one direction until all requests satisfied, then reverse direction.</li>
+<li><strong>C-SCAN</strong> (circular SCAN). Provides a more uniform wait time than SCAN by treating cylinders as a circular list. The head moves from one end of the disk to the other, servicing requests as it goes. When it reaches the other end, it immediately returns to the beginning of the disk, without servicing any requests on the return trip.</li>
+</ul>
+<h3 id="solid-state-disks-ssds">Solid state disks (SSDs)</h3>
+<ul>
+<li>Use NAND multi-level cell (2-bit/cell) flash memory. Non-volatile storage technology. Sector (4 KB page) addressable, but stores 4-64 &quot;pages&quot; per memory block. No moving parts (no rotate/seek motors). Very low power and lightweight</li>
+<li>Transfer time: transfer 4KB page. Limited by controller and disk interface (SATA: 300-600 MB/s).</li>
+<li>Latency = queuing time + controller time + transfering time.</li>
+<li><strong>SSD architecture: Writes</strong>
+<ul>
+<li>Writing data is complex (~200μs-1.7ms).</li>
+<li>Can only write empty pages in a block.</li>
+<li>Erasing a block takes ~1.5 ms.</li>
+<li>Controller maintains pool of empty blocks by coalescing used pages (read, erase, write), also reverses some % of capacity.</li>
+<li>Data written in 4KB pages, and erased in 256 KB blocks.</li>
+<li>Controller garbage collects obsolete pages by copying valid pages to new (erased) block.</li>
+<li>Typical steady state behavior when SSD is almost full. One erase every 64 or 128 writes.</li>
+<li>Write and erase cycles require high voltage. Damages memory cells, limits SSD lifespan. Controller uses ECC, performs wear leveling. Wear leveling and garbage collection cause data to be rewritten on the SSD.</li>
+<li>Result is very workload dependent performance.</li>
+<li>Latency = queuing time + controller time (find free block) + transfering time.</li>
+<li>Rule of thumb: Wrties 10x more expensive than reads, and writes 10x mroe expensive than writes.</li>
+</ul></li>
+<li>Pros (vs. HDD): Low latency, high throughput. No moving parts. Read at memory speeds.</li>
+<li>Cons: Small storage, very expensive. Assymetric block write performance: read page erase/write page. Limited drive lifetime.</li>
+</ul>
+<h3 id="hybird-disk-drive">Hybird disk drive</h3>
+<ul>
+<li>A hybrid disk uses a small SSD as a buffer for a larger drive.</li>
+<li>All dirty blocks can be flushed to the actual hard drive based on: Time, Threshold, Loss of power/computer shutdown.</li>
+</ul>
+<h2 id="reliable-storage">Reliable Storage</h2>
+<ul>
+<li><strong>Availability</strong>. The probability that the system can accept and process requests.
+<ul>
+<li>Often measured in &quot;nines&quot; of probability.</li>
+<li>Key idea here is independence of failures.</li>
+</ul></li>
+<li><strong>Durability</strong>. The ability of a system to recover data despite faults.
+<ul>
+<li>This idea is fault tolerance applied to data.
+<ul>
+<li>Mean time before failure (MTBF). Inverse of annual failure rate.</li>
+<li>Mean time to repair (MTTR) is a basic measure of the maintainability of repairable items. It represents the average time required to repair a failed component or device.</li>
+</ul></li>
+<li>Doesn't necessarily imply availability: information on pyramids was very durable, but could not be accessed until discovery of Rosetta Stone.</li>
+<li>How to make file system durabile?
+<ul>
+<li>Disk blocks contain Reed-Solomon error correcting codes (ECC) to deal with small defects in disk drive. Can allow recovery of data from small media defects.</li>
+<li>Make sure writes survive in short term. Either abandon delayed writes or use special, battery-backed RAM (called non-volatile RAM or NVRAM) for dirty blocks in buffer cache.</li>
+<li>Make sure that data survives in long term. Need to replicate. Independence of failure.</li>
+</ul></li>
+</ul></li>
+<li><strong>Reliability</strong>. The ability of a system or component to perform its required functions under stated conditions for a specified period of time (IEEE definition).
+<ul>
+<li>Usually stronger than simply availability: means that the system is not only &quot;up&quot;, but also working correctly.</li>
+<li>Includes availability, security, fault tolerance/durability.</li>
+<li>Must make sure data survives system crashes, disk crashes, etc.</li>
+</ul></li>
+</ul>
+<h3 id="raid-redundant-array-of-inexpensive-disks">RAID (redundant array of inexpensive disks)</h3>
+<ul>
+<li>Multiple disk drives provide reliability via <em>redundancy</em>.
+<ul>
+<li>Increases the mean time to failure.</li>
+<li>Improve reliability by storing redundant data.</li>
+<li>Improve performance with disk striping (use a group of disks as one storage unit).</li>
+</ul></li>
+<li>RAID is arranged into six different levels.
+<ul>
+<li>Mirroring (RAID 1) keeps duplicate of each disk.</li>
+<li>Striped mirrors (RAID 1+0) or mirrored stripes (RAID 0+1) provides high performance and high reliability.</li>
+<li>Block interleaved parity (RAID 4,5,6) uses much less redundan.</li>
+</ul></li>
+<li>RAID 0: Non-redundant disk array.
+<ul>
+<li>Files are strped across disks, no redundant info.</li>
+<li>High read throughput, best write throughput.</li>
+<li>Any disk failure results in data loss.</li>
+<li>1 I/O requests to read a byte in a disk block.</li>
+<li>2 I/O requests to write a byte in a block. (Read block, modify, and write back.)</li>
+</ul></li>
+<li>RAID 1: Mirrored disks.
+<ul>
+<li>Data is written to two places. On failure, just use surviving disk and easy to rebuild.</li>
+<li>On read, choose fastest to read. 2x performance.</li>
+<li>Write performance is same as single drive.</li>
+<li>Expensive (high space overhead).</li>
+<li>1 I/O requests to read a byte in a disk block.</li>
+<li>3 I/O requests to write a byte in a disk block.</li>
+</ul></li>
+<li>RAID 0+1: Stripe on a set of disks. Then mirror of data blocks is striped on the second set.</li>
+<li>RAID 1+0: Pair mirrors first. Then stripe on a set of paired mirrors. Better reliability than RAID 0+1.</li>
+<li>RAID 2: Memory-style error-correcting codes.</li>
+<li>RAID 3: Bit-interleaved parity.</li>
+<li>RAID 4: Block-interleaved parity.</li>
+<li>RAID 5: Block-interleaved distributed parity, with redundancy to recover from a single disk failure.
+<ul>
+<li>Files are striped as blocks. Blocks are distributed among disks. Parity blocks are added.</li>
+<li>1 I/O requests to read a byte in a disk block.</li>
+<li>4 I/O requests to write a byte in a block. (Read old data block, read old parity block, write new data block, write new parity block = old data XOR old parity XOR new data).</li>
+</ul></li>
+<li>RAID 6: RAID 5 with extra redundancy to recover from two disk failures.</li>
+</ul>
+<h3 id="more-reliable-file-systems">More reliable file systems</h3>
+<ul>
+<li><strong>Carefully order operation sequence</strong>
+<ul>
+<li>Read data structures to see if there were any operations in progress. Clean up/finish as needed.</li>
+<li>FAT and FFS (fsck) to protect filesystem structure/metadata.</li>
+<li>Many app-level recovery schemes (e.g., MS Word, emacs autosaves).</li>
+</ul></li>
+<li><strong>Copy on write file layout</strong>
+<ul>
+<li>To update file system, write a new version of the file system containing the update.</li>
+<li>NetApp's Write Anywhere File Layout (WAFL).</li>
+<li>ZFS (Sun/Oracle) and OpenZFS.</li>
+</ul></li>
+<li><strong>Transactional file systems</strong>. Better reliability through use of log.
+<ul>
+<li>Applies updates to system metadata using transactions committed once it is written to the disk log.</li>
+<li>Updates to non-directory files (i.e., user stuff) can be done in place (without logs), full logging optional.</li>
+<li>File system may not be updated immediately, data preserved in the log.</li>
+<li>Example: NTFS, Apple HFS+, Linux XFS, JFS, ext3, ext4.</li>
+</ul></li>
+</ul>
+<h3 id="transactional-file-systems">Transactional file systems</h3>
+<ul>
+<li>Typical structure
+<ul>
+<li>Begin a transation: Get transaction ID.</li>
+<li>Do a bunch of updates. If any fail along the way, rollback. Or, if any conflicts with other transactions, rollback.</li>
+<li>Commit the transaction.</li>
+</ul></li>
+<li>An <em>atomic sequence</em> of actions on a storage system (or database).</li>
+<li>It extends concept of atomic update from memory to stable storage.
+<ul>
+<li>Atomically update multiple persistent data structures.</li>
+<li>That takes it from one <em>consistent state</em> to another.</li>
+</ul></li>
+<li>The ACID properties of transactions.
+<ul>
+<li><strong>Atomicity</strong>. Operations appear to happen as a group, or not at all (at logical level). At physical level, only single disk/flash write is atomic.</li>
+<li><strong>Consistency</strong>. Transactions maintain data integrity, e.g., file size cannot be negative. If the DB starts out consistent, it ends up consistent at the end of transaction.</li>
+<li><strong>Isolation</strong>. Execution of one transaction is isolated from that of all others; no problems from concurrency.</li>
+<li><strong>Durability</strong>. If a transaction commits, its effects persist despite crashes.</li>
+</ul></li>
+<li><strong>Logging file systems</strong>
+<ul>
+<li>Full logging file system: All updates to disk are done in transcations.</li>
+<li>Instead of modifying data strucytures on disk directly, write changes to a journal/log.
+<ul>
+<li>Intention list: set of changes we intend to make.</li>
+<li>Log/journal is append-only.</li>
+</ul></li>
+<li>Once changes are on log, safe to apply changes to data structures on disk.
+<ul>
+<li>Recovery can read log to see what changes were intended.</li>
+</ul></li>
+<li>Once chances are copied, safe to remove log.</li>
+</ul></li>
+<li><strong>Redo logging</strong>
+<ul>
+<li>Prepare: Write all changes (in transaction) to log.</li>
+<li>Commit: Single disk write to make transaction durable.</li>
+<li>Redo: Copy changes to disk.</li>
+<li>Garbage collection: Reclaim space in log.</li>
+<li>Recovery: Read log; redo any operations for committed transactions; garbage collect log.</li>
+</ul></li>
+<li><strong>Example: Createing a file</strong>
+<ul>
+<li>Find free data blocks. Find free inode entry. Find directory entry insertion point.</li>
+<li>[log] Write map (i.e., mark used). [log] Write inode entry to point to block(s). [log] Write dir entry to point to indoe.</li>
+<li>Crash during logging: Scan the log. Detect transaction start with no commit. Discard log entries. Disk remains unchanged.</li>
+<li>Recovery after commit: Scan log, find start. Find matching commit. Redo it as usual.</li>
+</ul></li>
+</ul>
+<h2 id="cloud-computing-with-kv-storages-and-distributed-file-systems">Cloud Computing with KV Storages and Distributed File Systems</h2>
+<h3 id="cluster-computing">Cluster computing</h3>
+<ul>
+<li>Motivations: Large-scale data processing on clusters.</li>
+<li>Cost-efficiency: Commodity nodes/network. Automatic fault-tolerance. Easy to use.</li>
+<li>Functions: Automatic parallelization and distribution. Fault-tolerance.</li>
+<li>Typical cluster: 40 nodes/rack, 1k-4k nodes in cluster. 1Gbps bandwidth in rack, 8Gbps out of rack. Each node has 8-16 cores, 32GB RAM, 8x1.5TB disks.</li>
+<li>Why colud computing?
+<ul>
+<li>Cloud refers to large Internet services running on many machines.</li>
+<li>Cloud computing refers to services by these companies that let external customers rent cycles.</li>
+<li>Attractive features: Scalability, elastic computing, ease of use.</li>
+</ul></li>
+</ul>
+<h3 id="key-value-storage">Key value storage</h3>
+<ul>
+<li>Handle huge volumes of data. Store (key, value) pair. Used sometimes as a simpler but more scalable database.</li>
+<li>Simple interface: <code>put(key, value)</code>, <code>value = get(key)</code>.</li>
+<li>The KV-tables used for column-based storage, as opposed to row-based storage typical in older DBMS.</li>
+<li>Example: Amazon DynamoDB/S3, BigTable/HBase/Hypertable, Cassandra, Memcached, BitTorrent distributed file location, Redis, Oracle, etc.</li>
+<li>Key value store is also called distributed hash tables (DHT).
+<ul>
+<li>Main idea: Partition set of key-values across many machines.</li>
+<li>Challenges: Fault tolerance, scalability, consistency, heterogeneity.</li>
+</ul></li>
+<li>Dictonary-based architecture: Have a node maintain the mapping between keys and machines (nodes) that store the values associated with the keys.
+<ul>
+<li>Recursive query: Having the master relay the requests.
+<ul>
+<li>Pros: Faster, as typically master/directory closer to nodes. Easier to maintain consistency, as master/directory can serialize puts and gets.</li>
+<li>Cons: Scalability bottlenect, as all values go through master.</li>
+</ul></li>
+<li>Iterative query: Return node to requester and let requester contact node.
+<ul>
+<li>Pros: Scalability.</li>
+<li>Cons: Slower, harder to enfore data consistency.</li>
+</ul></li>
+</ul></li>
+<li><strong>Fault tolerance</strong>: Replicate value on several nodes. Usually place replicas on different racks in a datacenter to guard against rack failures.</li>
+<li><strong>Scalability</strong>
+<ul>
+<li>More storage: Use more nodes.</li>
+<li>More requests: Can serve requests from all nodes which a value is stored in parallel. Master can replicate a popular value on more nodes.</li>
+<li>Master/directory scalability: Replicate it. Partition it, so different keys are served by different masters/directories.</li>
+<li>Load balacning
+<ul>
+<li>Directory keeps track of the storage availability at each node. Preferentially insert new values on nodes with more storage available.</li>
+<li>When a new node is added. Cannot insert only new values on new node. Move values from heavy loaded nodes to the new node.</li>
+<li>When a node fails. Need to replicate values from fail node to other nodes.</li>
+</ul></li>
+</ul></li>
+<li><strong>Consistency</strong>
+<ul>
+<li>Need to make sure that a value is replicated correctly. In general, slow puts and faster gets.</li>
+<li>If concurrent updates, may need to make sure that updates happen in the same order to avoid inconsistent write/write.</li>
+<li>Read cannot guaranteed to return value of lastest write. Can happen if the master processes requests in different threads. Inconsistent write/read.</li>
+<li><strong>Atomic consistency</strong> (linearizability): reads/writes (gets/puts) to replicas appear as if there was a single underlying replica (single system image). Think one updated at a time. Transactions</li>
+<li><strong>Eventual consistency</strong>: Given enough time all updates will propagate through the system. One of the weakest form of consistency; used by many systems in practice. Must eventually converge on single key/value.</li>
+<li>And more: Causual consistency, sequential consistency, strong consistency, etc.</li>
+</ul></li>
+<li><strong>Quorum consensus</strong>
+<ul>
+<li>Improve <code>put()</code> and <code>get()</code> operation performance.</li>
+<li>Define a replica set of size N. <code>put()</code> waits for acks from at least W replicas. The writer returns after it hears from these replicas. <code>get()</code> waits for responses from at least R replicas. Make sure W+R&gt;N.</li>
+<li>There is at least one node that contains the update.</li>
+</ul></li>
+</ul>
+<h3 id="distributed-file-systems">Distributed file systems</h3>
+<ul>
+<li>The interface is the same as a single-machine file system.</li>
+<li>Distribute file data to a number of machines. Support replication. Support concurrent data access.</li>
+<li>Google file system and HDFS (Hadoop). Optimized for batch processing. Provides redundant storage of massive amounts of data on cheap and unreliable computers.</li>
+<li><strong>HDFS API</strong>
+<ul>
+<li>Copy data from the local to HDFS: <code>copyFromLocal src dest</code>.</li>
+<li>Copy data from HDFS to local: <code>copyToLocal src dest</code>.</li>
+</ul></li>
+<li><strong>Assumptions of GFS/HDFS</strong>
+<ul>
+<li>High component failure rates. Inexpensive commodity components fail all the time.</li>
+<li>Modest number of huge files. Just a few million. Each is 100 MB or larger.</li>
+<li>Files are write-once, mostly appended to. Perhaps concurrently.</li>
+<li>Large streaming reads.</li>
+<li>High sustained through favored over low latency.</li>
+</ul></li>
+<li><strong>HDFS architecture</strong>
+<ul>
+<li>Files split into 64MB blocks.</li>
+<li>Blocks are replicated across several datanodes (default 3) as slaves.</li>
+<li>Namenode stores metadata (file names, locations, etc) as a master.</li>
+<li>Files are appended-only. Optimized for large files, sequential reads.
+<ul>
+<li>Read use any copy, write append to all replicas.</li>
+</ul></li>
+<li>Namenode: Maps a file to a fileid and list of block ids and data nodes.</li>
+<li>Datanode: Maps a blockid to a physical location on disk.</li>
+<li>Secondary namenode: Backup. Periodic merge of transaction log.</li>
+</ul></li>
+<li><strong>Namenode metadata</strong>
+<ul>
+<li>The entire metadata is in memory. No demand paging of meta-data.</li>
+<li>Types of metadata: List of files/blocks for each file/datanodes for each block. File attributes.</li>
+<li>A transaction log: Records file creations, file deletions, etc.</li>
+</ul></li>
+<li><strong>Datanode</strong>
+<ul>
+<li>A block server: Stores data in local file system (e.g., ext3). Stores metadata of a block (e.g., CRC). Serves data and metadata to clients.</li>
+<li>Block report: Periodically sends a report of all existing blocks to the name node.</li>
+<li>Facilitates pipelining of data: Forwards data to other specified data nodes.</li>
+<li>Block placement current strategy: One replica on local node, second on a remote rack, third on the same remote rack. Additional ones are placed randomly.</li>
+</ul></li>
+<li><strong>Datanode failure detecture with heartbeat</strong>
+<ul>
+<li>A network partition can cause a subset of Datanodes to lose connectivity with the Namenode.</li>
+<li>Namenode detects this condition by the absence of a Heartbeat message.</li>
+<li>Namenode marks Datanodes without Hearbeat and does not send any IO requests to them.</li>
+<li>Any data registered to the failed Datanode is not available to the HDFS.</li>
+<li>Also the death of a Datanode may cause replication factor of some of the blocks to fall below their specified value.</li>
+</ul></li>
+<li><strong>Data pipelining during data block write</strong>
+<ul>
+<li>Client retrieves a list of DataNodes on which to place replicas of a block.</li>
+<li>Client writes block to the first DataNode.</li>
+<li>The first DataNode forwards the data to the next DataNode in the Pipeline.</li>
+<li>When all replicas are written, the Client moves on to write the next block in file.</li>
+</ul></li>
+<li><strong>Ensuring data correctness during reading</strong>
+<ul>
+<li>Use checksums (e.g., CRC32) to validate data.</li>
+<li>File creation: Client computes checksum per 512 bytes. Datanode stores the checksum.</li>
+<li>File accesS: Client retrieves the data and checksum from datanode. If validation fails, client tries other replicas.</li>
+</ul></li>
+<li><strong>HDFS properties</strong>
+<ul>
+<li>HDPS provides a write-once-read-many, append-only access model for data.</li>
+<li>HDFS is optimized for sequential reads of large files with large blocks (e.g. 64MB)</li>
+<li>HDFS maintains multiple copies of the data for fault tolerance.</li>
+<li>HDFS is designed for high-throughput, rather than low-latency.</li>
+<li>Hadoop jobs (e.g. MapReduce) tend to execute over several minutes and hours.</li>
+</ul></li>
+</ul>
+</body>
+</html>
